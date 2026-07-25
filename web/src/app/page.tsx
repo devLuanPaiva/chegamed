@@ -1,8 +1,23 @@
+import { Availability } from "@/components/landing/Availability";
+import { ContactSection } from "@/components/landing/ContactSection";
+import { FeatureCards } from "@/components/landing/FeatureCards";
+import { Footer } from "@/components/landing/Footer";
+import { Header } from "@/components/landing/Header";
+import { Hero } from "@/components/landing/Hero";
+import { ImpactStats } from "@/components/landing/ImpactStats";
 
 export default function Home() {
   return (
-    <div>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+    <div className="flex flex-1 flex-col">
+      <Header />
+      <main className="flex-1">
+        <Hero />
+        <FeatureCards />
+        <Availability />
+        <ImpactStats />
+        <ContactSection />
+      </main>
+      <Footer />
     </div>
   );
 }
