@@ -1,6 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 import { apiFetch, ApiRequestError, rawFetch } from "@/lib/apiFetch";
+import { AUTH_STORAGE_KEYS } from "@/lib/storageKeys";
 
 jest.mock("@/lib/env", () => ({
     BASE_URL: "https://api.example.com",
@@ -8,12 +9,12 @@ jest.mock("@/lib/env", () => ({
 
 describe("apiFetch", () => {
     beforeEach(async () => {
-        await AsyncStorage.clear();
+        await SecureStore.deleteItemAsync(AUTH_STORAGE_KEYS.ACCESS);
         global.fetch = jest.fn();
     });
 
     it("attaches the stored access token as a Bearer header", async () => {
-        await AsyncStorage.setItem("@auth:access", "stored-token");
+        await SecureStore.setItemAsync(AUTH_STORAGE_KEYS.ACCESS, "stored-token");
         (global.fetch as jest.Mock).mockResolvedValue({
             ok: true,
             json: async () => ({ success: true, message: "ok", count: null, currentPage: null, totalPages: null, next: null, previous: null, data: { id: 1 } }),
@@ -83,7 +84,7 @@ describe("apiFetch", () => {
 
 describe("rawFetch", () => {
     beforeEach(async () => {
-        await AsyncStorage.clear();
+        await SecureStore.deleteItemAsync(AUTH_STORAGE_KEYS.ACCESS);
         global.fetch = jest.fn();
     });
 

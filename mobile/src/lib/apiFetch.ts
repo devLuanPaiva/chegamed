@@ -79,7 +79,7 @@ function toApiRequestError(errorBody: ApiErrorResponse | null, fallbackMessage: 
     return new ApiRequestError(message, errorBody?.errors ?? []);
 }
 
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<ApiSuccessResponse<T>> {
+async function performFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const accessToken = await getAccessToken();
     const headers = buildHeaders(accessToken, options.headers);
 
@@ -90,5 +90,13 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
         throw toApiRequestError(body as ApiErrorResponse | null, "Erro na requisição.");
     }
 
-    return body as ApiSuccessResponse<T>;
+    return body as T;
+}
+
+export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<ApiSuccessResponse<T>> {
+    return performFetch<ApiSuccessResponse<T>>(endpoint, options);
+}
+
+export async function rawFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return performFetch<T>(endpoint, options);
 }
