@@ -45,7 +45,7 @@ public class GoogleAuthService {
             throw emailNotVerified();
         }
 
-        User user = userRepository.findByEmail(identity.email())
+        User user = userRepository.findByEmailIgnoreCase(identity.email())
                 .orElseThrow(this::emailNotRegistered);
 
         return new AuthResponseDTO(

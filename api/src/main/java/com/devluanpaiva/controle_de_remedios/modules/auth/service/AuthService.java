@@ -56,7 +56,7 @@ public class AuthService {
         private long tokenExpirationMinutes;
 
         public AuthResponseDTO login(LoginRequestDTO dto) {
-                User user = userRepository.findByEmail(dto.email())
+                User user = userRepository.findByEmailIgnoreCase(dto.email())
                                 .orElseThrow(() -> unauthorized(
                                                 "Credenciais inválidas",
                                                 "CREDENTIALS",
