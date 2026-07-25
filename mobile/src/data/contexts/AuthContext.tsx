@@ -12,7 +12,7 @@ import {
 
 import { clearTokens, getStoredTokens, persistTokens } from "@/lib/authStorage";
 import { BASE_URL } from "@/lib/env";
-import { AUTH_STORAGE_KEYS } from "@/lib/storageKeys";
+import { signInWithGoogle } from "@/data/services/googleAuth.service";
 import { IUser, UserRole, normalizeUserRole } from "../models/user.model";
 
 const SIGN_IN_ROUTE = "/(authentication)/signIn" as Href;
@@ -201,9 +201,9 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
 
   const loginWithGoogle = useCallback(async () => {
     const { accessToken, refreshToken } = await signInWithGoogle();
-    await persistTokens(accessToken, refreshToken);
+    await persistTokens({ access: accessToken, refresh: refreshToken });
     startSession(accessToken, refreshToken);
-  }, [persistTokens, startSession]);
+  }, [startSession]);
 
   const logout = useCallback(async () => {
     await endSession();
