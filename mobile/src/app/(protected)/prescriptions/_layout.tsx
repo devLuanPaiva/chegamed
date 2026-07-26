@@ -5,7 +5,7 @@ import { UserRole } from "@/data/models/user.model";
 
 export default function PrescriptionsLayout() {
     return (
-        <RoleGuard allow={[UserRole.MANAGER]}>
+        <RoleGuard allow={[UserRole.MANAGER, UserRole.ASSISTANT]}>
             <Stack screenOptions={{ headerShown: false, animation: "none" }}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="review" />
