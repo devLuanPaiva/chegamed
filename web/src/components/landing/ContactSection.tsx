@@ -1,9 +1,10 @@
 "use client";
 
-import { Mail, MessageCircle, Send } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { Mail, Send } from "lucide-react";
+import { useState } from "react";
+import type React from "react";
 import { Reveal } from "@/components/ui/Reveal";
-import { CONTACT_EMAIL, WHATSAPP_DISPLAY, WHATSAPP_LINK } from "@/lib/site-config";
+import { CONTACT_EMAIL } from "@/lib/site-config";
 
 interface ContactFormState {
   name: string;
@@ -28,7 +29,7 @@ export function ContactSection() {
     };
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const subject = `Contato via site — ${form.institution || form.name}`;
@@ -77,17 +78,6 @@ export function ContactSection() {
                     <Mail size={20} />
                   </span>
                   {CONTACT_EMAIL}
-                </a>
-                <a
-                  href={WHATSAPP_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-base font-semibold text-white transition-opacity hover:opacity-80"
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10">
-                    <MessageCircle size={20} />
-                  </span>
-                  {WHATSAPP_DISPLAY}
                 </a>
               </div>
             </div>
