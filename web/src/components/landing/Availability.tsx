@@ -1,6 +1,22 @@
-import { Monitor, Play, Smartphone } from "lucide-react";
+import { Check, LayoutDashboard, Monitor, Play, Smartphone } from "lucide-react";
+import type { ReactNode } from "react";
 import { Reveal } from "@/components/ui/Reveal";
 import { PLAY_STORE_URL } from "@/lib/site-config";
+
+interface BulletProps {
+  children: ReactNode;
+}
+
+function Bullet({ children }: Readonly<BulletProps>) {
+  return (
+    <li className="flex items-start gap-2 text-left text-sm font-semibold text-neutral-600">
+      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
+        <Check size={11} />
+      </span>
+      {children}
+    </li>
+  );
+}
 
 export function Availability() {
   return (
@@ -11,8 +27,8 @@ export function Availability() {
             Disponível onde você precisar
           </h2>
           <p className="mt-4 text-lg font-semibold text-neutral-600">
-            A equipe da farmácia usa o app no celular durante o atendimento, e
-            a gestão acompanha tudo pelo painel desktop.
+            Agilidade para quem atende no balcão, visão completa para quem
+            coordena a farmácia popular.
           </p>
         </Reveal>
 
@@ -23,12 +39,24 @@ export function Availability() {
                 <Smartphone size={30} />
               </span>
               <h3 className="mt-6 font-heading text-2xl tracking-wide text-neutral-900">
-                App para celular
+                App para celular — agilidade no atendimento
               </h3>
-              <p className="mt-2 max-w-sm text-sm font-semibold text-neutral-600">
-                Consulta de pacientes, registro de entregas e alertas de
-                duplicidade direto no bolso do atendente.
-              </p>
+
+              <ul className="mt-6 flex flex-col gap-3 self-stretch">
+                <Bullet>
+                  Fotografe a receita e deixe a inteligência artificial
+                  preencher medicamento, dosagem e datas automaticamente.
+                </Bullet>
+                <Bullet>
+                  Pergunte ao assistente virtual quando um paciente pode
+                  retirar de novo, sem precisar abrir relatórios.
+                </Bullet>
+                <Bullet>
+                  Registre entregas na hora do atendimento, com alerta
+                  imediato de duplicidade.
+                </Bullet>
+              </ul>
+
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
@@ -54,17 +82,29 @@ export function Availability() {
                 <Monitor size={30} />
               </span>
               <h3 className="mt-6 font-heading text-2xl tracking-wide text-neutral-900">
-                Painel desktop
+                Painel desktop — visão completa da gestão
               </h3>
-              <p className="mt-2 max-w-sm text-sm font-semibold text-neutral-600">
-                Gestão completa de prescrições, estoque, unidades e usuários
-                para quem coordena a farmácia popular.
-              </p>
+
+              <ul className="mt-6 flex flex-col gap-3 self-stretch">
+                <Bullet>
+                  Dashboards com status das prescrições, fila de pendências e
+                  linha do tempo de entregas.
+                </Bullet>
+                <Bullet>
+                  Tabelas e filtros para acompanhar cada paciente, medicamento
+                  e unidade.
+                </Bullet>
+                <Bullet>
+                  Indicadores de cumprimento — entregas completas x parciais —
+                  por período.
+                </Bullet>
+              </ul>
+
               <a
                 href="#contato"
                 className="mt-8 inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition-transform hover:-translate-y-0.5"
               >
-                <Monitor size={22} />
+                <LayoutDashboard size={22} />
                 <span className="text-left leading-tight">
                   <span className="block text-[11px] font-semibold text-neutral-300">
                     Disponível para
