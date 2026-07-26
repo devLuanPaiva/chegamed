@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     "controle de prescrições médicas",
     "gestão de pacientes farmácia",
     "redução de custos farmácia popular",
-    "controle de estoque de medicamentos doados",
+    "fila de entregas pendentes de medicamentos",
     "farmácia digital",
     "controle de prazo de consumo de medicamentos",
     "sistema para farmácia beneficente",
