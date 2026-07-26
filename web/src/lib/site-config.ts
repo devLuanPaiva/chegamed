@@ -1,9 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
-  Boxes,
   Building2,
   ClipboardList,
+  ListOrdered,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -25,30 +25,31 @@ export interface ImpactStat {
   label: string;
 }
 
-/**
- * Placeholder de WhatsApp — substituir pelo número real antes de publicar.
- */
-export const WHATSAPP_DISPLAY = "+55 (00) 0000-0000";
-export const WHATSAPP_LINK = "https://wa.me/5500000000000";
-
-export const CONTACT_EMAIL = "contato@chegamed.com.br";
+export const CONTACT_EMAIL = "devluanpaiva@gmail.com";
 
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.devluan.chegamed";
 
 export const NAV_LINKS: NavLink[] = [
-  { label: "Funcionalidades", href: "#funcionalidades" },
-  { label: "Disponibilidade", href: "#disponibilidade" },
-  { label: "Impacto", href: "#impacto" },
-  { label: "Contato", href: "#contato" },
+  { label: "Como funciona", href: "/#como-funciona" },
+  { label: "Funcionalidades", href: "/#funcionalidades" },
+  { label: "Disponibilidade", href: "/#disponibilidade" },
+  { label: "Impacto", href: "/#impacto" },
+  { label: "Contato", href: "/#contato" },
 ];
 
 export const FEATURE_CARDS: FeatureCard[] = [
   {
     icon: ShieldCheck,
-    title: "Bloqueio de retirada duplicada",
+    title: "Bloqueio por medicamento",
     description:
-      "O sistema calcula automaticamente a próxima data disponível para cada medicamento e alerta a equipe antes de liberar uma retirada antecipada, evitando desperdício.",
+      "Cada item da receita tem seu próprio prazo de tratamento. O ChegaMed libera apenas o que já pode ser entregue, remédio por remédio — nunca a receita inteira.",
+  },
+  {
+    icon: ListOrdered,
+    title: "Fila de entregas pendentes",
+    description:
+      "Quando um medicamento em falta chega à prefeitura, o sistema aponta quem está esperando há mais tempo, priorizando a entrega por ordem de cadastro.",
   },
   {
     icon: ClipboardList,
@@ -57,22 +58,16 @@ export const FEATURE_CARDS: FeatureCard[] = [
       "Cadastre receitas com dosagem, frequência e tipo de tratamento (contínuo ou por período fixo) e acompanhe cada item prescrito ao longo do tempo.",
   },
   {
-    icon: Boxes,
-    title: "Controle de estoque em tempo real",
-    description:
-      "Toda entrada e saída de medicamento é registrada automaticamente, mantendo o estoque da farmácia sempre atualizado e confiável.",
-  },
-  {
     icon: Building2,
     title: "Multiempresa e multiunidade",
     description:
-      "Gerencie várias farmácias e postos vinculados à mesma prefeitura, com usuários, permissões e estoques organizados por unidade.",
+      "Gerencie várias farmácias e postos vinculados à mesma prefeitura, com usuários e permissões organizados por unidade.",
   },
   {
     icon: BarChart3,
-    title: "Relatórios de movimentação",
+    title: "Relatórios e indicadores de entrega",
     description:
-      "Acompanhe entregas, estoque e histórico de cada paciente com relatórios claros, prontos para embasar decisões da gestão.",
+      "Painéis com status das prescrições, fila de pendências e taxa de cumprimento por período, prontos para embasar decisões da gestão.",
   },
   {
     icon: Users,

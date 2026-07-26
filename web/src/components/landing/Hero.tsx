@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, PackageCheck, Pill } from "lucide-react";
+import { CheckCircle2, Clock, ListOrdered, Pill } from "lucide-react";
 import { Reveal } from "@/components/ui/Reveal";
 
 export function Hero() {
@@ -22,8 +22,8 @@ export function Hero() {
             <p className="mt-6 max-w-xl text-lg font-semibold text-neutral-600">
               O ChegaMed controla prescrições e entregas de medicamentos e
               calcula automaticamente a próxima data disponível para cada
-              paciente, evitando retiradas duplicadas e garantindo que o
-              estoque da sua farmácia popular chegue a quem realmente precisa.
+              paciente, remédio por remédio, evitando retiradas duplicadas e
+              garantindo que a doação chegue a quem realmente precisa.
             </p>
           </Reveal>
 
@@ -64,10 +64,10 @@ export function Hero() {
                   </span>
                   <div>
                     <p className="text-sm font-bold text-neutral-900">
-                      Losartana 50mg
+                      Losartana
                     </p>
                     <p className="text-xs font-semibold text-neutral-500">
-                      Maria S. · tratamento contínuo
+                      João P. · tratamento concluído
                     </p>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ export function Hero() {
                   </span>
                   <div>
                     <p className="text-sm font-bold text-neutral-900">
-                      Metformina 850mg
+                      Glifage XR
                     </p>
                     <p className="text-xs font-semibold text-neutral-500">
                       João P. · retirada antecipada
@@ -93,7 +93,7 @@ export function Hero() {
                 </div>
                 <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2.5 py-1 text-xs font-bold text-warning">
                   <Clock size={14} />
-                  12 dias
+                  10 dias
                 </span>
               </div>
 
@@ -103,14 +103,14 @@ export function Hero() {
 
             <div className="animate-float-delayed absolute -bottom-6 -left-6 flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-xl">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-500 text-white">
-                <PackageCheck size={16} />
+                <ListOrdered size={16} />
               </span>
               <div>
                 <p className="text-xs font-bold text-neutral-900">
-                  Estoque atualizado
+                  Fila priorizada
                 </p>
                 <p className="text-[11px] font-semibold text-neutral-500">
-                  em tempo real
+                  por ordem de chegada
                 </p>
               </div>
             </div>

@@ -10,8 +10,8 @@ export function FeatureCards() {
             Tudo que sua farmácia popular precisa em um só lugar
           </h2>
           <p className="mt-4 text-lg font-semibold text-neutral-600">
-            Do cadastro da prescrição ao controle de estoque, o ChegaMed
-            acompanha cada etapa da distribuição de medicamentos.
+            Do cadastro da prescrição à entrega na mão do paciente, o
+            ChegaMed acompanha cada etapa da distribuição de medicamentos.
           </p>
         </Reveal>
 
