@@ -21,20 +21,20 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-xs text-sm font-semibold text-neutral-400">
-              Controle de prescrições, entregas e estoque para farmácias
-              populares vinculadas a prefeituras.
+              Controle de prescrições e entregas de medicamentos para
+              farmácias populares vinculadas a prefeituras.
             </p>
           </div>
 
           <nav className="flex flex-col gap-2 text-sm font-semibold">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="text-neutral-400 transition-colors hover:text-white"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <Link
               href="/politica-de-privacidade"
@@ -54,13 +54,13 @@ export function Footer() {
               <Play size={16} fill="currentColor" />
               Google Play
             </a>
-            <a
-              href="#contato"
+            <Link
+              href="/#contato"
               className="inline-flex items-center gap-2 rounded-xl border border-neutral-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
             >
               <Monitor size={16} />
               Desktop
-            </a>
+            </Link>
           </div>
         </div>
 

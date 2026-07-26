@@ -12,7 +12,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 sm:px-10">
-        <Link href="#" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <Image
             src="/icon-logo.png"
             alt="ChegaMed"
@@ -27,22 +27,22 @@ export function Header() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-sm font-semibold text-neutral-700 transition-colors hover:text-primary-600"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
-        <a
-          href="#contato"
+        <Link
+          href="/#contato"
           className="hidden rounded-full bg-primary-500 px-5 py-2 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 hover:bg-primary-600 md:inline-flex"
         >
           Fale conosco
-        </a>
+        </Link>
 
         <button
           type="button"
@@ -58,22 +58,22 @@ export function Header() {
       {isMenuOpen && (
         <nav className="flex flex-col gap-1 border-t border-neutral-200 bg-neutral-50 px-6 py-4 md:hidden">
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               onClick={() => setIsMenuOpen(false)}
               className="rounded-lg px-3 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-100 hover:text-primary-600"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
-          <a
-            href="#contato"
+          <Link
+            href="/#contato"
             onClick={() => setIsMenuOpen(false)}
             className="mt-2 rounded-full bg-primary-500 px-5 py-2 text-center text-sm font-semibold text-white"
           >
             Fale conosco
-          </a>
+          </Link>
         </nav>
       )}
     </header>
