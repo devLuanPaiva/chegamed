@@ -25,12 +25,16 @@ function ensureGoogleSignInConfigured(): void {
     isGoogleSignInConfigured = true;
 }
 
+const ANDROID_DEVELOPER_ERROR_CODE = "10";
+
 async function requestGoogleSignIn() {
     try {
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
         return await GoogleSignin.signIn();
     } catch (error) {
         if (isErrorWithCode(error)) {
+            console.error("Google Sign-In failed", error.code, error.message);
+
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
                 throw new GoogleSignInCancelledError();
             }
@@ -38,6 +42,15 @@ async function requestGoogleSignIn() {
             if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
                 throw new Error("Serviços do Google Play indisponíveis neste dispositivo.");
             }
+
+            if (error.code === ANDROID_DEVELOPER_ERROR_CODE) {
+                throw new Error(
+                    "Configuração do login com Google inválida para este app (SHA-1/client ID). " +
+                        "Contate o suporte.",
+                );
+            }
+        } else {
+            console.error("Google Sign-In failed with unknown error", error);
         }
 
         throw new Error("Não foi possível entrar com o Google. Tente novamente.");
