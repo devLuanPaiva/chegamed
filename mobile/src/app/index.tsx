@@ -1,13 +1,31 @@
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { useRouter } from "expo-router";
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { useEffect } from "react";
+import { Text, View, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Wave } from "@/components/shared/Wave";
+import { useAuth } from "@/data/contexts/AuthContext";
 
 export default function Index() {
   const router = useRouter();
+  const { isLoggedIn, isLoadingSession } = useAuth();
+
+  useEffect(() => {
+    if (!isLoadingSession && isLoggedIn) {
+      router.replace("/(protected)/home");
+    }
+  }, [isLoadingSession, isLoggedIn, router]);
+
+  if (isLoadingSession || isLoggedIn) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <StatusBar style="dark" />
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -55,6 +73,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+
+  centered: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   header: {
