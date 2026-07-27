@@ -1,8 +1,12 @@
 import { Tabs } from "expo-router";
 import { Home, User } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PrescriptionScanProvider } from "@/data/contexts/PrescriptionScanContext";
 import { Colors, Typography } from "@/theme";
+
+const TAB_BAR_CONTENT_HEIGHT = 46;
+const TAB_BAR_VERTICAL_PADDING = 18;
 
 function renderHomeIcon({ color, size }: { color: string; size: number }) {
     return <Home color={color} size={size} />;
@@ -13,6 +17,8 @@ function renderProfileIcon({ color, size }: { color: string; size: number }) {
 }
 
 export default function ProtectedLayout() {
+    const insets = useSafeAreaInsets();
+
     return (
         <PrescriptionScanProvider>
             <Tabs
@@ -23,9 +29,9 @@ export default function ProtectedLayout() {
                     tabBarStyle: {
                         backgroundColor: Colors.surface,
                         borderTopColor: Colors.border,
-                        height: 64,
+                        height: TAB_BAR_CONTENT_HEIGHT + TAB_BAR_VERTICAL_PADDING + insets.bottom,
                         paddingTop: 8,
-                        paddingBottom: 10,
+                        paddingBottom: 10 + insets.bottom,
                     },
                     tabBarLabelStyle: {
                         fontFamily: Typography.fonts.bodyMedium,
