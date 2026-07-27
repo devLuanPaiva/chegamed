@@ -78,8 +78,16 @@ export default function PatientsScreen() {
                     onRefresh={patients.refresh}
                 />
             ) : (
-                <KeyboardAvoidingView style={styles.formContainer} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                    <ScrollView contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled">
+                <KeyboardAvoidingView
+                    style={styles.formContainer}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                >
+                    <ScrollView
+                        contentContainerStyle={styles.formContent}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                        showsVerticalScrollIndicator={false}
+                    >
                         <PatientForm
                             values={values}
                             onChangeField={setField}
@@ -128,6 +136,7 @@ const styles = StyleSheet.create({
     },
 
     formContent: {
+        flexGrow: 1,
         padding: Spacing.xl,
         paddingBottom: Spacing.xxl,
     },
