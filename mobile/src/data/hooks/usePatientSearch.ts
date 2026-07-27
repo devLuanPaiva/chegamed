@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCompanies } from "@/data/contexts/CompanyContext";
 import { searchPatients } from "@/data/services/patient.service";
@@ -13,6 +13,7 @@ interface UsePatientSearchResult {
     results: IPatient[];
     isSearching: boolean;
     hasSearched: boolean;
+    isAutoQuery: boolean;
 }
 
 export function usePatientSearch(initialQuery = ""): UsePatientSearchResult {
@@ -21,6 +22,23 @@ export function usePatientSearch(initialQuery = ""): UsePatientSearchResult {
     const [results, setResults] = useState<IPatient[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [hasSearched, setHasSearched] = useState(false);
+    const [isAutoQuery, setIsAutoQuery] = useState(Boolean(initialQuery));
+
+    const appliedInitialQueryRef = useRef(Boolean(initialQuery));
+
+    useEffect(() => {
+        if (appliedInitialQueryRef.current) return;
+        if (!initialQuery) return;
+
+        appliedInitialQueryRef.current = true;
+        setIsAutoQuery(true);
+        setQuery(initialQuery);
+    }, [initialQuery]);
+
+    function handleSetQuery(value: string) {
+        setIsAutoQuery(false);
+        setQuery(value);
+    }
 
     const debouncedQuery = useDebouncedValue(query, SEARCH_DEBOUNCE_MS);
 
@@ -59,5 +77,5 @@ export function usePatientSearch(initialQuery = ""): UsePatientSearchResult {
         };
     }, [debouncedQuery, selectedCompany?.id]);
 
-    return { query, setQuery, results, isSearching, hasSearched };
+    return { query, setQuery: handleSetQuery, results, isSearching, hasSearched, isAutoQuery };
 }

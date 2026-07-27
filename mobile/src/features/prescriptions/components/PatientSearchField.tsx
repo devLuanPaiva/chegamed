@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Search } from "lucide-react-native";
 
@@ -19,7 +20,19 @@ export function PatientSearchField({
     onClear,
     initialQuery = "",
 }: Readonly<PatientSearchFieldProps>) {
-    const { query, setQuery, results, isSearching, hasSearched } = usePatientSearch(initialQuery);
+    const { query, setQuery, results, isSearching, hasSearched, isAutoQuery } = usePatientSearch(initialQuery);
+
+    const hasAutoSelectedRef = useRef(false);
+
+    useEffect(() => {
+        if (hasAutoSelectedRef.current) return;
+        if (!isAutoQuery || selectedPatient || isSearching || !hasSearched) return;
+
+        if (results.length === 1) {
+            hasAutoSelectedRef.current = true;
+            onSelect(results[0]);
+        }
+    }, [isAutoQuery, selectedPatient, isSearching, hasSearched, results, onSelect]);
 
     if (selectedPatient) {
         return (

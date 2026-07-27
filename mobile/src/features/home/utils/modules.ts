@@ -20,7 +20,7 @@ export const HOME_MODULES: ModuleDefinition[] = [
         subtitle: "Escanear receitas com IA",
         icon: ScanLine,
         route: "/(protected)/prescriptions" as Href,
-        allowedRoles: [UserRole.MANAGER],
+        allowedRoles: [UserRole.MANAGER, UserRole.ASSISTANT],
     },
     {
         id: "patients",

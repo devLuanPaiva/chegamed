@@ -40,12 +40,16 @@ import com.devluanpaiva.controle_de_remedios.modules.company.repository.CompanyR
 import com.devluanpaiva.controle_de_remedios.modules.notification.service.EmailService;
 import com.devluanpaiva.controle_de_remedios.modules.user.dto.ChangePasswordRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.user.dto.CreateUserRequestDTO;
+import com.devluanpaiva.controle_de_remedios.modules.user.dto.DataDeletionRequestDTO;
+import com.devluanpaiva.controle_de_remedios.modules.user.dto.DeleteAccountRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.user.dto.UpdateUserRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.user.dto.UserResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.user.entity.DataDeletionRequest;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 import com.devluanpaiva.controle_de_remedios.modules.user.filter.UserFilter;
 import com.devluanpaiva.controle_de_remedios.modules.user.mapper.UserMapper;
+import com.devluanpaiva.controle_de_remedios.modules.user.repository.DataDeletionRequestRepository;
 import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserRepository;
 import com.devluanpaiva.controle_de_remedios.modules.user.service.impl.UserServiceImpl;
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
@@ -73,13 +77,16 @@ class UserServiceImplTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private DataDeletionRequestRepository dataDeletionRequestRepository;
+
     private UserServiceImpl userService;
 
     @BeforeEach
     void setUp() {
         userService = new UserServiceImpl(
                 userRepository, companyRepository, new UserMapper(), passwordEncoder, securityContextHelper,
-                new AuthorizationPolicy(), emailService);
+                new AuthorizationPolicy(), emailService, dataDeletionRequestRepository);
 
         ReflectionTestUtils.setField(userService, "webUrl", "https://chegamed.com.br");
     }
@@ -921,6 +928,86 @@ class UserServiceImplTest {
                     });
 
             verify(userRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteOwnAccount")
+    class DeleteOwnAccount {
+
+        @Test
+        @DisplayName("should delete the current user when the password is correct")
+        void shouldDeleteCurrentUserWhenPasswordIsCorrect() {
+            User self = buildUser(UserRole.ASSISTANT);
+            DeleteAccountRequestDTO dto = new DeleteAccountRequestDTO("current-password");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+            when(passwordEncoder.matches(dto.password(), self.getPassword())).thenReturn(true);
+
+            userService.deleteOwnAccount(dto);
+
+            verify(userRepository).delete(self);
+        }
+
+        @Test
+        @DisplayName("should throw 400 and not delete when the password is incorrect")
+        void shouldThrowWhenPasswordIsIncorrect() {
+            User self = buildUser(UserRole.ASSISTANT);
+            DeleteAccountRequestDTO dto = new DeleteAccountRequestDTO("wrong-password");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+            when(passwordEncoder.matches(dto.password(), self.getPassword())).thenReturn(false);
+
+            assertThatThrownBy(() -> userService.deleteOwnAccount(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                        assertThat(businessException.getCode()).isEqualTo("CURRENT_PASSWORD_INVALID");
+                    });
+
+            verify(userRepository, never()).delete(any(User.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("requestDataDeletion")
+    class RequestDataDeletion {
+
+        @Test
+        @DisplayName("should persist the request with the current user's data and send both e-mails")
+        void shouldPersistRequestAndSendEmails() {
+            User self = buildUser(UserRole.ASSISTANT);
+            DataDeletionRequestDTO dto = new DataDeletionRequestDTO("Quero remover meus dados de prescrições.");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+
+            userService.requestDataDeletion(dto);
+
+            ArgumentCaptor<DataDeletionRequest> requestCaptor = ArgumentCaptor.forClass(DataDeletionRequest.class);
+            verify(dataDeletionRequestRepository).save(requestCaptor.capture());
+            assertThat(requestCaptor.getValue().getRequesterName()).isEqualTo(self.getName());
+            assertThat(requestCaptor.getValue().getRequesterEmail()).isEqualTo(self.getEmail());
+            assertThat(requestCaptor.getValue().getRequesterCpf()).isEqualTo(self.getCpf());
+            assertThat(requestCaptor.getValue().getMessage()).isEqualTo(dto.message());
+
+            verify(emailService).sendDataDeletionRequestConfirmationEmail(self);
+            verify(emailService).sendDataDeletionRequestNotificationEmail(self, dto.message());
+        }
+
+        @Test
+        @DisplayName("should not fail the request when sending the e-mails throws")
+        void shouldNotFailWhenEmailsFail() {
+            User self = buildUser(UserRole.ASSISTANT);
+            DataDeletionRequestDTO dto = new DataDeletionRequestDTO(null);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+            doThrow(new RuntimeException("Resend indisponível"))
+                    .when(emailService).sendDataDeletionRequestConfirmationEmail(any());
+
+            userService.requestDataDeletion(dto);
+
+            verify(dataDeletionRequestRepository).save(any(DataDeletionRequest.class));
         }
     }
 
