@@ -33,7 +33,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "publisher": "ChegaMed",
     "copyright": "© 2026 ChegaMed",
     "shortDescription": "Sistema de entregas de medicamentos",
