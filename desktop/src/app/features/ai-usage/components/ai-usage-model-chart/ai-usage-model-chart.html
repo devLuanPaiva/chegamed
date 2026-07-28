@@ -1,0 +1,15 @@
+<app-widget-card
+    title="Custo por modelo"
+    subtitle="Distribuição do custo estimado entre os modelos utilizados"
+    [loading]="loading()"
+    [error]="error()"
+>
+    <div class="ai-usage-model-chart__chart">
+        <app-chart
+            type="bar"
+            [data]="chartData()"
+            [options]="chartOptions()"
+            ariaLabel="Gráfico de custo estimado da IA por modelo"
+        />
+    </div>
+</app-widget-card>
