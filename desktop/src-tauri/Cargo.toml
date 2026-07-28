@@ -1,7 +1,7 @@
 [package]
 name = "ChegaMed"
 version = "0.1.0"
-description = "Projeto focado na entregua de medicamentos publicos em prefeituras. O mesmo tem o papel fundamental em controlar para que os pacientes recebam os medicamentos no tempo correto."
+description = "Projeto focado na entrega de medicamentos publicos em prefeituras. O mesmo tem o papel fundamental em controlar para que os pacientes recebam os medicamentos no tempo correto."
 authors = ["Luan Alves"]
 edition = "2021"
 
