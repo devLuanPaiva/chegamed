@@ -57,14 +57,14 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID>, J
 
     @Query("""
             SELECT new com.devluanpaiva.controle_de_remedios.modules.ai.dto.AiUsageDailyBreakdownDTO(
-                CAST(a.createdAt AS date), COUNT(a), COALESCE(SUM(a.totalTokens), 0), COALESCE(SUM(a.estimatedCostUsd), 0))
+                CAST(a.createdAt AS LocalDate), COUNT(a), COALESCE(SUM(a.totalTokens), 0), COALESCE(SUM(a.estimatedCostUsd), 0))
             FROM AiUsageLog a
             WHERE (:model IS NULL OR a.model = :model)
               AND (:userId IS NULL OR a.user.id = :userId)
               AND (:from IS NULL OR a.createdAt >= :from)
               AND (:until IS NULL OR a.createdAt <= :until)
-            GROUP BY CAST(a.createdAt AS date)
-            ORDER BY CAST(a.createdAt AS date)
+            GROUP BY CAST(a.createdAt AS LocalDate)
+            ORDER BY CAST(a.createdAt AS LocalDate)
             """)
     List<AiUsageDailyBreakdownDTO> findDailyBreakdown(
             @Param("model") String model,
