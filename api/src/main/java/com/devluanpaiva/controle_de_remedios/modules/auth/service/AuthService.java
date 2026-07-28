@@ -27,6 +27,7 @@ import com.devluanpaiva.controle_de_remedios.modules.auth.enums.RequestContext;
 import com.devluanpaiva.controle_de_remedios.modules.auth.repository.PasswordResetTokenRepository;
 import com.devluanpaiva.controle_de_remedios.modules.notification.service.EmailService;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
+import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserRepository;
 import com.devluanpaiva.controle_de_remedios.security.JwtService;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
@@ -71,6 +72,10 @@ public class AuthService {
                                         "Credenciais inválidas",
                                         "CREDENTIALS",
                                         "As credenciais informadas estão incorretas");
+                }
+
+                if (dto.context() == RequestContext.DESKTOP && user.getRole() == UserRole.PATIENT) {
+                        throw patientDesktopForbidden();
                 }
 
                 String accessToken = jwtService.generateAccessToken(user);
@@ -224,5 +229,14 @@ public class AuthService {
                                 "AUTH_UNAUTHORIZED",
                                 field,
                                 detail);
+        }
+
+        private BusinessException patientDesktopForbidden() {
+                return new BusinessException(
+                                HttpStatus.FORBIDDEN,
+                                "Acesso não autorizado",
+                                "AUTH_PATIENT_DESKTOP_FORBIDDEN",
+                                "context",
+                                "Pacientes não têm acesso ao aplicativo desktop. Utilize o aplicativo mobile.");
         }
 }

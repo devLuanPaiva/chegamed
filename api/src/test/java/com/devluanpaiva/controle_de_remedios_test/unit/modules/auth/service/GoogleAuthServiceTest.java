@@ -81,7 +81,7 @@ class GoogleAuthServiceTest {
         @DisplayName("should issue tokens when the Google e-mail is registered and verified")
         void shouldIssueTokensWhenEmailIsRegisteredAndVerified() {
             when(googleIdentityVerifier.verify(dto.idToken())).thenReturn(verifiedIdentity("luan@example.com"));
-            when(userRepository.findByEmail("luan@example.com")).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailIgnoreCase("luan@example.com")).thenReturn(Optional.of(user));
             when(jwtService.generateAccessToken(user)).thenReturn("access-token");
             when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
 
@@ -95,7 +95,7 @@ class GoogleAuthServiceTest {
         @DisplayName("should throw 403 when no user is registered with the Google e-mail")
         void shouldThrowForbiddenWhenEmailIsNotRegistered() {
             when(googleIdentityVerifier.verify(dto.idToken())).thenReturn(verifiedIdentity("stranger@example.com"));
-            when(userRepository.findByEmail("stranger@example.com")).thenReturn(Optional.empty());
+            when(userRepository.findByEmailIgnoreCase("stranger@example.com")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> googleAuthService.loginWithIdToken(dto))
                     .isInstanceOf(BusinessException.class)
@@ -118,7 +118,21 @@ class GoogleAuthServiceTest {
                     .isInstanceOf(BusinessException.class)
                     .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("AUTH_GOOGLE_EMAIL_NOT_VERIFIED"));
 
-            verify(userRepository, never()).findByEmail(anyString());
+            verify(userRepository, never()).findByEmailIgnoreCase(anyString());
+        }
+
+        @Test
+        @DisplayName("should issue tokens for a patient (mobile/web login is not restricted)")
+        void shouldIssueTokensWhenIdentityBelongsToPatient() {
+            user.setRole(UserRole.PATIENT);
+            when(googleIdentityVerifier.verify(dto.idToken())).thenReturn(verifiedIdentity("luan@example.com"));
+            when(userRepository.findByEmailIgnoreCase("luan@example.com")).thenReturn(Optional.of(user));
+            when(jwtService.generateAccessToken(user)).thenReturn("access-token");
+            when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
+
+            AuthResponseDTO response = googleAuthService.loginWithIdToken(dto);
+
+            assertThat(response.accessToken()).isEqualTo("access-token");
         }
 
         @Test
@@ -131,7 +145,7 @@ class GoogleAuthServiceTest {
             assertThatThrownBy(() -> googleAuthService.loginWithIdToken(dto))
                     .isSameAs(tokenInvalid);
 
-            verify(userRepository, never()).findByEmail(anyString());
+            verify(userRepository, never()).findByEmailIgnoreCase(anyString());
         }
     }
 
@@ -149,7 +163,7 @@ class GoogleAuthServiceTest {
                     dto.code(), dto.codeVerifier(), dto.redirectUri()))
                     .thenReturn("google-id-token");
             when(googleIdentityVerifier.verify("google-id-token")).thenReturn(verifiedIdentity("luan@example.com"));
-            when(userRepository.findByEmail("luan@example.com")).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailIgnoreCase("luan@example.com")).thenReturn(Optional.of(user));
             when(jwtService.generateAccessToken(user)).thenReturn("access-token");
             when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
 
@@ -166,11 +180,32 @@ class GoogleAuthServiceTest {
                     dto.code(), dto.codeVerifier(), dto.redirectUri()))
                     .thenReturn("google-id-token");
             when(googleIdentityVerifier.verify("google-id-token")).thenReturn(verifiedIdentity("stranger@example.com"));
-            when(userRepository.findByEmail("stranger@example.com")).thenReturn(Optional.empty());
+            when(userRepository.findByEmailIgnoreCase("stranger@example.com")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> googleAuthService.loginWithAuthorizationCode(dto))
                     .isInstanceOf(BusinessException.class)
                     .satisfies(ex -> assertThat(((BusinessException) ex).getCode()).isEqualTo("AUTH_EMAIL_NOT_REGISTERED"));
+        }
+
+        @Test
+        @DisplayName("should throw 403 when the exchanged identity belongs to a patient")
+        void shouldThrowForbiddenWhenIdentityBelongsToPatient() {
+            user.setRole(UserRole.PATIENT);
+            when(googleOAuthClient.exchangeAuthorizationCodeForIdToken(
+                    dto.code(), dto.codeVerifier(), dto.redirectUri()))
+                    .thenReturn("google-id-token");
+            when(googleIdentityVerifier.verify("google-id-token")).thenReturn(verifiedIdentity("luan@example.com"));
+            when(userRepository.findByEmailIgnoreCase("luan@example.com")).thenReturn(Optional.of(user));
+
+            assertThatThrownBy(() -> googleAuthService.loginWithAuthorizationCode(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                        assertThat(businessException.getCode()).isEqualTo("AUTH_PATIENT_DESKTOP_FORBIDDEN");
+                    });
+
+            verify(jwtService, never()).generateAccessToken(org.mockito.ArgumentMatchers.any());
         }
     }
 }

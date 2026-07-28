@@ -94,12 +94,13 @@ class AuthServiceTest {
     @DisplayName("login")
     class Login {
 
-        private final LoginRequestDTO dto = new LoginRequestDTO("luan@example.com", "raw-password");
+        private final LoginRequestDTO dto = new LoginRequestDTO(
+                "luan@example.com", "raw-password", RequestContext.DESKTOP);
 
         @Test
         @DisplayName("should return tokens when credentials are valid")
         void shouldReturnTokensWhenCredentialsAreValid() {
-            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.password(), user.getPassword())).thenReturn(true);
             when(jwtService.generateAccessToken(user))
                     .thenReturn("access-token");
@@ -119,7 +120,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("should throw 401 when email is not found, without checking password")
         void shouldThrowUnauthorizedWhenEmailNotFound() {
-            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.login(dto))
                     .isInstanceOf(BusinessException.class)
@@ -137,7 +138,7 @@ class AuthServiceTest {
         @Test
         @DisplayName("should throw 401 when password is incorrect")
         void shouldThrowUnauthorizedWhenPasswordDoesNotMatch() {
-            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.password(), user.getPassword())).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(dto))
@@ -155,14 +156,48 @@ class AuthServiceTest {
         @Test
         @DisplayName("should return the same error message for unknown email and wrong password (anti-enumeration)")
         void shouldReturnSameErrorMessageForBothFailureCases() {
-            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.empty());
             String emailNotFoundMessage = catchBusinessException(() -> authService.login(dto)).getMessage();
 
-            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.password(), user.getPassword())).thenReturn(false);
             String wrongPasswordMessage = catchBusinessException(() -> authService.login(dto)).getMessage();
 
             assertThat(emailNotFoundMessage).isEqualTo(wrongPasswordMessage);
+        }
+
+        @Test
+        @DisplayName("should throw 403 when a patient tries to log in from the desktop context")
+        void shouldThrowForbiddenWhenPatientLogsInFromDesktop() {
+            user.setRole(UserRole.PATIENT);
+            when(userRepository.findByEmailIgnoreCase(dto.email())).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches(dto.password(), user.getPassword())).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.login(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                        assertThat(businessException.getCode()).isEqualTo("AUTH_PATIENT_DESKTOP_FORBIDDEN");
+                    });
+
+            verify(jwtService, never()).generateAccessToken(any());
+        }
+
+        @Test
+        @DisplayName("should return tokens when a patient logs in from the mobile context")
+        void shouldReturnTokensWhenPatientLogsInFromMobile() {
+            LoginRequestDTO mobileDto = new LoginRequestDTO(
+                    "luan@example.com", "raw-password", RequestContext.MOBILE);
+            user.setRole(UserRole.PATIENT);
+            when(userRepository.findByEmailIgnoreCase(mobileDto.email())).thenReturn(Optional.of(user));
+            when(passwordEncoder.matches(mobileDto.password(), user.getPassword())).thenReturn(true);
+            when(jwtService.generateAccessToken(user)).thenReturn("access-token");
+            when(jwtService.generateRefreshToken(user)).thenReturn("refresh-token");
+
+            AuthResponseDTO response = authService.login(mobileDto);
+
+            assertThat(response.accessToken()).isEqualTo("access-token");
         }
     }
 
