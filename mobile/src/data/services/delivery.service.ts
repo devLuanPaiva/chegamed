@@ -2,6 +2,7 @@ import { apiFetch } from "@/lib/apiFetch";
 import { onlyDigits } from "@/lib/cpf";
 import { PagedResult } from "@/lib/pagination";
 import { UnityType } from "@/data/models/prescription-item.model";
+import { PrescriptionStatus } from "@/data/models/prescription.model";
 import {
     CreateDeliveryRequest,
     DeliveryFilterParams,
@@ -33,6 +34,7 @@ interface PendingDeliveryItemDto {
     patientName: string;
     issueDate: string;
     medicineName: string;
+    status: PrescriptionStatus;
     unityType: UnityType;
     prescribedQuantity: number;
 }
@@ -62,6 +64,7 @@ function toPendingDeliveryItem(dto: PendingDeliveryItemDto): IPendingDeliveryIte
         patientName: dto.patientName,
         issueDate: new Date(dto.issueDate),
         medicineName: dto.medicineName,
+        status: dto.status,
         unityType: dto.unityType,
         prescribedQuantity: dto.prescribedQuantity,
     };
@@ -110,6 +113,28 @@ export async function getPendingDeliveryItems(
 ): Promise<PagedResult<IPendingDeliveryItem>> {
     const params = buildFilterParams(companyId, page, filter);
     const response = await apiFetch<PendingDeliveryItemDto[]>(`/deliveries/pending-items?${params.toString()}`);
+
+    return {
+        data: response.data.map(toPendingDeliveryItem),
+        currentPage: response.currentPage ?? page,
+        totalPages: response.totalPages ?? 1,
+    };
+}
+
+export async function getMyDeliveries(page: number): Promise<PagedResult<IDelivery>> {
+    const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+    const response = await apiFetch<DeliveryDto[]>(`/deliveries?${params.toString()}`);
+
+    return {
+        data: response.data.map(toDelivery),
+        currentPage: response.currentPage ?? page,
+        totalPages: response.totalPages ?? 1,
+    };
+}
+
+export async function getMyPendingDeliveryItems(page: number): Promise<PagedResult<IPendingDeliveryItem>> {
+    const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+    const response = await apiFetch<PendingDeliveryItemDto[]>(`/deliveries/me/pending-items?${params.toString()}`);
 
     return {
         data: response.data.map(toPendingDeliveryItem),
