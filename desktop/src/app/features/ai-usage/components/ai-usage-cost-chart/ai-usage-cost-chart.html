@@ -1,0 +1,15 @@
+<app-widget-card
+    title="Custo por dia"
+    subtitle="Evolução do custo estimado no período filtrado"
+    [loading]="loading()"
+    [error]="error()"
+>
+    <div class="ai-usage-cost-chart__chart">
+        <app-chart
+            type="line"
+            [data]="chartData()"
+            [options]="chartOptions()"
+            ariaLabel="Gráfico de custo estimado da IA por dia"
+        />
+    </div>
+</app-widget-card>

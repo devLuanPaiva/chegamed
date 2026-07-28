@@ -25,6 +25,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient;
+import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient.GeminiGenerationResult;
 
 @DisplayName("GeminiClient")
 class GeminiClientTest {
@@ -47,10 +48,17 @@ class GeminiClientTest {
     }
 
     private void respondWithText(String text) {
+        respondWithTextAndUsage(text, 12, 8, 20);
+    }
+
+    private void respondWithTextAndUsage(String text, int promptTokens, int candidatesTokens, int totalTokens) {
         mockServer.expect(requestTo(URL))
                 .andExpect(method(HttpMethod.POST))
                 .andRespond(withSuccess(
-                        "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"" + text + "\"}]}}]}",
+                        "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"" + text + "\"}]}}],"
+                                + "\"usageMetadata\":{\"promptTokenCount\":" + promptTokens
+                                + ",\"candidatesTokenCount\":" + candidatesTokens
+                                + ",\"totalTokenCount\":" + totalTokens + "}}",
                         MediaType.APPLICATION_JSON));
     }
 
@@ -63,9 +71,9 @@ class GeminiClientTest {
         void shouldReturnTextOnSuccess() {
             respondWithText("hello world");
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img1"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img1"), SCHEMA);
 
-            assertThat(result).isEqualTo("hello world");
+            assertThat(result.text()).isEqualTo("hello world");
             mockServer.verify();
         }
 
@@ -97,11 +105,54 @@ class GeminiClientTest {
                             "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"}]}}]}",
                             MediaType.APPLICATION_JSON));
 
-            String result = geminiClient.generateContent(
+            GeminiGenerationResult result = geminiClient.generateContent(
                     MODEL, "some prompt", List.of("img1base64", "img2base64"), SCHEMA);
 
-            assertThat(result).isEqualTo("ok");
+            assertThat(result.text()).isEqualTo("ok");
             mockServer.verify();
+        }
+    }
+
+    @Nested
+    @DisplayName("usage metadata parsing")
+    class UsageMetadataParsing {
+
+        @Test
+        @DisplayName("should parse prompt, candidates and total token counts from usageMetadata")
+        void shouldParseUsageMetadata() {
+            respondWithTextAndUsage("hello", 123, 45, 168);
+
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+
+            assertThat(result.usage().promptTokens()).isEqualTo(123);
+            assertThat(result.usage().candidatesTokens()).isEqualTo(45);
+            assertThat(result.usage().totalTokens()).isEqualTo(168);
+        }
+
+        @Test
+        @DisplayName("should default token counts to zero when usageMetadata is absent")
+        void shouldDefaultToZeroWhenUsageMetadataIsAbsent() {
+            mockServer.expect(requestTo(URL)).andRespond(withSuccess(
+                    "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"hello\"}]}}]}", MediaType.APPLICATION_JSON));
+
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+
+            assertThat(result.usage().promptTokens()).isZero();
+            assertThat(result.usage().candidatesTokens()).isZero();
+            assertThat(result.usage().totalTokens()).isZero();
+        }
+
+        @Test
+        @DisplayName("should default token counts to zero when usageMetadata fields are malformed")
+        void shouldDefaultToZeroWhenUsageMetadataIsMalformed() {
+            mockServer.expect(requestTo(URL)).andRespond(withSuccess(
+                    "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"hello\"}]}}],"
+                            + "\"usageMetadata\":{\"promptTokenCount\":\"not-a-number\"}}",
+                    MediaType.APPLICATION_JSON));
+
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+
+            assertThat(result.usage().promptTokens()).isZero();
         }
     }
 
@@ -110,24 +161,25 @@ class GeminiClientTest {
     class MalformedResponses {
 
         @Test
-        @DisplayName("should return null when the response has no candidates (e.g. safety block)")
+        @DisplayName("should return null text when the response has no candidates (e.g. safety block)")
         void shouldReturnNullWhenNoCandidates() {
             mockServer.expect(requestTo(URL)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
+            assertThat(result.usage().totalTokens()).isZero();
         }
 
         @Test
-        @DisplayName("should return null when the text field is not a JSON string")
+        @DisplayName("should return null text when the text field is not a JSON string")
         void shouldReturnNullWhenTextFieldIsNotTextual() {
             mockServer.expect(requestTo(URL)).andRespond(withSuccess(
                     "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":42}]}}]}", MediaType.APPLICATION_JSON));
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
         }
     }
 
@@ -143,9 +195,9 @@ class GeminiClientTest {
                     "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"recovered\"}]}}]}",
                     MediaType.APPLICATION_JSON));
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isEqualTo("recovered");
+            assertThat(result.text()).isEqualTo("recovered");
             mockServer.verify();
         }
 
@@ -154,27 +206,27 @@ class GeminiClientTest {
         void shouldNotRetryOnNonRetryableStatus() {
             mockServer.expect(requestTo(URL)).andRespond(withStatus(HttpStatus.BAD_REQUEST));
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
             mockServer.verify();
         }
 
         @Test
-        @DisplayName("should return null after exhausting every attempt on repeated 429")
+        @DisplayName("should return null text after exhausting every attempt on repeated 429")
         void shouldReturnNullAfterExhaustingRetries() {
             mockServer.expect(requestTo(URL)).andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
             mockServer.expect(requestTo(URL)).andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
             mockServer.expect(requestTo(URL)).andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
             mockServer.verify();
         }
 
         @Test
-        @DisplayName("should return null when the connection fails on every attempt")
+        @DisplayName("should return null text when the connection fails on every attempt")
         void shouldReturnNullOnConnectionFailureOnAllAttempts() {
             mockServer.expect(requestTo(URL)).andRespond(request -> {
                 throw new IOException("connection refused");
@@ -186,9 +238,9 @@ class GeminiClientTest {
                 throw new IOException("connection refused");
             });
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
             mockServer.verify();
         }
     }
@@ -204,9 +256,10 @@ class GeminiClientTest {
             MockRestServiceServer serverWithNoExpectations = MockRestServiceServer.bindTo(blankKeyBuilder).build();
             GeminiClient clientWithoutKey = new GeminiClient(blankKeyBuilder, "   ");
 
-            String result = clientWithoutKey.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = clientWithoutKey.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isNull();
+            assertThat(result.text()).isNull();
+            assertThat(result.usage().totalTokens()).isZero();
             serverWithNoExpectations.verify();
         }
     }
@@ -223,21 +276,21 @@ class GeminiClientTest {
 
             respondWithText("ok");
 
-            String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+            GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-            assertThat(result).isEqualTo("ok");
+            assertThat(result.text()).isEqualTo("ok");
         }
 
         @Test
-        @DisplayName("should return null without making an HTTP call when every permit is held")
+        @DisplayName("should return null text without making an HTTP call when every permit is held")
         void shouldReturnNullWhenConcurrencyLimitIsSaturated() throws InterruptedException {
             Semaphore concurrencyLimiter = (Semaphore) ReflectionTestUtils.getField(geminiClient, "concurrencyLimiter");
             concurrencyLimiter.acquire(8);
 
             try {
-                String result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
+                GeminiGenerationResult result = geminiClient.generateContent(MODEL, "prompt", List.of("img"), SCHEMA);
 
-                assertThat(result).isNull();
+                assertThat(result.text()).isNull();
                 mockServer.verify();
             } finally {
                 concurrencyLimiter.release(8);

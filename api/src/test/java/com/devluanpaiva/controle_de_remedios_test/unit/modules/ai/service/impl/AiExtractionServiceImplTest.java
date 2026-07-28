@@ -24,11 +24,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient;
+import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient.GeminiGenerationResult;
+import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient.GeminiUsage;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.BarcodeExtractionResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.ImageExtractionRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.MedicineNameExtractionResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.PrescriptionExtractionRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.PrescriptionExtractionResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageContentType;
+import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageOperationType;
+import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiUsageLogService;
 import com.devluanpaiva.controle_de_remedios.modules.ai.service.impl.AiExtractionServiceImpl;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
@@ -45,12 +50,16 @@ class AiExtractionServiceImplTest {
 
         private static final String ESUS_MODEL = "gemini-3.1-flash-lite";
         private static final String HANDWRITTEN_MODEL = "gemini-2.5-flash";
+        private static final GeminiUsage USAGE = new GeminiUsage(10, 5, 15);
 
         @Mock
         private GeminiClient geminiClient;
 
         @Mock
         private SecurityContextHelper securityContextHelper;
+
+        @Mock
+        private AiUsageLogService aiUsageLogService;
 
         private AiExtractionServiceImpl aiExtractionService;
 
@@ -59,7 +68,8 @@ class AiExtractionServiceImplTest {
                 ObjectMapper objectMapper = JsonMapper.builder().build();
 
                 aiExtractionService = new AiExtractionServiceImpl(
-                                geminiClient, securityContextHelper, new AuthorizationPolicy(), objectMapper);
+                                geminiClient, securityContextHelper, new AuthorizationPolicy(), aiUsageLogService,
+                                objectMapper);
         }
 
         private User buildUser(UserRole role) {
@@ -88,7 +98,8 @@ class AiExtractionServiceImplTest {
         }
 
         private void stubGeminiResponse(String jsonText) {
-                when(geminiClient.generateContent(anyString(), anyString(), anyList(), anyMap())).thenReturn(jsonText);
+                when(geminiClient.generateContent(anyString(), anyString(), anyList(), anyMap()))
+                                .thenReturn(new GeminiGenerationResult(jsonText, USAGE));
         }
 
         @Nested
@@ -302,6 +313,7 @@ class AiExtractionServiceImplTest {
                                         new PrescriptionExtractionRequestDTO(List.of("base64page1"))));
 
                         verifyNoInteractions(geminiClient);
+                        verifyNoInteractions(aiUsageLogService);
                 }
         }
 
@@ -347,6 +359,7 @@ class AiExtractionServiceImplTest {
                                         new PrescriptionExtractionRequestDTO(List.of("base64page1"))));
 
                         verifyNoInteractions(geminiClient);
+                        verifyNoInteractions(aiUsageLogService);
                 }
         }
 
@@ -432,7 +445,8 @@ class AiExtractionServiceImplTest {
                         for (UserRole role : List.of(UserRole.ADMIN, UserRole.MANAGER, UserRole.ASSISTANT)) {
                                 when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(role));
                                 when(geminiClient.generateContent(anyString(), anyString(), anyList(), anyMap()))
-                                                .thenReturn("{\"codigo_ean\": \"12345678\"}");
+                                                .thenReturn(new GeminiGenerationResult(
+                                                                "{\"codigo_ean\": \"12345678\"}", USAGE));
 
                                 BarcodeExtractionResponseDTO response = aiExtractionService.extractBarcode(
                                                 new ImageExtractionRequestDTO("base64img"));
@@ -452,6 +466,7 @@ class AiExtractionServiceImplTest {
                                         .extractBarcode(new ImageExtractionRequestDTO("base64img")));
 
                         verifyNoInteractions(geminiClient);
+                        verifyNoInteractions(aiUsageLogService);
                 }
         }
 
@@ -510,6 +525,92 @@ class AiExtractionServiceImplTest {
                                         .extractMedicineName(new ImageExtractionRequestDTO("base64img")));
 
                         verifyNoInteractions(geminiClient);
+                        verifyNoInteractions(aiUsageLogService);
+                }
+        }
+
+        @Nested
+        @DisplayName("AI usage logging")
+        class UsageLogging {
+
+                @Test
+                @DisplayName("should record usage with the e-SUS operation type, the actor and the e-SUS model")
+                void shouldRecordUsageForEsusPrescription() {
+                        User actor = buildUser(UserRole.MANAGER);
+                        when(securityContextHelper.getCurrentUser()).thenReturn(actor);
+                        stubGeminiResponse("""
+                                        {"paciente":"Ana","data_emissao":"2024-01-01","medicamentos":[{"nome":"Dipirona"}]}
+                                        """);
+
+                        aiExtractionService.extractEsusPrescription(new PrescriptionExtractionRequestDTO(List.of("img")));
+
+                        verify(aiUsageLogService).record(
+                                        eq(actor), eq(ESUS_MODEL), eq(AiUsageOperationType.ESUS_PRESCRIPTION_EXTRACTION),
+                                        eq(AiUsageContentType.IMAGE), eq(USAGE));
+                }
+
+                @Test
+                @DisplayName("should record usage with the handwritten operation type and model")
+                void shouldRecordUsageForDigitalizedPrescription() {
+                        User actor = buildUser(UserRole.MANAGER);
+                        when(securityContextHelper.getCurrentUser()).thenReturn(actor);
+                        stubGeminiResponse("""
+                                        {"paciente":"Ana","data_emissao":"2024-01-01","medicamentos":[{"nome":"Dipirona"}]}
+                                        """);
+
+                        aiExtractionService.extractDigitalizedPrescription(
+                                        new PrescriptionExtractionRequestDTO(List.of("img")));
+
+                        verify(aiUsageLogService).record(
+                                        eq(actor), eq(HANDWRITTEN_MODEL),
+                                        eq(AiUsageOperationType.DIGITALIZED_PRESCRIPTION_EXTRACTION),
+                                        eq(AiUsageContentType.IMAGE), eq(USAGE));
+                }
+
+                @Test
+                @DisplayName("should record usage with the barcode operation type")
+                void shouldRecordUsageForBarcode() {
+                        User actor = buildUser(UserRole.MANAGER);
+                        when(securityContextHelper.getCurrentUser()).thenReturn(actor);
+                        stubGeminiResponse("""
+                                        {"codigo_ean": "12345678"}
+                                        """);
+
+                        aiExtractionService.extractBarcode(new ImageExtractionRequestDTO("base64img"));
+
+                        verify(aiUsageLogService).record(
+                                        eq(actor), anyString(), eq(AiUsageOperationType.BARCODE_EXTRACTION),
+                                        eq(AiUsageContentType.IMAGE), eq(USAGE));
+                }
+
+                @Test
+                @DisplayName("should record usage with the medicine name operation type")
+                void shouldRecordUsageForMedicineName() {
+                        User actor = buildUser(UserRole.MANAGER);
+                        when(securityContextHelper.getCurrentUser()).thenReturn(actor);
+                        stubGeminiResponse("""
+                                        {"nome": "Paracetamol"}
+                                        """);
+
+                        aiExtractionService.extractMedicineName(new ImageExtractionRequestDTO("base64img"));
+
+                        verify(aiUsageLogService).record(
+                                        eq(actor), anyString(), eq(AiUsageOperationType.MEDICINE_NAME_EXTRACTION),
+                                        eq(AiUsageContentType.IMAGE), eq(USAGE));
+                }
+
+                @Test
+                @DisplayName("should still record usage even when the extraction result is unavailable")
+                void shouldRecordUsageEvenWhenExtractionIsUnavailable() {
+                        User actor = buildUser(UserRole.MANAGER);
+                        when(securityContextHelper.getCurrentUser()).thenReturn(actor);
+                        stubGeminiResponse(null);
+
+                        aiExtractionService.extractEsusPrescription(new PrescriptionExtractionRequestDTO(List.of("img")));
+
+                        verify(aiUsageLogService).record(
+                                        eq(actor), eq(ESUS_MODEL), eq(AiUsageOperationType.ESUS_PRESCRIPTION_EXTRACTION),
+                                        eq(AiUsageContentType.IMAGE), eq(USAGE));
                 }
         }
 }

@@ -56,6 +56,11 @@ export const authRoutes: Routes = [
                 loadChildren: () => import('@features/delivery/delivery.routes').then((m) => m.deliveryRoutes),
             },
             {
+                path: 'ai-usage',
+                canActivate: [roleGuard([UserRole.ADMIN])],
+                loadChildren: () => import('@features/ai-usage/ai-usage.routes').then((m) => m.aiUsageRoutes),
+            },
+            {
                 path: '**',
                 loadComponent: () =>
                     import('@features/not-found/pages/authenticated-not-found/authenticated-not-found').then(

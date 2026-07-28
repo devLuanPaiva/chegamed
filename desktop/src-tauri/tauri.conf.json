@@ -27,17 +27,21 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["chegamed-desktop"]
+        "schemes": [
+          "chegamed-desktop"
+        ]
       }
     }
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "publisher": "ChegaMed",
     "copyright": "© 2026 ChegaMed",
     "shortDescription": "Sistema de entregas de medicamentos",
-    "longDescription": "Projeto focado na entregua de medicamentos publicos em prefeituras. O mesmo tem o papel fundamental em controlar para que os pacientes recebam os medicamentos no tempo correto.",
+    "longDescription": "Projeto focado na entrega de medicamentos publicos em prefeituras. O mesmo tem o papel fundamental em controlar para que os pacientes recebam os medicamentos no tempo correto.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

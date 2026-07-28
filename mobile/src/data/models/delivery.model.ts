@@ -1,4 +1,5 @@
 import { UnityType } from "@/data/models/prescription-item.model";
+import { PrescriptionStatus } from "@/data/models/prescription.model";
 
 export interface IDelivery {
     id: string;
@@ -22,6 +23,7 @@ export interface IPendingDeliveryItem {
     patientName: string;
     issueDate: Date;
     medicineName: string;
+    status: PrescriptionStatus;
     unityType: UnityType;
     prescribedQuantity: number;
 }

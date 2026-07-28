@@ -22,6 +22,11 @@ public final class PendingDeliveryItemSpecification {
                 builder.isNull(root.get("delivery")));
     }
 
+    public static Specification<PrescriptionItem> associatedWithPatientUser(UUID userId) {
+        return (root, query, builder) -> builder.equal(
+                root.join("prescription").join("patient").join("user").get("id"), userId);
+    }
+
     public static Specification<PrescriptionItem> hasCompanyId(UUID companyId) {
         if (companyId == null) {
             return Specification.unrestricted();

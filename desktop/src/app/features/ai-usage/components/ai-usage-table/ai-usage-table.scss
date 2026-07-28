@@ -1,0 +1,30 @@
+.ai-usage-table__state {
+    padding: var(--space-10) 0;
+}
+
+.ai-usage-table__state--error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+
+    text-align: center;
+    color: var(--color-danger);
+}
+
+.ai-usage-table__table {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.ai-usage-table__col-number {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.ai-usage-table__empty-row td {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: var(--space-8) 0;
+}
