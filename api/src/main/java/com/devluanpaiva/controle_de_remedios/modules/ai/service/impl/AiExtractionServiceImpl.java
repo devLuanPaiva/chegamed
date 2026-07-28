@@ -12,13 +12,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient;
+import com.devluanpaiva.controle_de_remedios.modules.ai.client.GeminiClient.GeminiGenerationResult;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.BarcodeExtractionResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.ExtractedMedicationDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.ImageExtractionRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.MedicineNameExtractionResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.PrescriptionExtractionRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.ai.dto.PrescriptionExtractionResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageContentType;
+import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageOperationType;
 import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiExtractionService;
+import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiUsageLogService;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
@@ -76,26 +80,32 @@ public class AiExtractionServiceImpl implements AiExtractionService {
     private final GeminiClient geminiClient;
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationPolicy authorizationPolicy;
+    private final AiUsageLogService aiUsageLogService;
     private final ObjectMapper objectMapper;
 
     @Override
     public PrescriptionExtractionResponseDTO extractEsusPrescription(PrescriptionExtractionRequestDTO dto) {
-        return extractPrescription(dto, ESUS_MODEL, buildPrescriptionPrompt(ESUS_TYPE_INSTRUCTIONS));
+        return extractPrescription(
+                dto, ESUS_MODEL, buildPrescriptionPrompt(ESUS_TYPE_INSTRUCTIONS),
+                AiUsageOperationType.ESUS_PRESCRIPTION_EXTRACTION);
     }
 
     @Override
     public PrescriptionExtractionResponseDTO extractDigitalizedPrescription(PrescriptionExtractionRequestDTO dto) {
-        return extractPrescription(dto, HANDWRITTEN_MODEL, buildPrescriptionPrompt(HANDWRITTEN_TYPE_INSTRUCTIONS));
+        return extractPrescription(
+                dto, HANDWRITTEN_MODEL, buildPrescriptionPrompt(HANDWRITTEN_TYPE_INSTRUCTIONS),
+                AiUsageOperationType.DIGITALIZED_PRESCRIPTION_EXTRACTION);
     }
 
     @Override
     public BarcodeExtractionResponseDTO extractBarcode(ImageExtractionRequestDTO dto) {
-        authorizeExtraction();
+        User actor = authorizeExtraction();
 
-        String text = geminiClient.generateContent(
+        GeminiGenerationResult result = geminiClient.generateContent(
                 MEDICINE_MODEL, BARCODE_PROMPT, List.of(dto.image()), BARCODE_RESPONSE_SCHEMA);
+        recordUsage(actor, MEDICINE_MODEL, AiUsageOperationType.BARCODE_EXTRACTION, result);
 
-        JsonNode parsed = parseJson(text);
+        JsonNode parsed = parseJson(result.text());
 
         if (parsed == null) {
             return new BarcodeExtractionResponseDTO(false, null);
@@ -110,12 +120,13 @@ public class AiExtractionServiceImpl implements AiExtractionService {
 
     @Override
     public MedicineNameExtractionResponseDTO extractMedicineName(ImageExtractionRequestDTO dto) {
-        authorizeExtraction();
+        User actor = authorizeExtraction();
 
-        String text = geminiClient.generateContent(
+        GeminiGenerationResult result = geminiClient.generateContent(
                 MEDICINE_MODEL, MEDICINE_NAME_PROMPT, List.of(dto.image()), MEDICINE_NAME_RESPONSE_SCHEMA);
+        recordUsage(actor, MEDICINE_MODEL, AiUsageOperationType.MEDICINE_NAME_EXTRACTION, result);
 
-        JsonNode parsed = parseJson(text);
+        JsonNode parsed = parseJson(result.text());
         String name = parsed == null ? null : textOrNull(parsed.path("nome"));
 
         return name != null
@@ -124,12 +135,15 @@ public class AiExtractionServiceImpl implements AiExtractionService {
     }
 
     private PrescriptionExtractionResponseDTO extractPrescription(
-            PrescriptionExtractionRequestDTO dto, String model, String prompt) {
+            PrescriptionExtractionRequestDTO dto, String model, String prompt, AiUsageOperationType operationType) {
 
-        authorizeExtraction();
+        User actor = authorizeExtraction();
 
-        String text = geminiClient.generateContent(model, prompt, dto.images(), prescriptionResponseSchema());
-        JsonNode parsed = parseJson(text);
+        GeminiGenerationResult result = geminiClient.generateContent(
+                model, prompt, dto.images(), prescriptionResponseSchema());
+        recordUsage(actor, model, operationType, result);
+
+        JsonNode parsed = parseJson(result.text());
 
         if (parsed == null) {
             return unavailablePrescription();
@@ -146,10 +160,15 @@ public class AiExtractionServiceImpl implements AiExtractionService {
         return new PrescriptionExtractionResponseDTO(true, patientName, issueDate, medications);
     }
 
-    private void authorizeExtraction() {
+    private User authorizeExtraction() {
         User actor = securityContextHelper.getCurrentUser();
         authorizationPolicy.requireAdminOrRolesWithCondition(actor, Set.of(UserRole.MANAGER, UserRole.ASSISTANT),
                 () -> true);
+        return actor;
+    }
+
+    private void recordUsage(User actor, String model, AiUsageOperationType operationType, GeminiGenerationResult result) {
+        aiUsageLogService.record(actor, model, operationType, AiUsageContentType.IMAGE, result.usage());
     }
 
     private List<ExtractedMedicationDTO> parseMedications(JsonNode medicamentos) {
