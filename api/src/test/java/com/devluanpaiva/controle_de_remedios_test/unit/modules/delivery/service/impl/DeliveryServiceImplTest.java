@@ -420,4 +420,51 @@ class DeliveryServiceImplTest {
             assertThat(dto.prescribedQuantity()).isEqualTo(30);
         }
     }
+
+    @Nested
+    @DisplayName("listMyPendingDeliveryItems")
+    class ListMyPendingDeliveryItems {
+
+        @Test
+        @DisplayName("should throw 403 when the actor is not a patient")
+        void shouldThrowWhenActorIsNotPatient() {
+            User manager = buildUser(UserRole.MANAGER);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+
+            assertThatThrownBy(() -> deliveryService.listMyPendingDeliveryItems(PageRequest.of(0, 20)))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
+                    });
+
+            verify(prescriptionItemRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should list the pending items belonging to the logged-in patient")
+        void shouldListPendingItemsForTheLoggedInPatient() {
+            User patientUser = buildUser(UserRole.PATIENT);
+            Company company = buildCompany();
+            PrescriptionItem item = buildItem(company, 30, 30);
+            item.getPrescription().getPatient().setUser(patientUser);
+            Pageable pageable = PageRequest.of(0, 20);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(patientUser);
+            when(prescriptionItemRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(item)));
+
+            Page<PendingDeliveryItemResponseDTO> result = deliveryService.listMyPendingDeliveryItems(pageable);
+
+            assertThat(result.getContent()).hasSize(1);
+
+            PendingDeliveryItemResponseDTO dto = result.getContent().get(0);
+            assertThat(dto.prescriptionItemId()).isEqualTo(item.getId());
+            assertThat(dto.status()).isEqualTo(PrescriptionStatus.PENDING);
+            assertThat(dto.medicineName()).isEqualTo(item.getMedicine().getName());
+        }
+    }
 }

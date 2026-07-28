@@ -18,6 +18,7 @@ public class PendingDeliveryItemMapper {
                 prescription.getPatient().getName(),
                 prescription.getIssueDate(),
                 item.getMedicine().getName(),
+                item.getStatus(),
                 item.getUnityType(),
                 item.getPrescribedQuantity());
     }

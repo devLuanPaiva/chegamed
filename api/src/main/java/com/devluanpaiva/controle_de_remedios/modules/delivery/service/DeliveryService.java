@@ -29,6 +29,8 @@ public interface DeliveryService {
 
     Page<PendingDeliveryItemResponseDTO> listPendingDeliveryItems(PendingDeliveryItemFilter filter, Pageable pageable);
 
+    Page<PendingDeliveryItemResponseDTO> listMyPendingDeliveryItems(Pageable pageable);
+
     List<PendingQueueItemResponseDTO> getPendingQueue(UUID medicineId);
 
     List<EligiblePrescriptionResponseDTO> getEligiblePrescriptions(UUID companyId, String cpf);
