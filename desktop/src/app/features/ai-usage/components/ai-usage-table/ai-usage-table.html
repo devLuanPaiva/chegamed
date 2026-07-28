@@ -1,0 +1,50 @@
+@if (loading()) {
+    <div class="loading ai-usage-table__state">
+        <output class="spinner" aria-label="Carregando uso da IA"></output>
+    </div>
+} @else if (error()) {
+    <div class="ai-usage-table__state ai-usage-table__state--error">
+        <p>{{ error() }}</p>
+        <button type="button" class="btn btn-outline" (click)="retry.emit()">Tentar novamente</button>
+    </div>
+} @else {
+    <div class="table-responsive">
+        <table class="table ai-usage-table__table">
+            <thead>
+                <tr>
+                    <th>Data/hora</th>
+                    <th>Usuário</th>
+                    <th>Modelo</th>
+                    <th>Tipo</th>
+                    <th>Operação</th>
+                    <th class="ai-usage-table__col-number">Tokens entrada</th>
+                    <th class="ai-usage-table__col-number">Tokens saída</th>
+                    <th class="ai-usage-table__col-number">Tokens total</th>
+                    <th class="ai-usage-table__col-number">Custo estimado</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (log of logs(); track log.id) {
+                    <tr>
+                        <td data-label="Data/hora">{{ formatDateTime(log.createdAt) }}</td>
+                        <td data-label="Usuário">{{ log.userName }}</td>
+                        <td data-label="Modelo">{{ log.model }}</td>
+                        <td data-label="Tipo">{{ AiContentTypeLabels[log.contentType] }}</td>
+                        <td data-label="Operação">{{ AiOperationTypeLabels[log.operationType] }}</td>
+                        <td data-label="Tokens entrada" class="ai-usage-table__col-number">{{ formatTokens(log.promptTokens) }}</td>
+                        <td data-label="Tokens saída" class="ai-usage-table__col-number">{{ formatTokens(log.candidatesTokens) }}</td>
+                        <td data-label="Tokens total" class="ai-usage-table__col-number">{{ formatTokens(log.totalTokens) }}</td>
+                        <td data-label="Custo estimado" class="ai-usage-table__col-number">{{ formatUsd(log.estimatedCostUsd) }}</td>
+                    </tr>
+                } @empty {
+                    <tr class="ai-usage-table__empty-row">
+                        <td colspan="9">Nenhum registro de uso encontrado para os filtros selecionados.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <app-pagination [pagination]="pagination()" (previousPage)="previousPage.emit()" (nextPage)="nextPage.emit()" />
+}
