@@ -1,0 +1,13 @@
+<app-widget-card
+    title="Indicadores de uso da IA"
+    subtitle="Custos e consumo de tokens no período filtrado"
+    [loading]="loading()"
+    [error]="error()"
+>
+    <div class="ai-usage-summary__stats">
+        <app-stat-tile label="Custo estimado" [value]="totalCostLabel()" accent="danger" />
+        <app-stat-tile label="Requisições" [value]="totalRequestsLabel()" accent="info" />
+        <app-stat-tile label="Tokens consumidos" [value]="totalTokensLabel()" [hint]="tokensBreakdownHint()" accent="neutral" />
+        <app-stat-tile label="Custo médio por requisição" [value]="avgCostLabel()" accent="warning" />
+    </div>
+</app-widget-card>

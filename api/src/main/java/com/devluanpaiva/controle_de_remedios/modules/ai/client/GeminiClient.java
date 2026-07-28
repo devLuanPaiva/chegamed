@@ -45,16 +45,16 @@ public class GeminiClient {
         this.apiKey = apiKey;
     }
 
-    public String generateContent(String model, String prompt, List<String> base64Images,
+    public GeminiGenerationResult generateContent(String model, String prompt, List<String> base64Images,
             Map<String, Object> responseSchema) {
         if (!StringUtils.hasText(apiKey)) {
             log.warn("Gemini extraction skipped -> chave GEMINI_API_KEY não configurada");
-            return null;
+            return emptyResult();
         }
 
         if (!tryAcquirePermit()) {
             log.warn("Gemini extraction skipped -> limite de {} chamadas simultâneas atingido", MAX_CONCURRENT_CALLS);
-            return null;
+            return emptyResult();
         }
 
         try {
@@ -62,6 +62,10 @@ public class GeminiClient {
         } finally {
             concurrencyLimiter.release();
         }
+    }
+
+    private GeminiGenerationResult emptyResult() {
+        return new GeminiGenerationResult(null, GeminiUsage.EMPTY);
     }
 
     private boolean tryAcquirePermit() {
@@ -73,7 +77,7 @@ public class GeminiClient {
         }
     }
 
-    private String callWithRetry(String model, String prompt, List<String> base64Images,
+    private GeminiGenerationResult callWithRetry(String model, String prompt, List<String> base64Images,
             Map<String, Object> responseSchema) {
 
         String uri = UriComponentsBuilder
@@ -92,26 +96,26 @@ public class GeminiClient {
                         .retrieve()
                         .body(JsonNode.class);
 
-                return extractText(response);
+                return new GeminiGenerationResult(extractText(response), extractUsage(response));
             } catch (RestClientResponseException ex) {
                 int status = ex.getStatusCode().value();
                 log.error("Chamada ao Gemini falhou com HTTP {} (tentativa {}/{})", status, attempt, MAX_ATTEMPTS, ex);
 
                 if (!RETRYABLE_STATUSES.contains(status) || attempt == MAX_ATTEMPTS) {
-                    return null;
+                    return emptyResult();
                 }
             } catch (RestClientException ex) {
                 log.error("Chamada ao Gemini falhou (tentativa {}/{})", attempt, MAX_ATTEMPTS, ex);
 
                 if (attempt == MAX_ATTEMPTS) {
-                    return null;
+                    return emptyResult();
                 }
             }
 
             sleep(RETRY_BACKOFF_MS * attempt);
         }
 
-        return null;
+        return emptyResult();
     }
 
     private Map<String, Object> buildRequestBody(String prompt, List<String> base64Images,
@@ -145,11 +149,35 @@ public class GeminiClient {
         return textNode.isTextual() ? textNode.asText() : null;
     }
 
+    private GeminiUsage extractUsage(JsonNode response) {
+        if (response == null) {
+            return GeminiUsage.EMPTY;
+        }
+
+        JsonNode usageNode = response.path("usageMetadata");
+
+        return new GeminiUsage(
+                intOrZero(usageNode.path("promptTokenCount")),
+                intOrZero(usageNode.path("candidatesTokenCount")),
+                intOrZero(usageNode.path("totalTokenCount")));
+    }
+
+    private int intOrZero(JsonNode node) {
+        return node.isNumber() ? node.asInt() : 0;
+    }
+
     private void sleep(long millis) {
         try {
             Thread.sleep(millis);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    public record GeminiUsage(int promptTokens, int candidatesTokens, int totalTokens) {
+        public static final GeminiUsage EMPTY = new GeminiUsage(0, 0, 0);
+    }
+
+    public record GeminiGenerationResult(String text, GeminiUsage usage) {
     }
 }

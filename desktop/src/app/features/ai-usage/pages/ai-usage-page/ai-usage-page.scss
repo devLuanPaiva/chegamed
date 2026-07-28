@@ -1,0 +1,33 @@
+@use "../../../../../styles/abstracts/breakpoints" as bp;
+
+.ai-usage-page__header {
+    margin-bottom: var(--space-5);
+}
+
+.ai-usage-page__title {
+    font-size: var(--text-2xl);
+    color: var(--color-primary-600);
+}
+
+.ai-usage-page__subtitle {
+    margin-top: 0.25rem;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+}
+
+.ai-usage-page__widgets {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-bottom: var(--space-6);
+}
+
+.ai-usage-page__charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+
+    @media (max-width: bp.$md) {
+        grid-template-columns: 1fr;
+    }
+}

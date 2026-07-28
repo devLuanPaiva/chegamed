@@ -1,0 +1,27 @@
+<section class="ai-usage-page">
+    <header class="ai-usage-page__header">
+        <h1 class="ai-usage-page__title">Custos da IA (Gemini)</h1>
+        <p class="ai-usage-page__subtitle">Consumo de tokens e custo estimado das chamadas ao Gemini</p>
+    </header>
+
+    <app-ai-usage-filters [models]="models()" [users]="users()" (filterChange)="onFilterChange($event)" />
+
+    <div class="ai-usage-page__widgets">
+        <app-ai-usage-summary [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+
+        <div class="ai-usage-page__charts">
+            <app-ai-usage-cost-chart [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+            <app-ai-usage-model-chart [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+        </div>
+    </div>
+
+    <app-ai-usage-table
+        [logs]="logs()"
+        [pagination]="pagination()"
+        [loading]="logsLoading()"
+        [error]="logsError()"
+        (retry)="retry()"
+        (previousPage)="goToPreviousPage()"
+        (nextPage)="goToNextPage()"
+    />
+</section>

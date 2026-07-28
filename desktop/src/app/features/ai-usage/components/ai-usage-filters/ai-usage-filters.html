@@ -1,0 +1,62 @@
+<form class="ai-usage-filters" (submit)="applyFilters($event)">
+    <div class="ai-usage-filters__field">
+        <label class="ai-usage-filters__label" for="filter-model">Modelo</label>
+        <select
+            id="filter-model"
+            #modelSelect
+            class="input"
+            [value]="form().model"
+            (change)="onModelChange(modelSelect.value)"
+        >
+            <option value="">Todos os modelos</option>
+            @for (model of models(); track model) {
+                <option [value]="model">{{ model }}</option>
+            }
+        </select>
+    </div>
+
+    <div class="ai-usage-filters__field">
+        <label class="ai-usage-filters__label" for="filter-user">Usuário</label>
+        <select
+            id="filter-user"
+            #userSelect
+            class="input"
+            [value]="form().userId"
+            (change)="onUserChange(userSelect.value)"
+        >
+            <option value="">Todos os usuários</option>
+            @for (user of users(); track user.id) {
+                <option [value]="user.id">{{ user.name }}</option>
+            }
+        </select>
+    </div>
+
+    <div class="ai-usage-filters__field">
+        <label class="ai-usage-filters__label" for="filter-start-date">De</label>
+        <input
+            id="filter-start-date"
+            #startDateInput
+            type="date"
+            class="input"
+            [value]="form().startDate"
+            (change)="onStartDateChange(startDateInput.value)"
+        />
+    </div>
+
+    <div class="ai-usage-filters__field">
+        <label class="ai-usage-filters__label" for="filter-end-date">Até</label>
+        <input
+            id="filter-end-date"
+            #endDateInput
+            type="date"
+            class="input"
+            [value]="form().endDate"
+            (change)="onEndDateChange(endDateInput.value)"
+        />
+    </div>
+
+    <div class="ai-usage-filters__actions">
+        <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+        <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Limpar filtros</button>
+    </div>
+</form>
