@@ -93,6 +93,21 @@ public class DeliveryController {
                 "Lista de itens pendentes de entrega obtida com sucesso", result, next, previous);
     }
 
+    @GetMapping("/me/pending-items")
+    public ApiResponse<List<PendingDeliveryItemResponseDTO>> getMyPendingDeliveryItems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.ASC, "requestedAt"));
+        Page<PendingDeliveryItemResponseDTO> result = deliveryService.listMyPendingDeliveryItems(pageable);
+
+        String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
+        String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
+
+        return ApiResponseFactory.paginated(
+                "Lista dos seus itens pendentes de entrega obtida com sucesso", result, next, previous);
+    }
+
     @GetMapping("/pending-queue/{medicineId}")
     public ApiResponse<List<PendingQueueItemResponseDTO>> getPendingQueue(@PathVariable UUID medicineId) {
         return ApiResponseFactory.list(

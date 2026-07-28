@@ -25,7 +25,8 @@ export class AuthEffects {
 
             exhaustMap(action => this.authService.login({
                 email: action.email,
-                password: action.password
+                password: action.password,
+                context: 'DESKTOP'
 
             }).pipe(
                 map(response => {

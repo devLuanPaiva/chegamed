@@ -259,6 +259,20 @@ public class DeliveryServiceImpl implements DeliveryService {
 
         @Override
         @Transactional(readOnly = true)
+        public Page<PendingDeliveryItemResponseDTO> listMyPendingDeliveryItems(Pageable pageable) {
+                User actor = securityContextHelper.getCurrentUser();
+
+                authorizationPolicy.requireCondition(actor.getRole() == UserRole.PATIENT);
+
+                Specification<PrescriptionItem> specification = PendingDeliveryItemSpecification.isDeliverable()
+                                .and(PendingDeliveryItemSpecification.associatedWithPatientUser(actor.getId()));
+
+                return prescriptionItemRepository.findAll(specification, pageable)
+                                .map(pendingDeliveryItemMapper::toResponseDTO);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
         public List<PendingQueueItemResponseDTO> getPendingQueue(UUID medicineId) {
                 User actor = securityContextHelper.getCurrentUser();
                 Medicine medicine = findMedicineOrThrow(medicineId);
