@@ -29,8 +29,8 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID>, J
             FROM AiUsageLog a
             WHERE (:model IS NULL OR a.model = :model)
               AND (:userId IS NULL OR a.user.id = :userId)
-              AND (:from IS NULL OR a.createdAt >= :from)
-              AND (:until IS NULL OR a.createdAt <= :until)
+              AND a.createdAt >= :from
+              AND a.createdAt <= :until
             """)
     AiUsageTotalsDTO findTotals(
             @Param("model") String model,
@@ -44,8 +44,8 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID>, J
             FROM AiUsageLog a
             WHERE (:model IS NULL OR a.model = :model)
               AND (:userId IS NULL OR a.user.id = :userId)
-              AND (:from IS NULL OR a.createdAt >= :from)
-              AND (:until IS NULL OR a.createdAt <= :until)
+              AND a.createdAt >= :from
+              AND a.createdAt <= :until
             GROUP BY a.model
             ORDER BY a.model
             """)
@@ -61,8 +61,8 @@ public interface AiUsageLogRepository extends JpaRepository<AiUsageLog, UUID>, J
             FROM AiUsageLog a
             WHERE (:model IS NULL OR a.model = :model)
               AND (:userId IS NULL OR a.user.id = :userId)
-              AND (:from IS NULL OR a.createdAt >= :from)
-              AND (:until IS NULL OR a.createdAt <= :until)
+              AND a.createdAt >= :from
+              AND a.createdAt <= :until
             GROUP BY CAST(a.createdAt AS LocalDate)
             ORDER BY CAST(a.createdAt AS LocalDate)
             """)
