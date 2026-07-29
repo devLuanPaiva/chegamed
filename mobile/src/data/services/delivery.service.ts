@@ -123,7 +123,7 @@ export async function getPendingDeliveryItems(
 
 export async function getMyDeliveries(page: number): Promise<PagedResult<IDelivery>> {
     const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
-    const response = await apiFetch<DeliveryDto[]>(`/deliveries?${params.toString()}`);
+    const response = await apiFetch<DeliveryDto[]>(`/deliveries/me?${params.toString()}`);
 
     return {
         data: response.data.map(toDelivery),
