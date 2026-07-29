@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
 
     boolean existsByCpf(String cpf);
 
+    Optional<User> findByCpf(String cpf);
+
     Optional<User> findById(UUID id);
 
     Page<User> findByCompanies_Id(UUID companyId, Pageable pageable);
