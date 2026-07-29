@@ -67,6 +67,20 @@ public class DeliveryController {
         return ApiResponseFactory.paginated("Lista de entregas obtida com sucesso", result, next, previous);
     }
 
+    @GetMapping("/me")
+    public ApiResponse<List<DeliveryResponseDTO>> getMyDeliveries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<DeliveryResponseDTO> result = deliveryService.listMyDeliveries(pageable);
+
+        String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
+        String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
+
+        return ApiResponseFactory.paginated("Lista das suas entregas obtida com sucesso", result, next, previous);
+    }
+
     private String buildPageUri(int page, int size) {
         return ServletUriComponentsBuilder.fromCurrentRequestUri()
                 .replaceQueryParam("page", page)
