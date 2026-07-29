@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -157,9 +159,9 @@ class AiUsageQueryServiceImplTest {
             List<AiUsageDailyBreakdownDTO> byDay = List.of(
                     new AiUsageDailyBreakdownDTO(LocalDate.now(), 4, 600, new BigDecimal("1.200000")));
 
-            when(aiUsageLogRepository.findTotals(isNull(), isNull(), isNull(), isNull())).thenReturn(totals);
-            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), isNull(), isNull())).thenReturn(byModel);
-            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), isNull(), isNull())).thenReturn(byDay);
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any())).thenReturn(byModel);
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any())).thenReturn(byDay);
 
             AiUsageSummaryResponseDTO summary = aiUsageQueryService.getSummary(NO_FILTER);
 
@@ -176,10 +178,10 @@ class AiUsageQueryServiceImplTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
 
             AiUsageTotalsDTO totals = new AiUsageTotalsDTO(0, 0, 0, 0, BigDecimal.ZERO);
-            when(aiUsageLogRepository.findTotals(isNull(), isNull(), isNull(), isNull())).thenReturn(totals);
-            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), isNull(), isNull()))
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any()))
                     .thenReturn(List.of());
-            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), isNull(), isNull()))
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any()))
                     .thenReturn(List.of());
 
             AiUsageSummaryResponseDTO summary = aiUsageQueryService.getSummary(NO_FILTER);
@@ -195,6 +197,24 @@ class AiUsageQueryServiceImplTest {
             assertForbidden(() -> aiUsageQueryService.getSummary(NO_FILTER));
 
             verifyNoInteractions(aiUsageLogRepository);
+        }
+
+        @Test
+        @DisplayName("should never pass null from/until to the repository, since Postgres cannot infer "
+                + "the parameter type for a bare 'timestamp IS NULL' check")
+        void shouldNeverPassNullDateBoundsToRepository() {
+            when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
+
+            AiUsageTotalsDTO totals = new AiUsageTotalsDTO(0, 0, 0, 0, BigDecimal.ZERO);
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any())).thenReturn(List.of());
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any())).thenReturn(List.of());
+
+            aiUsageQueryService.getSummary(NO_FILTER);
+
+            verify(aiUsageLogRepository).findTotals(isNull(), isNull(), notNull(), notNull());
+            verify(aiUsageLogRepository).findModelBreakdown(isNull(), isNull(), notNull(), notNull());
+            verify(aiUsageLogRepository).findDailyBreakdown(isNull(), isNull(), notNull(), notNull());
         }
     }
 
