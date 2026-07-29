@@ -29,6 +29,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AiUsageQueryServiceImpl implements AiUsageQueryService {
+    private static final LocalDateTime EARLIEST_POSSIBLE_DATE = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime LATEST_POSSIBLE_DATE = LocalDateTime.of(9999, 12, 31, 23, 59, 59);
+
     private final AiUsageLogRepository aiUsageLogRepository;
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationPolicy authorizationPolicy;
@@ -51,8 +54,8 @@ public class AiUsageQueryServiceImpl implements AiUsageQueryService {
     public AiUsageSummaryResponseDTO getSummary(AiUsageLogFilter filter) {
         assertIsAdmin();
 
-        LocalDateTime from = filter.startDate() != null ? filter.startDate().atStartOfDay() : null;
-        LocalDateTime until = filter.endDate() != null ? LocalDateTime.of(filter.endDate(), LocalTime.MAX) : null;
+        LocalDateTime from = filter.startDate() != null ? filter.startDate().atStartOfDay() : EARLIEST_POSSIBLE_DATE;
+        LocalDateTime until = filter.endDate() != null ? LocalDateTime.of(filter.endDate(), LocalTime.MAX) : LATEST_POSSIBLE_DATE;
 
         AiUsageTotalsDTO totals = aiUsageLogRepository.findTotals(filter.model(), filter.userId(), from, until);
 
