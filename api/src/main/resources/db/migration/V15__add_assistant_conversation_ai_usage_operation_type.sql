@@ -1,0 +1,1 @@
+ALTER TYPE ai_usage_operation_type ADD VALUE 'ASSISTANT_CONVERSATION';
