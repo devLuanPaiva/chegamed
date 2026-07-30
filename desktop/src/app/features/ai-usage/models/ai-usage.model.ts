@@ -2,7 +2,8 @@ export type AiOperationType =
     | 'ESUS_PRESCRIPTION_EXTRACTION'
     | 'DIGITALIZED_PRESCRIPTION_EXTRACTION'
     | 'BARCODE_EXTRACTION'
-    | 'MEDICINE_NAME_EXTRACTION';
+    | 'MEDICINE_NAME_EXTRACTION'
+    | 'ASSISTANT_CONVERSATION';
 
 export type AiContentType = 'IMAGE' | 'CHAT_MESSAGE';
 
@@ -11,6 +12,7 @@ export const AiOperationTypeLabels: Record<AiOperationType, string> = {
     DIGITALIZED_PRESCRIPTION_EXTRACTION: 'Extração de receita digitalizada',
     BARCODE_EXTRACTION: 'Leitura de código de barras',
     MEDICINE_NAME_EXTRACTION: 'Leitura de nome de medicamento',
+    ASSISTANT_CONVERSATION: 'Conversa com assistente',
 };
 
 export const AiContentTypeLabels: Record<AiContentType, string> = {
