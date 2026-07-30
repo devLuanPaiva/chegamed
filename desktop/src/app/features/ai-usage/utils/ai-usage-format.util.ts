@@ -1,3 +1,5 @@
+import { FORTALEZA_TIME_ZONE } from '@shared/utils/date.util';
+
 const USD_FORMATTER = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -16,6 +18,7 @@ export function formatDateTime(date: Date): string {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: FORTALEZA_TIME_ZONE,
     });
 }
 
