@@ -25,6 +25,7 @@ import com.devluanpaiva.controle_de_remedios.modules.ai.entity.AiUsageLog;
 import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageContentType;
 import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageOperationType;
 import com.devluanpaiva.controle_de_remedios.modules.ai.repository.AiUsageLogRepository;
+import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiUsageLogService.ExternalAiUsage;
 import com.devluanpaiva.controle_de_remedios.modules.ai.service.impl.AiUsageLogServiceImpl;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
@@ -111,6 +112,46 @@ class AiUsageLogServiceImplTest {
             aiUsageLogService.record(
                     buildUser(), MODEL, AiUsageOperationType.BARCODE_EXTRACTION, AiUsageContentType.IMAGE,
                     GeminiUsage.EMPTY);
+
+            verify(aiUsageLogRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("recordExternalUsage")
+    class RecordExternalUsage {
+
+        @Test
+        @DisplayName("should persist a usage log with the cost provided by the caller, unchanged")
+        void shouldPersistUsageLogWithProvidedCost() {
+            User actor = buildUser();
+            ExternalAiUsage usage = new ExternalAiUsage(120, 80, 200, BigDecimal.valueOf(0.000841));
+
+            aiUsageLogService.recordExternalUsage(
+                    actor, "gpt-4o-mini", AiUsageOperationType.ASSISTANT_CONVERSATION,
+                    AiUsageContentType.CHAT_MESSAGE, usage);
+
+            ArgumentCaptor<AiUsageLog> captor = ArgumentCaptor.forClass(AiUsageLog.class);
+            verify(aiUsageLogRepository).save(captor.capture());
+
+            AiUsageLog savedLog = captor.getValue();
+            assertThat(savedLog.getUser()).isEqualTo(actor);
+            assertThat(savedLog.getModel()).isEqualTo("gpt-4o-mini");
+            assertThat(savedLog.getOperationType()).isEqualTo(AiUsageOperationType.ASSISTANT_CONVERSATION);
+            assertThat(savedLog.getContentType()).isEqualTo(AiUsageContentType.CHAT_MESSAGE);
+            assertThat(savedLog.getPromptTokens()).isEqualTo(120);
+            assertThat(savedLog.getCandidatesTokens()).isEqualTo(80);
+            assertThat(savedLog.getTotalTokens()).isEqualTo(200);
+            assertThat(savedLog.getEstimatedCostUsd()).isEqualByComparingTo("0.000841");
+            verify(geminiPricingProperties, never()).pricingFor(any());
+        }
+
+        @Test
+        @DisplayName("should not persist anything when total tokens is zero")
+        void shouldNotPersistWhenTotalTokensIsZero() {
+            aiUsageLogService.recordExternalUsage(
+                    buildUser(), "gpt-4o-mini", AiUsageOperationType.ASSISTANT_CONVERSATION,
+                    AiUsageContentType.CHAT_MESSAGE, new ExternalAiUsage(0, 0, 0, BigDecimal.ZERO));
 
             verify(aiUsageLogRepository, never()).save(any());
         }

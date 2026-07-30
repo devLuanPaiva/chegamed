@@ -63,28 +63,29 @@ class N8nAssistantClientTest {
                     .andExpect(method(HttpMethod.POST))
                     .andRespond(withSuccess("{\"answer\": \"Resposta do assistente\"}", MediaType.APPLICATION_JSON));
 
-            String answer = n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID());
+            String answer = n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 
             assertThat(answer).isEqualTo("Resposta do assistente");
             mockServer.verify();
         }
 
         @Test
-        @DisplayName("should send the internal secret header and the message/companyId/conversationId body")
+        @DisplayName("should send the internal secret header and the message/companyId/conversationId/userId body")
         void shouldSendSecretHeaderAndRequestBody() {
             UUID companyId = UUID.randomUUID();
             UUID conversationId = UUID.randomUUID();
+            UUID userId = UUID.randomUUID();
 
             String expectedBody = String.format(
-                    "{\"message\": \"Olá\", \"companyId\": \"%s\", \"conversationId\": \"%s\"}",
-                    companyId, conversationId);
+                    "{\"message\": \"Olá\", \"companyId\": \"%s\", \"conversationId\": \"%s\", \"userId\": \"%s\"}",
+                    companyId, conversationId, userId);
 
             mockServer.expect(requestTo(WEBHOOK_URL))
                     .andExpect(header("X-Internal-Secret", INTERNAL_SECRET))
                     .andExpect(content().json(expectedBody, true))
                     .andRespond(withSuccess("{\"answer\": \"ok\"}", MediaType.APPLICATION_JSON));
 
-            String answer = n8nAssistantClient.ask("Olá", companyId, conversationId);
+            String answer = n8nAssistantClient.ask("Olá", companyId, conversationId, userId);
 
             assertThat(answer).isEqualTo("ok");
             mockServer.verify();
@@ -101,7 +102,7 @@ class N8nAssistantClientTest {
             mockServer.expect(requestTo(WEBHOOK_URL))
                     .andRespond(withSuccess("{\"answer\": null}", MediaType.APPLICATION_JSON));
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
         }
 
         @Test
@@ -110,7 +111,7 @@ class N8nAssistantClientTest {
             mockServer.expect(requestTo(WEBHOOK_URL))
                     .andRespond(withSuccess("{\"answer\": \"   \"}", MediaType.APPLICATION_JSON));
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
         }
 
         @Test
@@ -119,7 +120,7 @@ class N8nAssistantClientTest {
             mockServer.expect(requestTo(WEBHOOK_URL))
                     .andRespond(withSuccess("null", MediaType.APPLICATION_JSON));
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
         }
 
         @Test
@@ -127,7 +128,7 @@ class N8nAssistantClientTest {
         void shouldThrowOnHttpErrorStatus() {
             mockServer.expect(requestTo(WEBHOOK_URL)).andRespond(withServerError());
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
         }
 
         @Test
@@ -137,7 +138,7 @@ class N8nAssistantClientTest {
                 throw new IOException("connection refused");
             });
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
         }
 
         @Test
@@ -145,7 +146,7 @@ class N8nAssistantClientTest {
         void shouldMakeOnlyOneAttempt() {
             mockServer.expect(requestTo(WEBHOOK_URL)).andRespond(withServerError());
 
-            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID()));
+            assertAssistantUnavailable(() -> n8nAssistantClient.ask("Olá", UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
 
             mockServer.verify();
         }
