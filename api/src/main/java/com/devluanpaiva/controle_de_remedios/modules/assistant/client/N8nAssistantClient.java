@@ -32,12 +32,12 @@ public class N8nAssistantClient {
         this.internalSecret = internalSecret;
     }
 
-    public String ask(String message, UUID companyId, UUID conversationId) {
+    public String ask(String message, UUID companyId, UUID conversationId, UUID userId) {
         try {
             N8nChatResponse response = restClient.post()
                     .uri(webhookUrl)
                     .header(INTERNAL_SECRET_HEADER, internalSecret)
-                    .body(new N8nChatRequest(message, companyId, conversationId))
+                    .body(new N8nChatRequest(message, companyId, conversationId, userId))
                     .retrieve()
                     .body(N8nChatResponse.class);
 
@@ -61,7 +61,7 @@ public class N8nAssistantClient {
                 "Não foi possível obter uma resposta do assistente no momento. Tente novamente em instantes.");
     }
 
-    private record N8nChatRequest(String message, UUID companyId, UUID conversationId) {
+    private record N8nChatRequest(String message, UUID companyId, UUID conversationId, UUID userId) {
     }
 
     private record N8nChatResponse(String answer) {
