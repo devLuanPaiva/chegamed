@@ -7,8 +7,22 @@ import org.springframework.util.StringUtils;
 
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+
 public final class PatientSpecification {
     private PatientSpecification() {
+    }
+
+    public static Specification<Patient> orderByNameIgnoringAccents() {
+        return (root, query, builder) -> {
+            query.orderBy(builder.asc(unaccentedLowerName(builder, root.get("name"))));
+            return builder.conjunction();
+        };
+    }
+
+    private static Expression<String> unaccentedLowerName(CriteriaBuilder builder, Expression<String> name) {
+        return builder.function("unaccent", String.class, builder.lower(name));
     }
 
     public static Specification<Patient> associatedWithUser(UUID userId) {

@@ -95,7 +95,8 @@ public class PatientServiceImpl implements PatientService {
         Specification<Patient> specification = visibilityScope(actor)
                 .and(PatientSpecification.hasCompanyId(filter.companyId()))
                 .and(PatientSpecification.hasName(filter.name()))
-                .and(PatientSpecification.hasCpf(filter.cpf()));
+                .and(PatientSpecification.hasCpf(filter.cpf()))
+                .and(PatientSpecification.orderByNameIgnoringAccents());
 
         return patientRepository.findAll(specification, pageable)
                 .map(patientMapper::toMaskedResponseDTO);
