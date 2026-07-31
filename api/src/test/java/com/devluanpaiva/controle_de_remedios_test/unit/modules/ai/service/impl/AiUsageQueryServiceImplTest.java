@@ -83,7 +83,7 @@ class AiUsageQueryServiceImplTest {
         return AiUsageLog.builder()
                 .id(UUID.randomUUID())
                 .user(user)
-                .model("gemini-2.5-flash")
+                .model("gemini-2.5-pro")
                 .operationType(AiUsageOperationType.BARCODE_EXTRACTION)
                 .contentType(AiUsageContentType.IMAGE)
                 .promptTokens(100)
@@ -127,7 +127,7 @@ class AiUsageQueryServiceImplTest {
             assertThat(dto.id()).isEqualTo(log.getId());
             assertThat(dto.userId()).isEqualTo(loggedUser.getId());
             assertThat(dto.userName()).isEqualTo(loggedUser.getName());
-            assertThat(dto.model()).isEqualTo("gemini-2.5-flash");
+            assertThat(dto.model()).isEqualTo("gemini-2.5-pro");
             assertThat(dto.operationType()).isEqualTo(AiUsageOperationType.BARCODE_EXTRACTION);
             assertThat(dto.contentType()).isEqualTo(AiUsageContentType.IMAGE);
             assertThat(dto.totalTokens()).isEqualTo(150);
@@ -155,7 +155,7 @@ class AiUsageQueryServiceImplTest {
 
             AiUsageTotalsDTO totals = new AiUsageTotalsDTO(4, 400, 200, 600, new BigDecimal("1.200000"));
             List<AiUsageModelBreakdownDTO> byModel = List.of(
-                    new AiUsageModelBreakdownDTO("gemini-2.5-flash", 4, 600, new BigDecimal("1.200000")));
+                    new AiUsageModelBreakdownDTO("gemini-2.5-pro", 4, 600, new BigDecimal("1.200000")));
             List<AiUsageDailyBreakdownDTO> byDay = List.of(
                     new AiUsageDailyBreakdownDTO(LocalDate.now(), 4, 600, new BigDecimal("1.200000")));
 
@@ -227,11 +227,11 @@ class AiUsageQueryServiceImplTest {
         void shouldReturnDistinctModels() {
             when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
             when(aiUsageLogRepository.findDistinctModels())
-                    .thenReturn(List.of("gemini-2.5-flash", "gemini-3.1-flash-lite"));
+                    .thenReturn(List.of("gemini-2.5-pro", "gemini-3.1-flash-lite"));
 
             List<String> models = aiUsageQueryService.getDistinctModels();
 
-            assertThat(models).containsExactly("gemini-2.5-flash", "gemini-3.1-flash-lite");
+            assertThat(models).containsExactly("gemini-2.5-pro", "gemini-3.1-flash-lite");
         }
 
         @Test

@@ -16,7 +16,7 @@ describe('AiUsageFilters', () => {
 
         fixture = TestBed.createComponent(AiUsageFilters);
         component = fixture.componentInstance;
-        fixture.componentRef.setInput('models', ['gemini-2.5-flash']);
+        fixture.componentRef.setInput('models', ['gemini-2.5-pro']);
         fixture.componentRef.setInput('users', [
             { id: 'user-1', name: 'Jane', email: 'jane@example.com', cpf: '12345678901', role: UserRole.ADMIN, createdAt: new Date(), updatedAt: new Date() },
         ]);
@@ -36,14 +36,14 @@ describe('AiUsageFilters', () => {
         let emitted: unknown;
         component.filterChange.subscribe((filter) => (emitted = filter));
 
-        component.onModelChange('gemini-2.5-flash');
+        component.onModelChange('gemini-2.5-pro');
         component.onUserChange('user-1');
         component.onStartDateChange('2026-01-01');
         component.onEndDateChange('2026-01-31');
         component.applyFilters(new Event('submit'));
 
         expect(emitted).toEqual({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-2.5-pro',
             userId: 'user-1',
             startDate: '2026-01-01',
             endDate: '2026-01-31',
@@ -51,7 +51,7 @@ describe('AiUsageFilters', () => {
     });
 
     it('should reset the form and emit an empty filter when cleared', () => {
-        component.onModelChange('gemini-2.5-flash');
+        component.onModelChange('gemini-2.5-pro');
 
         let emitted: unknown;
         component.filterChange.subscribe((filter) => (emitted = filter));

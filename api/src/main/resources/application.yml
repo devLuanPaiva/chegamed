@@ -52,12 +52,15 @@ gemini:
   api-key: ${GEMINI_API_KEY:}
   pricing:
     models:
-      gemini-3.1-flash-lite:
+      "[gemini-3.1-flash-lite]":
         input-per-million-tokens: 0.10
         output-per-million-tokens: 0.40
-      gemini-2.5-flash:
+      "[gemini-2.5-flash]":
         input-per-million-tokens: 0.30
         output-per-million-tokens: 2.50
+      "[gemini-2.5-pro]":
+        input-per-million-tokens: 1.25
+        output-per-million-tokens: 10.00
 
 google:
   oauth:
