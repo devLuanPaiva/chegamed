@@ -31,7 +31,6 @@ class GeminiPricingPropertiesTest {
                 .orElseGet(GeminiPricingProperties::new);
 
         assertThat(properties.pricingFor("gemini-3.1-flash-lite")).isNotNull();
-        assertThat(properties.pricingFor("gemini-2.5-pro")).isNotNull();
-        assertThat(properties.pricingFor("gemini-2.5-pro")).isNotNull();
+        assertThat(properties.pricingFor("gemini-3.5-flash")).isNotNull();
     }
 }

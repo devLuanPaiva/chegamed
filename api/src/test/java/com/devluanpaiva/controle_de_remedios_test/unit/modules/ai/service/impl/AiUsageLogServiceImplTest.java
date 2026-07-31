@@ -34,7 +34,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 @DisplayName("AiUsageLogServiceImpl")
 class AiUsageLogServiceImplTest {
 
-    private static final String MODEL = "gemini-2.5-pro";
+    private static final String MODEL = "gemini-3.5-flash";
 
     @Mock
     private AiUsageLogRepository aiUsageLogRepository;

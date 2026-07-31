@@ -17,7 +17,7 @@ function buildLogDto(overrides: Partial<AiUsageLogApiDto> = {}): AiUsageLogApiDt
         id: 'log-1',
         userId: 'user-1',
         userName: 'Jane Doe',
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.5-flash',
         operationType: 'BARCODE_EXTRACTION',
         contentType: 'IMAGE',
         promptTokens: 100,
@@ -37,7 +37,7 @@ function buildSummaryDto(overrides: Partial<AiUsageSummaryApiDto> = {}): AiUsage
         totalTokens: 600,
         totalCostUsd: 1.2,
         avgCostPerRequestUsd: 0.3,
-        byModel: [{ model: 'gemini-2.5-pro', requests: 4, totalTokens: 600, costUsd: 1.2 }],
+        byModel: [{ model: 'gemini-3.5-flash', requests: 4, totalTokens: 600, costUsd: 1.2 }],
         byDay: [{ date: '2026-01-01', requests: 4, totalTokens: 600, costUsd: 1.2 }],
         ...overrides,
     };
@@ -78,7 +78,7 @@ describe('AiUsageService', () => {
         it('should send page/size and only the filter params that are set', () => {
             let result: unknown;
 
-            service.getLogs(1, { model: 'gemini-2.5-pro', userId: undefined, startDate: '2026-01-01' })
+            service.getLogs(1, { model: 'gemini-3.5-flash', userId: undefined, startDate: '2026-01-01' })
                 .subscribe((page) => (result = page));
 
             const req = httpMock.expectOne(
@@ -86,7 +86,7 @@ describe('AiUsageService', () => {
                     request.url === `${API_URL}/ai/usage/logs` &&
                     request.params.get('page') === '1' &&
                     request.params.get('size') === '20' &&
-                    request.params.get('model') === 'gemini-2.5-pro' &&
+                    request.params.get('model') === 'gemini-3.5-flash' &&
                     request.params.get('startDate') === '2026-01-01' &&
                     !request.params.has('userId') &&
                     !request.params.has('endDate'),
@@ -142,7 +142,7 @@ describe('AiUsageService', () => {
                 totalTokens: 600,
                 totalCostUsd: 1.2,
                 avgCostPerRequestUsd: 0.3,
-                byModel: [{ model: 'gemini-2.5-pro', requests: 4, totalTokens: 600, costUsd: 1.2 }],
+                byModel: [{ model: 'gemini-3.5-flash', requests: 4, totalTokens: 600, costUsd: 1.2 }],
                 byDay: [{ date: new Date(2026, 0, 1), requests: 4, totalTokens: 600, costUsd: 1.2 }],
             });
         });
@@ -155,9 +155,9 @@ describe('AiUsageService', () => {
             service.getModels().subscribe((models) => (result = models));
 
             const req = httpMock.expectOne(`${API_URL}/ai/usage/models`);
-            req.flush(buildResponse(['gemini-2.5-pro', 'gemini-3.1-flash-lite']));
+            req.flush(buildResponse(['gemini-3.5-flash', 'gemini-3.1-flash-lite']));
 
-            expect(result).toEqual(['gemini-2.5-pro', 'gemini-3.1-flash-lite']);
+            expect(result).toEqual(['gemini-3.5-flash', 'gemini-3.1-flash-lite']);
         });
     });
 });
