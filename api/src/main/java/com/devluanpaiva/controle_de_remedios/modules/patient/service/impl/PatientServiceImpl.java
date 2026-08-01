@@ -99,7 +99,7 @@ public class PatientServiceImpl implements PatientService {
                 .and(PatientSpecification.orderByNameIgnoringAccents());
 
         return patientRepository.findAll(specification, pageable)
-                .map(patientMapper::toMaskedResponseDTO);
+                .map(patientMapper::toResponseDTO);
     }
 
     private Specification<Patient> visibilityScope(User actor) {

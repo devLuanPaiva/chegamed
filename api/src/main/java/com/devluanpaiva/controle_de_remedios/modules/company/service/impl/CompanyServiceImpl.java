@@ -151,7 +151,7 @@ public class CompanyServiceImpl implements CompanyService {
         assertCanView(actor, company);
 
         return userRepository.findByCompanies_Id(companyId, pageable)
-                .map(userMapper::toMaskedResponseDTO);
+                .map(userMapper::toResponseDTO);
     }
 
     @Override

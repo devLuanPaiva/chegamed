@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
                 .and(UserSpecification.isActive(filter.active()));
 
         return userRepository.findAll(specification, pageable)
-                .map(userMapper::toMaskedResponseDTO);
+                .map(userMapper::toResponseDTO);
     }
 
     @Override

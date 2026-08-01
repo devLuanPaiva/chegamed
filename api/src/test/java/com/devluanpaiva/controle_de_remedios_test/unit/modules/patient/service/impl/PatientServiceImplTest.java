@@ -52,6 +52,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserReposit
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
+import com.devluanpaiva.controle_de_remedios.shared.utils.CpfMasker;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -158,7 +159,7 @@ class PatientServiceImplTest {
             PatientResponseDTO response = patientService.createPatient(dto);
 
             assertThat(response.name()).isEqualTo("John Doe");
-            assertThat(response.cpf()).isEqualTo("52998224725");
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask("52998224725"));
             assertThat(response.companyId()).isEqualTo(company.getId());
             verify(companyRepository, never()).existsByIdAndUsers_Id(any(), any());
         }
@@ -423,7 +424,7 @@ class PatientServiceImplTest {
             PatientResponseDTO response = patientService.updatePatient(patient.getId(), dto);
 
             assertThat(response.name()).isEqualTo("Jane Doe");
-            assertThat(response.cpf()).isEqualTo(originalCpf);
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(originalCpf));
             verify(patientRepository, never()).existsByCompanyIdAndCpf(any(), any());
         }
 
@@ -538,7 +539,7 @@ class PatientServiceImplTest {
             UserResponseDTO response = patientService.createPatientAccount(patient.getId(), dto);
 
             assertThat(response.name()).isEqualTo(patient.getName());
-            assertThat(response.cpf()).isEqualTo(patient.getCpf());
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(patient.getCpf()));
             assertThat(response.email()).isEqualTo("patient@example.com");
             assertThat(response.role()).isEqualTo(UserRole.PATIENT);
             assertThat(patient.getUser()).isNotNull();
