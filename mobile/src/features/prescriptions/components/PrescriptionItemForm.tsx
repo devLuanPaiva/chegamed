@@ -6,8 +6,6 @@ import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { ChipSelector } from "@/components/shared/ChipSelector";
 import {
     CreatePrescriptionItemRequest,
-    FrequencyType,
-    FrequencyTypeLabels,
     TreatmentType,
     TreatmentTypeLabels,
     UnityType,
@@ -16,7 +14,6 @@ import {
 import { BLANK_PRESCRIPTION_ITEM } from "@/features/prescriptions/hooks/usePrescriptionItems";
 
 const UNITY_OPTIONS = Object.values(UnityType).map((value) => ({ value, label: UnityTypeLabels[value] }));
-const FREQUENCY_OPTIONS = Object.values(FrequencyType).map((value) => ({ value, label: FrequencyTypeLabels[value] }));
 const TREATMENT_OPTIONS = Object.values(TreatmentType).map((value) => ({ value, label: TreatmentTypeLabels[value] }));
 
 interface PrescriptionItemFormProps {
@@ -35,8 +32,6 @@ function toFormState(item: CreatePrescriptionItemRequest) {
         dosage: item.dosage,
         prescribedQuantity: String(item.prescribedQuantity),
         unityType: item.unityType,
-        frequency: String(item.frequency),
-        frequencyType: item.frequencyType,
         treatmentType: item.treatmentType,
         treatmentDays: String(item.treatmentDays),
     };
@@ -46,14 +41,13 @@ type FormState = ReturnType<typeof toFormState>;
 
 function toPayload(form: FormState): CreatePrescriptionItemRequest | null {
     const prescribedQuantity = Number(form.prescribedQuantity);
-    const frequency = Number(form.frequency);
     const treatmentDays = Number(form.treatmentDays);
 
     if (!form.name.trim() || !form.dosage.trim()) {
         return null;
     }
 
-    if (!prescribedQuantity || prescribedQuantity <= 0 || !frequency || frequency <= 0) {
+    if (!prescribedQuantity || prescribedQuantity <= 0) {
         return null;
     }
 
@@ -70,8 +64,6 @@ function toPayload(form: FormState): CreatePrescriptionItemRequest | null {
         dosage: form.dosage.trim(),
         prescribedQuantity,
         unityType: form.unityType,
-        frequency,
-        frequencyType: form.frequencyType,
         treatmentType: form.treatmentType,
         treatmentDays,
     };
@@ -106,7 +98,7 @@ export function PrescriptionItemForm({
         const payload = toPayload(form!);
 
         if (!payload) {
-            setError("Preencha nome, dosagem e valores válidos (maiores que zero) para quantidade, frequência e dias.");
+            setError("Preencha nome, dosagem e valores válidos (maiores que zero) para quantidade e dias.");
             return;
         }
 
@@ -203,28 +195,6 @@ export function PrescriptionItemForm({
                         options={UNITY_OPTIONS}
                         value={form.unityType}
                         onChange={(value) => updateForm({ unityType: value })}
-                    />
-
-                    <View style={styles.row}>
-                        <View style={[styles.field, styles.rowField]}>
-                            <Text style={styles.label}>Frequência</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="0"
-                                placeholderTextColor={Colors.textSecondary}
-                                value={form.frequency}
-                                onChangeText={(text) => updateForm({ frequency: text.replace(/\D/g, "") })}
-                                keyboardType="number-pad"
-                                accessibilityLabel="Frequência de uso"
-                            />
-                        </View>
-                    </View>
-
-                    <ChipSelector
-                        label="Tipo de frequência"
-                        options={FREQUENCY_OPTIONS}
-                        value={form.frequencyType}
-                        onChange={(value) => updateForm({ frequencyType: value })}
                     />
 
                     <ChipSelector
