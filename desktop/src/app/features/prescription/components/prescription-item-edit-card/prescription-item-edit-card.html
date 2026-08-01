@@ -73,35 +73,6 @@
             </div>
 
             <div class="field">
-                <label class="field__label" for="item-edit-{{ item().id }}-frequency">Frequência</label>
-                <input
-                    id="item-edit-{{ item().id }}-frequency"
-                    #frequencyInput
-                    type="number"
-                    min="1"
-                    class="input"
-                    placeholder="0"
-                    [value]="model().frequency"
-                    (input)="onFrequencyChange(frequencyInput.value)"
-                />
-            </div>
-
-            <div class="field">
-                <label class="field__label" for="item-edit-{{ item().id }}-frequency-type">Tipo de frequência</label>
-                <select
-                    id="item-edit-{{ item().id }}-frequency-type"
-                    #frequencyTypeSelect
-                    class="input"
-                    [value]="model().frequencyType"
-                    (change)="onFrequencyTypeChange(frequencyTypeSelect.value)"
-                >
-                    @for (frequencyType of frequencyOptions; track frequencyType) {
-                        <option [value]="frequencyType">{{ FrequencyTypeLabels[frequencyType] }}</option>
-                    }
-                </select>
-            </div>
-
-            <div class="field">
                 <label class="field__label" for="item-edit-{{ item().id }}-treatment-type">Tipo de tratamento</label>
                 <select
                     id="item-edit-{{ item().id }}-treatment-type"

@@ -7,8 +7,6 @@ import { toDateInputValue } from '@shared/utils/date.util';
 import { PrescriptionStatus, PrescriptionStatusLabels } from '../../models/prescription.model';
 import { UpdatePrescriptionItemRequest } from '../../models/prescription-item-api.model';
 import {
-    FrequencyType,
-    FrequencyTypeLabels,
     IPrescriptionItem,
     TreatmentType,
     TreatmentTypeLabels,
@@ -21,8 +19,6 @@ interface EditCardModel {
     dosage: string;
     prescribedQuantity: number;
     unityType: UnityType;
-    frequency: number;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number;
     observations: string;
@@ -37,8 +33,6 @@ function toModel(item: IPrescriptionItem): EditCardModel {
         dosage: item.dosage,
         prescribedQuantity: item.prescribedQuantity,
         unityType: item.unityType,
-        frequency: item.frequency,
-        frequencyType: item.frequencyType,
         treatmentType: item.treatmentType,
         treatmentDays: item.treatmentDays,
         observations: item.observations ?? '',
@@ -67,9 +61,6 @@ export class PrescriptionItemEditCard {
     readonly unityOptions = Object.values(UnityType);
     readonly UnityTypeLabels = UnityTypeLabels;
 
-    readonly frequencyOptions = Object.values(FrequencyType);
-    readonly FrequencyTypeLabels = FrequencyTypeLabels;
-
     readonly treatmentOptions = Object.values(TreatmentType);
     readonly TreatmentTypeLabels = TreatmentTypeLabels;
 
@@ -77,9 +68,7 @@ export class PrescriptionItemEditCard {
         status: PrescriptionStatus.PENDING,
         dosage: '',
         prescribedQuantity: 0,
-        unityType: UnityType.BOX,
-        frequency: 0,
-        frequencyType: FrequencyType.PER_DAY,
+        unityType: UnityType.BOTTLE,
         treatmentType: TreatmentType.CONTINUOUS,
         treatmentDays: 0,
         observations: '',
@@ -94,7 +83,6 @@ export class PrescriptionItemEditCard {
         return (
             value.dosage.trim().length > 0 &&
             value.prescribedQuantity > 0 &&
-            value.frequency > 0 &&
             value.treatmentDays > 0 &&
             value.receivedQuantity >= 0 &&
             value.deliveredQuantity >= 0 &&
@@ -122,14 +110,6 @@ export class PrescriptionItemEditCard {
 
     onUnityTypeChange(value: string): void {
         this.model.update((current) => ({ ...current, unityType: value as UnityType }));
-    }
-
-    onFrequencyChange(value: string): void {
-        this.model.update((current) => ({ ...current, frequency: Number(value) }));
-    }
-
-    onFrequencyTypeChange(value: string): void {
-        this.model.update((current) => ({ ...current, frequencyType: value as FrequencyType }));
     }
 
     onTreatmentTypeChange(value: string): void {
@@ -173,8 +153,6 @@ export class PrescriptionItemEditCard {
             dosage: diffPrimitive(original.dosage, value.dosage.trim()),
             prescribedQuantity: diffPrimitive(original.prescribedQuantity, value.prescribedQuantity),
             unityType: diffPrimitive(original.unityType, value.unityType),
-            frequency: diffPrimitive(original.frequency, value.frequency),
-            frequencyType: diffPrimitive(original.frequencyType, value.frequencyType),
             treatmentType: diffPrimitive(original.treatmentType, value.treatmentType),
             treatmentDays: diffPrimitive(original.treatmentDays, value.treatmentDays),
             observations: diffPrimitive(original.observations ?? '', observations) || undefined,
