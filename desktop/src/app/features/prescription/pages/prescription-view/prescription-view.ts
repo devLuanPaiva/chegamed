@@ -14,7 +14,7 @@ import { DeliverQuantityModal } from '@shared/ui/deliver-quantity-modal/deliver-
 import { ImageFallback } from '@shared/ui/image-fallback/image-fallback';
 import { PrescriptionStatusBadge } from '@shared/ui/prescription-status-badge/prescription-status-badge';
 import { ViewMode, ViewToggle } from '@shared/ui/view-toggle/view-toggle';
-import { formatCpf } from '@shared/utils/cpf.util';
+import { MaskCpfPipe } from '@core/pipes/mask-cpf.pipe';
 import { toDateInputValue } from '@shared/utils/date.util';
 
 import {
@@ -32,7 +32,7 @@ import {
 
 @Component({
     selector: 'app-prescription-view',
-    imports: [DatePipe, ConfirmDialog, PrescriptionStatusBadge, ViewToggle, ImageFallback, DeliverQuantityModal],
+    imports: [DatePipe, ConfirmDialog, PrescriptionStatusBadge, ViewToggle, ImageFallback, DeliverQuantityModal, MaskCpfPipe],
     templateUrl: './prescription-view.html',
     styleUrl: './prescription-view.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,7 +43,6 @@ export class PrescriptionView implements OnDestroy {
     private readonly router = inject(Router);
     private readonly actions$ = inject(Actions);
 
-    readonly formatCpf = formatCpf;
     readonly UnityTypeLabels = UnityTypeLabels;
     readonly FrequencyTypeLabels = FrequencyTypeLabels;
     readonly TreatmentTypeLabels = TreatmentTypeLabels;

@@ -39,7 +39,7 @@
                     <span class="prescription-view__patient-detail">
                         Nascimento: {{ prescription()!.patient.birthDate | date: 'dd/MM/yyyy' }}
                     </span>
-                    <span class="prescription-view__patient-detail">CPF: {{ formatCpf(prescription()!.patient.cpf) }}</span>
+                    <span class="prescription-view__patient-detail">CPF: {{ prescription()!.patient.cpf | maskCpf }}</span>
                 </div>
             </div>
         </div>

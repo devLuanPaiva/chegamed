@@ -19,7 +19,7 @@
             <div class="card-body patient-edit__summary-body">
                 <div class="patient-edit__summary-info">
                     <span class="patient-edit__summary-name">{{ patient()!.name }}</span>
-                    <span class="patient-edit__summary-cpf">{{ formatCpf(patient()!.cpf) }}</span>
+                    <span class="patient-edit__summary-cpf">{{ patient()!.cpf | maskCpf }}</span>
                 </div>
 
                 <span class="badge" [class]="patient()!.userId ? 'badge-success' : 'badge-outline'">
@@ -49,7 +49,7 @@
                     />
                 </app-field>
 
-                <app-cpf-field id="edit-patient-cpf" [field]="editForm.cpf" />
+                <app-cpf-field id="edit-patient-cpf" [label]="cpfLabel()" [field]="editForm.cpf" />
 
                 <app-date-field id="edit-patient-birth-date" label="Data de nascimento" [field]="editForm.birthDate" [max]="maxBirthDate" />
 

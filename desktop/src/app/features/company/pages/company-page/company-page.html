@@ -75,7 +75,7 @@
                 </app-field>
 
                 <app-field for="company-cnpj" label="CNPJ">
-                    <input id="company-cnpj" class="input" type="text" [value]="formatCnpj(selectedCompany()!.cnpj)" disabled />
+                    <input id="company-cnpj" class="input" type="text" [value]="selectedCompany()!.cnpj | formatCnpj" disabled />
                 </app-field>
 
                 <app-field for="company-image" label="Logo (URL, opcional)">

@@ -5,12 +5,12 @@ import { form, required, validate } from '@angular/forms/signals';
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs';
 
+import { MaskCpfPipe } from '@core/pipes/mask-cpf.pipe';
 import { DateField } from '@shared/ui/date-field/date-field';
 import { ImageUploadMultiField, ImageUploadMultiFieldChange } from '@shared/ui/image-upload-multi-field/image-upload-multi-field';
 import { ToastService } from '@core/ui/toast/service/toast.service';
 import { ToastType } from '@core/ui/toast/models/toast.model';
 import { FileUploadService } from '@shared/services/file-upload.service';
-import { formatCpf } from '@shared/utils/cpf.util';
 import { isNotFutureDate, toDateInputValue } from '@shared/utils/date.util';
 import { diffPrimitive, diffStringArray } from '@shared/utils/diff.util';
 
@@ -29,7 +29,7 @@ import {
 
 @Component({
     selector: 'app-prescription-edit',
-    imports: [DateField, ImageUploadMultiField, PrescriptionItemEditCard],
+    imports: [DateField, ImageUploadMultiField, PrescriptionItemEditCard, MaskCpfPipe],
     templateUrl: './prescription-edit.html',
     styleUrl: './prescription-edit.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +42,6 @@ export class PrescriptionEdit implements OnDestroy {
     private readonly toastService = inject(ToastService);
 
     readonly maxIssueDate = toDateInputValue(new Date());
-    readonly formatCpf = formatCpf;
     readonly statusOptions = Object.values(PrescriptionStatus);
     readonly PrescriptionStatusLabels = PrescriptionStatusLabels;
 

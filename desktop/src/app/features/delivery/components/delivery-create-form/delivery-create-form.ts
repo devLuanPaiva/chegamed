@@ -9,7 +9,7 @@ import { UnityTypeLabels } from '@features/prescription/models/prescription-item
 import { DeliverQuantityModal } from '@shared/ui/deliver-quantity-modal/deliver-quantity-modal';
 import { ImageFallback } from '@shared/ui/image-fallback/image-fallback';
 import { PrescriptionStatusBadge } from '@shared/ui/prescription-status-badge/prescription-status-badge';
-import { formatCpf } from '@shared/utils/cpf.util';
+import { MaskCpfPipe } from '@core/pipes/mask-cpf.pipe';
 import { toDateInputValue } from '@shared/utils/date.util';
 
 import { IEligiblePrescription, IEligiblePrescriptionItem, isDeliverableStatus } from '../../models/delivery.model';
@@ -23,7 +23,7 @@ import { PatientCpfModal } from '../patient-cpf-modal/patient-cpf-modal';
 
 @Component({
     selector: 'app-delivery-create-form',
-    imports: [DatePipe, ImageFallback, PrescriptionStatusBadge, PatientCpfModal, DeliverQuantityModal],
+    imports: [DatePipe, ImageFallback, PrescriptionStatusBadge, PatientCpfModal, DeliverQuantityModal, MaskCpfPipe],
     templateUrl: './delivery-create-form.html',
     styleUrl: './delivery-create-form.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +33,6 @@ export class DeliveryCreateForm {
     private readonly actions$ = inject(Actions);
 
     readonly UnityTypeLabels = UnityTypeLabels;
-    readonly formatCpf = formatCpf;
 
     readonly prescriptions = this.store.selectSignal(selectEligiblePrescriptions);
     readonly loading = this.store.selectSignal(selectEligiblePrescriptionsLoading);

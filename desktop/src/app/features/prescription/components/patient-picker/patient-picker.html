@@ -1,7 +1,7 @@
 <div class="patient-picker">
     @if (selectedPatient(); as patient) {
         <p class="patient-picker__selected">
-            Paciente selecionado: <strong>{{ patient.name }}</strong> ({{ formatCpf(patient.cpf) }})
+            Paciente selecionado: <strong>{{ patient.name }}</strong> ({{ patient.cpf | maskCpf }})
         </p>
     }
 
@@ -35,7 +35,7 @@
         >
             <option value="" disabled>Selecione um paciente</option>
             @for (candidate of results(); track candidate.id) {
-                <option [value]="candidate.id">{{ candidate.name }} ({{ formatCpf(candidate.cpf) }})</option>
+                <option [value]="candidate.id">{{ candidate.name }} ({{ candidate.cpf | maskCpf }})</option>
             }
         </select>
     } @else if (searched() && !searching()) {

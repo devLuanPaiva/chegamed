@@ -52,7 +52,6 @@ export class UserList implements OnInit {
     private readonly session = inject(AuthSessionService);
     private readonly actions$ = inject(Actions);
 
-    readonly formatCpf = formatCpf;
     readonly UserRoleLabels = UserRoleLabels;
 
     readonly users = this.store.selectSignal(selectAllUsers);

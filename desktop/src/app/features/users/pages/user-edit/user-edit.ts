@@ -5,7 +5,7 @@ import { FormField, form, minLength, required, validate } from '@angular/forms/s
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs';
 
-import { formatCpf, isValidCpf, onlyDigits } from '@shared/utils/cpf.util';
+import { isValidCpf, maskCpf, onlyDigits } from '@shared/utils/cpf.util';
 import { diffPrimitive } from '@shared/utils/diff.util';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import { RoleBadge } from '@shared/ui/role-badge/role-badge';
@@ -64,11 +64,17 @@ export class UserEdit implements OnDestroy {
         required(schema.name, { message: 'O nome é obrigatório.' });
         minLength(schema.name, 3, { message: 'O nome deve ter ao menos 3 caracteres.' });
 
-        required(schema.cpf, { message: 'O CPF é obrigatório.' });
-        validate(schema.cpf, ({ value }) => (isValidCpf(value()) ? null : { kind: 'cpf', message: 'CPF inválido.' }));
+        validate(schema.cpf, ({ value }) =>
+            !value() || isValidCpf(value()) ? null : { kind: 'cpf', message: 'CPF inválido.' },
+        );
     });
 
     readonly canSubmit = computed(() => this.editForm().valid() && !this.mutating() && !this.submitting());
+
+    readonly cpfLabel = computed(() => {
+        const user = this.user();
+        return user ? `CPF (atual: ${maskCpf(user.cpf)} — deixe em branco para manter)` : 'CPF';
+    });
 
     constructor() {
         effect(() => {
@@ -83,7 +89,7 @@ export class UserEdit implements OnDestroy {
             if (user) {
                 this.model.set({
                     name: user.name,
-                    cpf: formatCpf(user.cpf),
+                    cpf: '',
                 });
             }
         });
@@ -119,7 +125,7 @@ export class UserEdit implements OnDestroy {
 
             const payload: UpdateUserRequest = {
                 name: diffPrimitive(original.name, value.name),
-                cpf: diffPrimitive(original.cpf, onlyDigits(value.cpf)),
+                cpf: value.cpf.trim() ? onlyDigits(value.cpf) : undefined,
                 imageUrl,
             };
 
