@@ -2,7 +2,7 @@ import { MedicineApiDto, toMedicine } from '@features/medicine/models/medicine-a
 import { parseLocalDate } from '@shared/utils/date.util';
 
 import { PrescriptionStatus } from './prescription.model';
-import { FrequencyType, IPrescriptionItem, TreatmentType, UnityType } from './prescription-item.model';
+import { IPrescriptionItem, TreatmentType, UnityType } from './prescription-item.model';
 
 export interface PrescriptionItemApiDto {
     id: string;
@@ -12,8 +12,6 @@ export interface PrescriptionItemApiDto {
     dosage: string;
     prescribedQuantity: number;
     unityType: UnityType;
-    frequency: number;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number;
     observations: string | null;
@@ -37,8 +35,6 @@ export interface CreatePrescriptionItemRequest {
     dosage: string;
     prescribedQuantity: number;
     unityType: UnityType;
-    frequency: number;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number;
 }
@@ -60,8 +56,6 @@ export interface CreatePrescriptionItemRequestDraft {
     dosage: string;
     prescribedQuantity: number;
     unityType: UnityType;
-    frequency: number;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number;
 }
@@ -71,8 +65,6 @@ export interface UpdatePrescriptionItemRequest {
     dosage?: string;
     prescribedQuantity?: number;
     unityType?: UnityType;
-    frequency?: number;
-    frequencyType?: FrequencyType;
     treatmentType?: TreatmentType;
     treatmentDays?: number;
     observations?: string;
@@ -90,8 +82,6 @@ export function toPrescriptionItem(dto: PrescriptionItemApiDto): IPrescriptionIt
         dosage: dto.dosage,
         prescribedQuantity: dto.prescribedQuantity,
         unityType: dto.unityType,
-        frequency: dto.frequency,
-        frequencyType: dto.frequencyType,
         treatmentType: dto.treatmentType,
         treatmentDays: dto.treatmentDays,
         observations: dto.observations,
