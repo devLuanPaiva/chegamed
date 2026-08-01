@@ -3,7 +3,7 @@ import { ChevronRight, MapPin, Phone, User } from "lucide-react-native";
 
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { IPatient } from "@/data/models/patient.model";
-import { formatCpf } from "@/lib/cpf";
+import { maskCpf } from "@/lib/cpf";
 
 interface PatientCardProps {
     patient: IPatient;
@@ -27,7 +27,7 @@ export function PatientCard({ patient, onPress }: Readonly<PatientCardProps>) {
                 <Text style={styles.patientName} numberOfLines={1}>
                     {patient.name}
                 </Text>
-                <Text style={styles.cpfText}>{formatCpf(patient.cpf)}</Text>
+                <Text style={styles.cpfText}>{maskCpf(patient.cpf)}</Text>
 
                 <View style={styles.detailRow}>
                     <Phone size={14} color={Colors.textSecondary} />

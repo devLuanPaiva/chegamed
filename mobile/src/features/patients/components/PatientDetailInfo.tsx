@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { IPatient } from "@/data/models/patient.model";
-import { formatCpf } from "@/lib/cpf";
+import { maskCpf } from "@/lib/cpf";
 import { formatDateBr } from "@/lib/dateFormat";
 
 interface PatientDetailInfoProps {
@@ -17,7 +17,7 @@ interface InfoRow {
 export function PatientDetailInfo({ patient }: Readonly<PatientDetailInfoProps>) {
     const rows: InfoRow[] = [
         { label: "Nome", value: patient.name },
-        { label: "CPF", value: formatCpf(patient.cpf) },
+        { label: "CPF", value: maskCpf(patient.cpf) },
         { label: "Data de nascimento", value: formatDateBr(patient.birthDate) },
         { label: "Contato", value: patient.contact || "Não informado" },
         { label: "Endereço", value: patient.address || "Não informado" },

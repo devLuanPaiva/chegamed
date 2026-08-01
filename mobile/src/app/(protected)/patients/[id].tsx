@@ -78,6 +78,7 @@ export default function PatientDetailsScreen() {
                             isSubmitting={isSubmitting}
                             submitLabel="Salvar alterações"
                             onSubmit={submit}
+                            currentCpf={patient.cpf}
                         />
                     </ScrollView>
                 </KeyboardAvoidingView>

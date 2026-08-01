@@ -2,7 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
 import { AlertCircle } from "lucide-react-native";
 
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
-import { formatCpf } from "@/lib/cpf";
+import { formatCpf, maskCpf } from "@/lib/cpf";
 import { PatientFormValues } from "@/features/patients/hooks/usePatientForm";
 import { BirthDateField } from "./BirthDateField";
 
@@ -14,6 +14,7 @@ interface PatientFormProps {
     isSubmitting: boolean;
     submitLabel: string;
     onSubmit: () => void;
+    currentCpf?: string;
 }
 
 export function PatientForm({
@@ -24,6 +25,7 @@ export function PatientForm({
     isSubmitting,
     submitLabel,
     onSubmit,
+    currentCpf,
 }: Readonly<PatientFormProps>) {
     return (
         <View style={styles.container}>
@@ -48,12 +50,12 @@ export function PatientForm({
             </View>
 
             <View style={styles.field}>
-                <Text style={styles.label}>CPF</Text>
+                <Text style={styles.label}>{currentCpf ? `CPF (atual: ${maskCpf(currentCpf)})` : "CPF"}</Text>
                 <TextInput
                     style={[styles.input, formErrorField === "cpf" && styles.inputError]}
                     value={values.cpf}
                     onChangeText={(text) => onChangeField("cpf", formatCpf(text))}
-                    placeholder="000.000.000-00"
+                    placeholder={currentCpf ? "Deixe em branco para manter o CPF atual" : "000.000.000-00"}
                     placeholderTextColor={Colors.textSecondary}
                     keyboardType="numeric"
                     maxLength={14}
