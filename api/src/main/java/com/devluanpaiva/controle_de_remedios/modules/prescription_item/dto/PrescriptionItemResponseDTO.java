@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import com.devluanpaiva.controle_de_remedios.modules.medicine.dto.MedicineResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 
@@ -18,8 +17,6 @@ public record PrescriptionItemResponseDTO(
         String dosage,
         Integer prescribedQuantity,
         UnityType unityType,
-        Integer frequency,
-        FrequencyType frequencyType,
         TreatmentType treatmentType,
         Integer treatmentDays,
         String observations,
