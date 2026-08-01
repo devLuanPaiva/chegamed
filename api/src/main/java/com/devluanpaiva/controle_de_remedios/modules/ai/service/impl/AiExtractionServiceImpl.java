@@ -23,7 +23,6 @@ import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageContentType
 import com.devluanpaiva.controle_de_remedios.modules.ai.enums.AiUsageOperationType;
 import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiExtractionService;
 import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiUsageLogService;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
@@ -49,7 +48,6 @@ public class AiExtractionServiceImpl implements AiExtractionService {
     private static final Pattern EAN_PATTERN = Pattern.compile("^\\d{8}$|^\\d{12,14}$");
 
     private static final List<String> UNITY_TYPE_VALUES = enumNames(UnityType.values());
-    private static final List<String> FREQUENCY_TYPE_VALUES = enumNames(FrequencyType.values());
     private static final List<String> TREATMENT_TYPE_VALUES = enumNames(TreatmentType.values());
 
     private static final String ESUS_TYPE_INSTRUCTIONS = "A receita é digitalizada, no modelo e-SUS. O nome do paciente normalmente está na primeira linha do "
@@ -191,8 +189,6 @@ public class AiExtractionServiceImpl implements AiExtractionService {
                     textOrNull(medication.path("dosagem")),
                     integerOrNull(medication.path("quantidade_prescrita")),
                     enumOrNull(medication.path("unidade"), UnityType.class),
-                    integerOrNull(medication.path("frequencia")),
-                    enumOrNull(medication.path("tipo_frequencia"), FrequencyType.class),
                     enumOrNull(medication.path("tipo_tratamento"), TreatmentType.class),
                     integerOrNull(medication.path("dias_tratamento"))));
         }
@@ -260,22 +256,17 @@ public class AiExtractionServiceImpl implements AiExtractionService {
                 + "   - codigo_ean: código de barras/EAN do medicamento, apenas se estiver explicitamente impresso "
                 + "na receita.\n"
                 + "   - dosagem: apenas a concentração do medicamento (ex: '500mg', '20mg/mL', '1g'). Não inclua "
-                + "via de administração, frequência ou duração do tratamento — essas informações já são extraídas "
-                + "separadamente nos campos quantidade_prescrita, unidade, frequencia, tipo_frequencia, "
-                + "tipo_tratamento e dias_tratamento.\n"
+                + "via de administração ou duração do tratamento — essas informações já são extraídas "
+                + "separadamente nos campos quantidade_prescrita, unidade, tipo_tratamento e dias_tratamento.\n"
                 + "   - quantidade_prescrita: a quantidade total prescrita, como número inteiro (ex: 60).\n"
                 + "   - unidade: classifique a unidade da quantidade prescrita em um destes valores: "
                 + String.join(", ", UNITY_TYPE_VALUES) + ".\n"
-                + "   - frequencia: o número de vezes que o medicamento deve ser usado por dia/semana/mês, como "
-                + "número inteiro.\n"
-                + "   - tipo_frequencia: classifique o período da frequência em um destes valores: "
-                + String.join(", ", FREQUENCY_TYPE_VALUES) + ".\n"
                 + "   - tipo_tratamento: classifique a duração do tratamento em um destes valores: "
                 + String.join(", ", TREATMENT_TYPE_VALUES) + ".\n"
                 + "   - dias_tratamento: a quantidade de dias de tratamento, como número inteiro. Se o tratamento "
                 + "for contínuo e não houver prazo definido, estime um valor razoável (ex: 30).\n"
-                + "Sempre que um campo estruturado (unidade, quantidade_prescrita, frequencia, tipo_frequencia, "
-                + "tipo_tratamento, dias_tratamento) não puder ser lido diretamente da receita, faça sua melhor "
+                + "Sempre que um campo estruturado (unidade, quantidade_prescrita, tipo_tratamento, "
+                + "dias_tratamento) não puder ser lido diretamente da receita, faça sua melhor "
                 + "estimativa clínica com base no texto disponível em vez de retornar null — esses campos serão "
                 + "revisados por um farmacêutico antes de confirmar o cadastro. Use null apenas quando realmente "
                 + "não houver nenhuma informação para basear uma estimativa.\n\n"
@@ -289,8 +280,6 @@ public class AiExtractionServiceImpl implements AiExtractionService {
                 "dosagem", Map.of("type", "STRING", "nullable", true),
                 "quantidade_prescrita", Map.of("type", "INTEGER", "nullable", true),
                 "unidade", Map.of("type", "STRING", "enum", UNITY_TYPE_VALUES, "nullable", true),
-                "frequencia", Map.of("type", "INTEGER", "nullable", true),
-                "tipo_frequencia", Map.of("type", "STRING", "enum", FREQUENCY_TYPE_VALUES, "nullable", true),
                 "tipo_tratamento", Map.of("type", "STRING", "enum", TREATMENT_TYPE_VALUES, "nullable", true),
                 "dias_tratamento", Map.of("type", "INTEGER", "nullable", true));
 

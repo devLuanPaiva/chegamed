@@ -107,8 +107,6 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                 .dosage(dto.dosage())
                 .prescribedQuantity(dto.prescribedQuantity())
                 .unityType(dto.unityType())
-                .frequency(dto.frequency())
-                .frequencyType(dto.frequencyType())
                 .treatmentType(dto.treatmentType())
                 .treatmentDays(dto.treatmentDays())
                 .receivedQuantity(0)

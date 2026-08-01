@@ -22,8 +22,6 @@ public class PrescriptionItemMapper {
                 item.getDosage(),
                 item.getPrescribedQuantity(),
                 item.getUnityType(),
-                item.getFrequency(),
-                item.getFrequencyType(),
                 item.getTreatmentType(),
                 item.getTreatmentDays(),
                 item.getObservations(),

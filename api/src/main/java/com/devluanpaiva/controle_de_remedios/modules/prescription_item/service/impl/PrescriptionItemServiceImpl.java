@@ -67,14 +67,6 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
             item.setUnityType(dto.unityType());
         }
 
-        if (dto.frequency() != null) {
-            item.setFrequency(dto.frequency());
-        }
-
-        if (dto.frequencyType() != null) {
-            item.setFrequencyType(dto.frequencyType());
-        }
-
         if (dto.treatmentType() != null) {
             item.setTreatmentType(dto.treatmentType());
         }
