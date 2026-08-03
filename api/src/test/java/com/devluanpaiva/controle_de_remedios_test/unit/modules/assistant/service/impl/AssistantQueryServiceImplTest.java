@@ -42,7 +42,6 @@ import com.devluanpaiva.controle_de_remedios.modules.patient.repository.PatientR
 import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescription;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.repository.PrescriptionItemRepository;
@@ -114,9 +113,7 @@ class AssistantQueryServiceImplTest {
                 .status(status)
                 .dosage("10mg")
                 .prescribedQuantity(30)
-                .unityType(UnityType.TABLET)
-                .frequency(2)
-                .frequencyType(FrequencyType.PER_DAY)
+                .unityType(UnityType.BOTTLE)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(15)
                 .receivedQuantity(0)

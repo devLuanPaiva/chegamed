@@ -5,7 +5,6 @@ import { AlertCircle, Pencil, Pill, Trash2 } from "lucide-react-native";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import {
     CreatePrescriptionItemRequest,
-    FrequencyTypeLabels,
     TreatmentTypeLabels,
     UnityTypeLabels,
 } from "@/data/models/prescription-item.model";
@@ -19,12 +18,10 @@ interface PrescriptionItemCardProps {
 
 function summarize(item: CreatePrescriptionItemRequest): string {
     const unity = UnityTypeLabels[item.unityType];
-    const frequencyType = FrequencyTypeLabels[item.frequencyType];
     const treatmentType = TreatmentTypeLabels[item.treatmentType];
 
     return (
-        `${unity} · ${item.frequency}x ${frequencyType.toLowerCase()} · ` +
-        `${item.treatmentDays} dias (${treatmentType.toLowerCase()}) · Qtd: ${item.prescribedQuantity}`
+        `${unity} · ${item.treatmentDays} dias (${treatmentType.toLowerCase()}) · Qtd: ${item.prescribedQuantity}`
     );
 }
 

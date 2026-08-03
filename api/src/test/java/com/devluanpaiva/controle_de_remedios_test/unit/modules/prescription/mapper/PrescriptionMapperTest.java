@@ -26,7 +26,6 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescri
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.mapper.PrescriptionMapper;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.mapper.PrescriptionItemMapper;
@@ -80,9 +79,7 @@ class PrescriptionMapperTest {
                 .status(PrescriptionStatus.PENDING)
                 .dosage(dosage)
                 .prescribedQuantity(10)
-                .unityType(UnityType.TABLET)
-                .frequency(1)
-                .frequencyType(FrequencyType.PER_DAY)
+                .unityType(UnityType.BOTTLE)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(7)
                 .receivedQuantity(0)

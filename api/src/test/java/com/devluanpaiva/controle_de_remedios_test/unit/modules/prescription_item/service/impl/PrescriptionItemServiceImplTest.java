@@ -31,7 +31,6 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.Prescrip
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.PrescriptionItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.UpdatePrescriptionItemRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.mapper.PrescriptionItemMapper;
@@ -113,9 +112,7 @@ class PrescriptionItemServiceImplTest {
                 .status(PrescriptionStatus.PENDING)
                 .dosage("10mg")
                 .prescribedQuantity(30)
-                .unityType(UnityType.TABLET)
-                .frequency(2)
-                .frequencyType(FrequencyType.PER_DAY)
+                .unityType(UnityType.BOTTLE)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(15)
                 .receivedQuantity(0)
@@ -125,7 +122,7 @@ class PrescriptionItemServiceImplTest {
 
     private UpdatePrescriptionItemRequestDTO emptyUpdateDto() {
         return new UpdatePrescriptionItemRequestDTO(
-                null, null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private void assertForbidden(ThrowingCallable callable) {
@@ -221,8 +218,7 @@ class PrescriptionItemServiceImplTest {
             Patient patient = buildPatient(buildCompany());
             PrescriptionItem item = buildItem(patient);
             UpdatePrescriptionItemRequestDTO dto = new UpdatePrescriptionItemRequestDTO(
-                    PrescriptionStatus.APPROVED, null, null, null, null, null, null, null, null, null, null, null,
-                    null);
+                    PrescriptionStatus.APPROVED, null, null, null, null, null, null, null, null, null, null);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
@@ -242,7 +238,7 @@ class PrescriptionItemServiceImplTest {
             Patient patient = buildPatient(buildCompany());
             PrescriptionItem item = buildItem(patient);
             UpdatePrescriptionItemRequestDTO dto = new UpdatePrescriptionItemRequestDTO(
-                    null, null, null, null, null, null, null, null, null, null, 20, 10, null);
+                    null, null, null, null, null, null, null, null, 20, 10, null);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
