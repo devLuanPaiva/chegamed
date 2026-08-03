@@ -112,7 +112,7 @@ class PrescriptionItemServiceImplTest {
                 .status(PrescriptionStatus.PENDING)
                 .dosage("10mg")
                 .prescribedQuantity(30)
-                .unityType(UnityType.BOTTLE)
+                .unityType(UnityType.TABLET)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(15)
                 .receivedQuantity(0)

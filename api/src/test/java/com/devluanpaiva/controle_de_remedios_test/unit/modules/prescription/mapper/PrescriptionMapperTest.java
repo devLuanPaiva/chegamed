@@ -79,7 +79,7 @@ class PrescriptionMapperTest {
                 .status(PrescriptionStatus.PENDING)
                 .dosage(dosage)
                 .prescribedQuantity(10)
-                .unityType(UnityType.BOTTLE)
+                .unityType(UnityType.TABLET)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(7)
                 .receivedQuantity(0)

@@ -159,7 +159,7 @@ class PrescriptionServiceImplTest {
 
     private CreatePrescriptionItemRequestDTO buildItemDto(UUID medicineId) {
         return new CreatePrescriptionItemRequestDTO(
-                medicineId, null, "10mg", 30, UnityType.BOTTLE,
+                medicineId, null, "10mg", 30, UnityType.TABLET,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -168,7 +168,7 @@ class PrescriptionServiceImplTest {
                 medicineName, null, null);
 
         return new CreatePrescriptionItemRequestDTO(
-                null, medicine, "10mg", 30, UnityType.BOTTLE,
+                null, medicine, "10mg", 30, UnityType.TABLET,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -268,7 +268,7 @@ class PrescriptionServiceImplTest {
             User admin = buildUser(UserRole.ADMIN);
             Patient patient = buildPatient(buildCompany());
             CreatePrescriptionItemRequestDTO itemWithoutMedicine = new CreatePrescriptionItemRequestDTO(
-                    null, null, "10mg", 30, UnityType.BOTTLE,
+                    null, null, "10mg", 30, UnityType.TABLET,
                     TreatmentType.CONTINUOUS, 15);
             CreatePrescriptionRequestDTO dto = new CreatePrescriptionRequestDTO(
                     null, LocalDate.now(), patient.getId(), List.of(itemWithoutMedicine));
