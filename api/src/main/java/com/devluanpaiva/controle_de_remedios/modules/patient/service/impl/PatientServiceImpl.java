@@ -95,10 +95,11 @@ public class PatientServiceImpl implements PatientService {
         Specification<Patient> specification = visibilityScope(actor)
                 .and(PatientSpecification.hasCompanyId(filter.companyId()))
                 .and(PatientSpecification.hasName(filter.name()))
-                .and(PatientSpecification.hasCpf(filter.cpf()));
+                .and(PatientSpecification.hasCpf(filter.cpf()))
+                .and(PatientSpecification.orderByNameIgnoringAccents());
 
         return patientRepository.findAll(specification, pageable)
-                .map(patientMapper::toMaskedResponseDTO);
+                .map(patientMapper::toResponseDTO);
     }
 
     private Specification<Patient> visibilityScope(User actor) {
@@ -231,22 +232,39 @@ public class PatientServiceImpl implements PatientService {
     private User buildPatientUser(
             String name, String cpf, String email, String rawPassword, String imageUrl, Company company) {
 
-        if (userRepository.existsByEmail(email)) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "E-mail já cadastrado",
-                    "EMAIL_ALREADY_EXISTS",
-                    "email",
-                    "Já existe um usuário cadastrado com o e-mail '" + email + "'.");
+        return userRepository.findByCpf(cpf)
+                .map(existingUser -> reactivatePatientUser(existingUser, name, email, rawPassword, imageUrl, company))
+                .orElseGet(() -> createNewPatientUser(name, cpf, email, rawPassword, imageUrl, company));
+    }
+
+    private User reactivatePatientUser(
+            User user, String name, String email, String rawPassword, String imageUrl, Company company) {
+
+        if (user.getRole() != UserRole.PATIENT || patientRepository.existsByUser_Id(user.getId())) {
+            throw cpfAlreadyExists(user.getCpf());
         }
 
-        if (userRepository.existsByCpf(cpf)) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "CPF já cadastrado",
-                    "CPF_ALREADY_EXISTS",
-                    "cpf",
-                    "Já existe um usuário cadastrado com o CPF '" + cpf + "'.");
+        userRepository.findByEmail(email)
+                .filter(existing -> !existing.getId().equals(user.getId()))
+                .ifPresent(existing -> {
+                    throw emailAlreadyExists(email);
+                });
+
+        user.setName(name);
+        user.setEmail(email);
+        user.setImageUrl(imageUrl);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setActive(true);
+        user.assignToCompany(company);
+
+        return user;
+    }
+
+    private User createNewPatientUser(
+            String name, String cpf, String email, String rawPassword, String imageUrl, Company company) {
+
+        if (userRepository.existsByEmail(email)) {
+            throw emailAlreadyExists(email);
         }
 
         User user = User.builder()
@@ -261,6 +279,24 @@ public class PatientServiceImpl implements PatientService {
 
         user.assignToCompany(company);
         return user;
+    }
+
+    private BusinessException emailAlreadyExists(String email) {
+        return new BusinessException(
+                HttpStatus.CONFLICT,
+                "E-mail já cadastrado",
+                "EMAIL_ALREADY_EXISTS",
+                "email",
+                "Já existe um usuário cadastrado com o e-mail '" + email + "'.");
+    }
+
+    private BusinessException cpfAlreadyExists(String cpf) {
+        return new BusinessException(
+                HttpStatus.CONFLICT,
+                "CPF já cadastrado",
+                "CPF_ALREADY_EXISTS",
+                "cpf",
+                "Já existe um usuário cadastrado com o CPF '" + cpf + "'.");
     }
 
     private void assertCanManagePatients(User actor) {

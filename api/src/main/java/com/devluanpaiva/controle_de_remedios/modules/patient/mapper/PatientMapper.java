@@ -12,7 +12,7 @@ public class PatientMapper {
         return new PatientResponseDTO(
                 patient.getId(),
                 patient.getName(),
-                patient.getCpf(),
+                CpfMasker.mask(patient.getCpf()),
                 patient.getBirthdate().toLocalDate(),
                 patient.getCompany().getId(),
                 patient.getUser() != null ? patient.getUser().getId() : null,
@@ -20,21 +20,5 @@ public class PatientMapper {
                 patient.getAddress(),
                 patient.getCreatedAt(),
                 patient.getUpdatedAt());
-    }
-
-    public PatientResponseDTO toMaskedResponseDTO(Patient patient) {
-        PatientResponseDTO dto = toResponseDTO(patient);
-
-        return new PatientResponseDTO(
-                dto.id(),
-                dto.name(),
-                CpfMasker.mask(dto.cpf()),
-                dto.birthDate(),
-                dto.companyId(),
-                dto.userId(),
-                dto.contact(),
-                dto.address(),
-                dto.createdAt(),
-                dto.updatedAt());
     }
 }

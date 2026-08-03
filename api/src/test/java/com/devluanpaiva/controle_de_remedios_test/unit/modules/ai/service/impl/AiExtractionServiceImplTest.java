@@ -49,7 +49,7 @@ import tools.jackson.databind.json.JsonMapper;
 class AiExtractionServiceImplTest {
 
         private static final String ESUS_MODEL = "gemini-3.1-flash-lite";
-        private static final String HANDWRITTEN_MODEL = "gemini-2.5-flash";
+        private static final String HANDWRITTEN_MODEL = "gemini-3.5-flash";
         private static final GeminiUsage USAGE = new GeminiUsage(10, 5, 15);
 
         @Mock

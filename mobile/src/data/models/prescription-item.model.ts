@@ -1,31 +1,13 @@
 export enum UnityType {
-    BOX = "BOX",
-    BLISTER = "BLISTER",
     BOTTLE = "BOTTLE",
-    TABLET = "TABLET",
-    CAPSULE = "CAPSULE",
-    SYRUP = "SYRUP",
+    CREAM = "CREAM",
+    LIQUID = "LIQUID",
 }
 
 export const UnityTypeLabels: Record<UnityType, string> = {
-    [UnityType.BOX]: "Caixa",
-    [UnityType.BLISTER]: "Blister",
     [UnityType.BOTTLE]: "Frasco",
-    [UnityType.TABLET]: "Comprimido",
-    [UnityType.CAPSULE]: "Cápsula",
-    [UnityType.SYRUP]: "Xarope",
-};
-
-export enum FrequencyType {
-    PER_DAY = "PER_DAY",
-    PER_WEEK = "PER_WEEK",
-    PER_MONTH = "PER_MONTH",
-}
-
-export const FrequencyTypeLabels: Record<FrequencyType, string> = {
-    [FrequencyType.PER_DAY]: "Por dia",
-    [FrequencyType.PER_WEEK]: "Por semana",
-    [FrequencyType.PER_MONTH]: "Por mês",
+    [UnityType.CREAM]: "Creme",
+    [UnityType.LIQUID]: "Líquido",
 };
 
 export enum TreatmentType {
@@ -51,8 +33,6 @@ export interface CreatePrescriptionItemRequest {
     dosage: string;
     prescribedQuantity: number;
     unityType: UnityType;
-    frequency: number;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number;
 }
@@ -67,8 +47,6 @@ export function toCreatePrescriptionItemRequest(draft: PrescriptionItemDraft): C
         dosage: draft.dosage,
         prescribedQuantity: draft.prescribedQuantity,
         unityType: draft.unityType,
-        frequency: draft.frequency,
-        frequencyType: draft.frequencyType,
         treatmentType: draft.treatmentType,
         treatmentDays: draft.treatmentDays,
     };

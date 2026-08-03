@@ -4,10 +4,10 @@ import { Store } from '@ngrx/store';
 
 import { AuthSessionService } from '@features/auth/services/auth-session.service';
 import { normalizeUserRole, UserRole } from '@features/users/models/user.model';
+import { FormatCnpjPipe } from '@core/pipes/format-cnpj.pipe';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import { Field } from '@shared/ui/field/field';
 import { NotFound } from '@shared/ui/not-found/not-found';
-import { formatCnpj } from '@shared/utils/cnpj.util';
 
 import * as CompanyActions from '../../store/company.actions';
 import {
@@ -24,7 +24,7 @@ import { CompanySwitcher } from '../../ui/company-switcher/company-switcher';
 
 @Component({
     selector: 'app-company-page',
-    imports: [FormField, Avatar, Field, NotFound, CompanySwitcher, CompanyCreateModal, CompanyAssociationsModal],
+    imports: [FormField, Avatar, Field, NotFound, CompanySwitcher, CompanyCreateModal, CompanyAssociationsModal, FormatCnpjPipe],
     templateUrl: './company-page.html',
     styleUrl: './company-page.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,8 +32,6 @@ import { CompanySwitcher } from '../../ui/company-switcher/company-switcher';
 export class CompanyPage {
     private readonly store = inject(Store);
     private readonly session = inject(AuthSessionService);
-
-    readonly formatCnpj = formatCnpj;
 
     readonly companies = this.store.selectSignal(selectAllCompanies);
     readonly loading = this.store.selectSignal(selectCompaniesLoading);

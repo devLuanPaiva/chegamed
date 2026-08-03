@@ -5,7 +5,7 @@ import { Search } from "lucide-react-native";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { usePatientSearch } from "@/data/hooks/usePatientSearch";
 import { IPatient } from "@/data/models/patient.model";
-import { formatCpf } from "@/lib/cpf";
+import { maskCpf } from "@/lib/cpf";
 
 interface PatientSearchFieldProps {
     selectedPatient: IPatient | null;
@@ -39,7 +39,7 @@ export function PatientSearchField({
             <View style={styles.chip}>
                 <View style={styles.chipInfo}>
                     <Text style={styles.chipName}>{selectedPatient.name}</Text>
-                    <Text style={styles.chipDetail}>{formatCpf(selectedPatient.cpf)}</Text>
+                    <Text style={styles.chipDetail}>{maskCpf(selectedPatient.cpf)}</Text>
                 </View>
 
                 <TouchableOpacity
@@ -80,7 +80,7 @@ export function PatientSearchField({
                             accessibilityLabel={`Selecionar paciente ${patient.name}`}
                         >
                             <Text style={styles.resultName}>{patient.name}</Text>
-                            <Text style={styles.resultDetail}>{formatCpf(patient.cpf)}</Text>
+                            <Text style={styles.resultDetail}>{maskCpf(patient.cpf)}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>

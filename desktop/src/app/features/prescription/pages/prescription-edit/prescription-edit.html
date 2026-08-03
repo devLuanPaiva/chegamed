@@ -19,7 +19,7 @@
             <div class="card-body prescription-edit__summary-body">
                 <div class="prescription-edit__summary-info">
                     <span class="prescription-edit__summary-name">{{ prescription()!.patient.name }}</span>
-                    <span class="prescription-edit__summary-cpf">{{ formatCpf(prescription()!.patient.cpf) }}</span>
+                    <span class="prescription-edit__summary-cpf">{{ prescription()!.patient.cpf | maskCpf }}</span>
                 </div>
             </div>
         </div>

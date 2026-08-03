@@ -26,10 +26,10 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescri
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.mapper.PrescriptionMapper;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.mapper.PrescriptionItemMapper;
+import com.devluanpaiva.controle_de_remedios.shared.utils.CpfMasker;
 
 @DisplayName("PrescriptionMapper")
 class PrescriptionMapperTest {
@@ -79,9 +79,7 @@ class PrescriptionMapperTest {
                 .status(PrescriptionStatus.PENDING)
                 .dosage(dosage)
                 .prescribedQuantity(10)
-                .unityType(UnityType.TABLET)
-                .frequency(1)
-                .frequencyType(FrequencyType.PER_DAY)
+                .unityType(UnityType.BOTTLE)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(7)
                 .receivedQuantity(0)
@@ -153,8 +151,8 @@ class PrescriptionMapperTest {
     class ToDetailResponseDTO {
 
         @Test
-        @DisplayName("should include the complete unmasked patient response DTO")
-        void shouldIncludeCompleteUnmaskedPatientResponseDTO() {
+        @DisplayName("should include the complete masked patient response DTO")
+        void shouldIncludeCompleteMaskedPatientResponseDTO() {
             Patient patient = buildPatient(buildCompany());
             Prescription prescription = buildPrescription(patient, new ArrayList<>());
 
@@ -162,7 +160,7 @@ class PrescriptionMapperTest {
 
             assertThat(response.patient().id()).isEqualTo(patient.getId());
             assertThat(response.patient().name()).isEqualTo(patient.getName());
-            assertThat(response.patient().cpf()).isEqualTo("52998224725");
+            assertThat(response.patient().cpf()).isEqualTo(CpfMasker.mask("52998224725"));
         }
 
         @Test

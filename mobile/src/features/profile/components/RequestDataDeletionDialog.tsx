@@ -1,7 +1,9 @@
 import { AlertCircle } from "lucide-react-native";
 import {
     ActivityIndicator,
+    KeyboardAvoidingView,
     Modal,
+    Platform,
     Pressable,
     StyleSheet,
     Text,
@@ -35,7 +37,8 @@ export function RequestDataDeletionDialog({
 
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
-            <Pressable style={styles.backdrop} onPress={handleCancel} accessibilityLabel="Fechar">
+            <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+                <Pressable style={styles.backdrop} onPress={handleCancel} accessibilityLabel="Fechar">
                 <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
                     <Text style={styles.title}>Solicitar exclusão de dados</Text>
                     <Text style={styles.message}>
@@ -92,12 +95,17 @@ export function RequestDataDeletionDialog({
                         </TouchableOpacity>
                     </View>
                 </Pressable>
-            </Pressable>
+                </Pressable>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
+    flex: {
+        flex: 1,
+    },
+
     backdrop: {
         flex: 1,
         backgroundColor: "rgba(26,26,26,0.5)",

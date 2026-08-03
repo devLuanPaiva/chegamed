@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -81,7 +83,7 @@ class AiUsageQueryServiceImplTest {
         return AiUsageLog.builder()
                 .id(UUID.randomUUID())
                 .user(user)
-                .model("gemini-2.5-flash")
+                .model("gemini-3.5-flash")
                 .operationType(AiUsageOperationType.BARCODE_EXTRACTION)
                 .contentType(AiUsageContentType.IMAGE)
                 .promptTokens(100)
@@ -125,7 +127,7 @@ class AiUsageQueryServiceImplTest {
             assertThat(dto.id()).isEqualTo(log.getId());
             assertThat(dto.userId()).isEqualTo(loggedUser.getId());
             assertThat(dto.userName()).isEqualTo(loggedUser.getName());
-            assertThat(dto.model()).isEqualTo("gemini-2.5-flash");
+            assertThat(dto.model()).isEqualTo("gemini-3.5-flash");
             assertThat(dto.operationType()).isEqualTo(AiUsageOperationType.BARCODE_EXTRACTION);
             assertThat(dto.contentType()).isEqualTo(AiUsageContentType.IMAGE);
             assertThat(dto.totalTokens()).isEqualTo(150);
@@ -153,13 +155,13 @@ class AiUsageQueryServiceImplTest {
 
             AiUsageTotalsDTO totals = new AiUsageTotalsDTO(4, 400, 200, 600, new BigDecimal("1.200000"));
             List<AiUsageModelBreakdownDTO> byModel = List.of(
-                    new AiUsageModelBreakdownDTO("gemini-2.5-flash", 4, 600, new BigDecimal("1.200000")));
+                    new AiUsageModelBreakdownDTO("gemini-3.5-flash", 4, 600, new BigDecimal("1.200000")));
             List<AiUsageDailyBreakdownDTO> byDay = List.of(
                     new AiUsageDailyBreakdownDTO(LocalDate.now(), 4, 600, new BigDecimal("1.200000")));
 
-            when(aiUsageLogRepository.findTotals(isNull(), isNull(), isNull(), isNull())).thenReturn(totals);
-            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), isNull(), isNull())).thenReturn(byModel);
-            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), isNull(), isNull())).thenReturn(byDay);
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any())).thenReturn(byModel);
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any())).thenReturn(byDay);
 
             AiUsageSummaryResponseDTO summary = aiUsageQueryService.getSummary(NO_FILTER);
 
@@ -176,10 +178,10 @@ class AiUsageQueryServiceImplTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
 
             AiUsageTotalsDTO totals = new AiUsageTotalsDTO(0, 0, 0, 0, BigDecimal.ZERO);
-            when(aiUsageLogRepository.findTotals(isNull(), isNull(), isNull(), isNull())).thenReturn(totals);
-            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), isNull(), isNull()))
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any()))
                     .thenReturn(List.of());
-            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), isNull(), isNull()))
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any()))
                     .thenReturn(List.of());
 
             AiUsageSummaryResponseDTO summary = aiUsageQueryService.getSummary(NO_FILTER);
@@ -196,6 +198,24 @@ class AiUsageQueryServiceImplTest {
 
             verifyNoInteractions(aiUsageLogRepository);
         }
+
+        @Test
+        @DisplayName("should never pass null from/until to the repository, since Postgres cannot infer "
+                + "the parameter type for a bare 'timestamp IS NULL' check")
+        void shouldNeverPassNullDateBoundsToRepository() {
+            when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
+
+            AiUsageTotalsDTO totals = new AiUsageTotalsDTO(0, 0, 0, 0, BigDecimal.ZERO);
+            when(aiUsageLogRepository.findTotals(isNull(), isNull(), any(), any())).thenReturn(totals);
+            when(aiUsageLogRepository.findModelBreakdown(isNull(), isNull(), any(), any())).thenReturn(List.of());
+            when(aiUsageLogRepository.findDailyBreakdown(isNull(), isNull(), any(), any())).thenReturn(List.of());
+
+            aiUsageQueryService.getSummary(NO_FILTER);
+
+            verify(aiUsageLogRepository).findTotals(isNull(), isNull(), notNull(), notNull());
+            verify(aiUsageLogRepository).findModelBreakdown(isNull(), isNull(), notNull(), notNull());
+            verify(aiUsageLogRepository).findDailyBreakdown(isNull(), isNull(), notNull(), notNull());
+        }
     }
 
     @Nested
@@ -207,11 +227,11 @@ class AiUsageQueryServiceImplTest {
         void shouldReturnDistinctModels() {
             when(securityContextHelper.getCurrentUser()).thenReturn(buildUser(UserRole.ADMIN));
             when(aiUsageLogRepository.findDistinctModels())
-                    .thenReturn(List.of("gemini-2.5-flash", "gemini-3.1-flash-lite"));
+                    .thenReturn(List.of("gemini-3.5-flash", "gemini-3.1-flash-lite"));
 
             List<String> models = aiUsageQueryService.getDistinctModels();
 
-            assertThat(models).containsExactly("gemini-2.5-flash", "gemini-3.1-flash-lite");
+            assertThat(models).containsExactly("gemini-3.5-flash", "gemini-3.1-flash-lite");
         }
 
         @Test

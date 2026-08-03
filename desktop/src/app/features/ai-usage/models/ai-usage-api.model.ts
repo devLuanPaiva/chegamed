@@ -1,4 +1,4 @@
-import { parseLocalDate } from '@shared/utils/date.util';
+import { parseFortalezaDateTime, parseLocalDate } from '@shared/utils/date.util';
 
 import {
     AiContentType,
@@ -67,7 +67,7 @@ export interface AiUsageLogsPage {
 export function toAiUsageLog(dto: AiUsageLogApiDto): IAiUsageLog {
     return {
         ...dto,
-        createdAt: new Date(dto.createdAt),
+        createdAt: parseFortalezaDateTime(dto.createdAt),
     };
 }
 

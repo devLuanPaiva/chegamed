@@ -3,16 +3,21 @@ package com.devluanpaiva.controle_de_remedios.modules.assistant.controller;
 import java.util.UUID;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.devluanpaiva.controle_de_remedios.modules.assistant.dto.DeliverySummaryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.assistant.dto.PatientDeliveriesResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.assistant.dto.RecordAssistantUsageRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.assistant.service.AssistantQueryService;
+import com.devluanpaiva.controle_de_remedios.modules.assistant.service.AssistantService;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponse;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponseFactory;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AssistantInternalController {
     private final AssistantQueryService assistantQueryService;
+    private final AssistantService assistantService;
 
     @GetMapping("/deliveries-summary")
     public ApiResponse<DeliverySummaryResponseDTO> getDeliveriesSummary(@RequestParam UUID companyId) {
@@ -34,5 +40,11 @@ public class AssistantInternalController {
         return ApiResponseFactory.success(
                 "Entregas do paciente obtidas com sucesso",
                 assistantQueryService.getPatientDeliveries(companyId, patientName));
+    }
+
+    @PostMapping("/usage")
+    public ApiResponse<Void> recordUsage(@RequestBody @Valid RecordAssistantUsageRequestDTO dto) {
+        assistantService.recordUsage(dto);
+        return ApiResponseFactory.success("Uso do assistente registrado com sucesso", null);
     }
 }

@@ -10,7 +10,7 @@ const LOG: IAiUsageLog = {
     id: 'log-1',
     userId: 'user-1',
     userName: 'Jane Doe',
-    model: 'gemini-2.5-flash',
+    model: 'gemini-3.5-flash',
     operationType: 'BARCODE_EXTRACTION',
     contentType: 'IMAGE',
     promptTokens: 100,
@@ -42,7 +42,7 @@ describe('AiUsageTable', () => {
         const rows = fixture.nativeElement.querySelectorAll('tbody tr');
         expect(rows).toHaveLength(1);
         expect(rows[0].textContent).toContain('Jane Doe');
-        expect(rows[0].textContent).toContain('gemini-2.5-flash');
+        expect(rows[0].textContent).toContain('gemini-3.5-flash');
         expect(rows[0].textContent).toContain('Imagem');
         expect(rows[0].textContent).toContain('Leitura de código de barras');
         expect(rows[0].textContent).toContain('$0.0015');

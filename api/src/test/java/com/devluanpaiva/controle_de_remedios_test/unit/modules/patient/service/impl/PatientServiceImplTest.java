@@ -52,6 +52,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserReposit
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
+import com.devluanpaiva.controle_de_remedios.shared.utils.CpfMasker;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -158,7 +159,7 @@ class PatientServiceImplTest {
             PatientResponseDTO response = patientService.createPatient(dto);
 
             assertThat(response.name()).isEqualTo("John Doe");
-            assertThat(response.cpf()).isEqualTo("52998224725");
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask("52998224725"));
             assertThat(response.companyId()).isEqualTo(company.getId());
             verify(companyRepository, never()).existsByIdAndUsers_Id(any(), any());
         }
@@ -423,7 +424,7 @@ class PatientServiceImplTest {
             PatientResponseDTO response = patientService.updatePatient(patient.getId(), dto);
 
             assertThat(response.name()).isEqualTo("Jane Doe");
-            assertThat(response.cpf()).isEqualTo(originalCpf);
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(originalCpf));
             verify(patientRepository, never()).existsByCompanyIdAndCpf(any(), any());
         }
 
@@ -530,7 +531,7 @@ class PatientServiceImplTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(patientRepository.findById(patient.getId())).thenReturn(Optional.of(patient));
             when(userRepository.existsByEmail(dto.email())).thenReturn(false);
-            when(userRepository.existsByCpf(patient.getCpf())).thenReturn(false);
+            when(userRepository.findByCpf(patient.getCpf())).thenReturn(Optional.empty());
             when(passwordEncoder.encode(dto.password())).thenReturn("encoded-password");
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
             when(patientRepository.save(patient)).thenReturn(patient);
@@ -538,11 +539,62 @@ class PatientServiceImplTest {
             UserResponseDTO response = patientService.createPatientAccount(patient.getId(), dto);
 
             assertThat(response.name()).isEqualTo(patient.getName());
-            assertThat(response.cpf()).isEqualTo(patient.getCpf());
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(patient.getCpf()));
             assertThat(response.email()).isEqualTo("patient@example.com");
             assertThat(response.role()).isEqualTo(UserRole.PATIENT);
             assertThat(patient.getUser()).isNotNull();
             assertThat(patient.getUser().getCompanies()).contains(company);
+        }
+
+        @Test
+        @DisplayName("should reactivate an orphaned PATIENT user sharing the same CPF instead of blocking")
+        void shouldReactivateOrphanedUserWithSameCpf() {
+            User admin = buildUser(UserRole.ADMIN);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            User orphanedUser = buildUser(UserRole.PATIENT);
+            orphanedUser.setCpf(patient.getCpf());
+            CreatePatientAccountRequestDTO dto = new CreatePatientAccountRequestDTO(
+                    "new-email@example.com", "password123");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            when(patientRepository.findById(patient.getId())).thenReturn(Optional.of(patient));
+            when(userRepository.findByCpf(patient.getCpf())).thenReturn(Optional.of(orphanedUser));
+            when(patientRepository.existsByUser_Id(orphanedUser.getId())).thenReturn(false);
+            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
+            when(passwordEncoder.encode(dto.password())).thenReturn("encoded-password");
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(patientRepository.save(patient)).thenReturn(patient);
+
+            UserResponseDTO response = patientService.createPatientAccount(patient.getId(), dto);
+
+            assertThat(response.email()).isEqualTo("new-email@example.com");
+            assertThat(patient.getUser()).isEqualTo(orphanedUser);
+            assertThat(orphanedUser.getCompanies()).contains(company);
+            verify(userRepository, never()).existsByCpf(any());
+        }
+
+        @Test
+        @DisplayName("should throw 409 when the CPF belongs to a User still linked to a patient")
+        void shouldThrowConflictWhenCpfBelongsToLinkedUser() {
+            User admin = buildUser(UserRole.ADMIN);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            User linkedUser = buildUser(UserRole.PATIENT);
+            linkedUser.setCpf(patient.getCpf());
+            CreatePatientAccountRequestDTO dto = new CreatePatientAccountRequestDTO(
+                    "patient@example.com", "password123");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            when(patientRepository.findById(patient.getId())).thenReturn(Optional.of(patient));
+            when(userRepository.findByCpf(patient.getCpf())).thenReturn(Optional.of(linkedUser));
+            when(patientRepository.existsByUser_Id(linkedUser.getId())).thenReturn(true);
+
+            assertFailsWith(
+                    () -> patientService.createPatientAccount(patient.getId(), dto),
+                    HttpStatus.CONFLICT, "CPF_ALREADY_EXISTS");
+
+            verify(userRepository, never()).save(any());
         }
 
         @Test
@@ -620,7 +672,7 @@ class PatientServiceImplTest {
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(companyRepository.findById(company.getId())).thenReturn(Optional.of(company));
             when(userRepository.existsByEmail(dto.email())).thenReturn(false);
-            when(userRepository.existsByCpf(dto.cpf())).thenReturn(false);
+            when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.empty());
             when(passwordEncoder.encode(dto.password())).thenReturn("encoded-password");
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
@@ -634,6 +686,34 @@ class PatientServiceImplTest {
             assertThat(response.name()).isEqualTo("John Doe");
             assertThat(response.userId()).isNotNull();
             assertThat(response.companyId()).isEqualTo(company.getId());
+        }
+
+        @Test
+        @DisplayName("should reactivate an orphaned PATIENT user sharing the same CPF instead of blocking")
+        void shouldReactivateOrphanedUserWithSameCpf() {
+            User admin = buildUser(UserRole.ADMIN);
+            Company company = buildCompany();
+            User orphanedUser = buildUser(UserRole.PATIENT);
+            orphanedUser.setCpf("52998224725");
+            CreatePatientWithAccountRequestDTO dto = new CreatePatientWithAccountRequestDTO(
+                    "John Doe", "52998224725", LocalDate.of(1950, Month.JANUARY, 1), company.getId(),
+                    "new-email@example.com", "password123", null, null, null);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            when(companyRepository.findById(company.getId())).thenReturn(Optional.of(company));
+            when(userRepository.findByCpf(dto.cpf())).thenReturn(Optional.of(orphanedUser));
+            when(patientRepository.existsByUser_Id(orphanedUser.getId())).thenReturn(false);
+            when(userRepository.findByEmail(dto.email())).thenReturn(Optional.empty());
+            when(passwordEncoder.encode(dto.password())).thenReturn("encoded-password");
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(patientRepository.save(any(Patient.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            PatientResponseDTO response = patientService.createPatientWithAccount(dto);
+
+            assertThat(response.userId()).isEqualTo(orphanedUser.getId());
+            assertThat(orphanedUser.getEmail()).isEqualTo("new-email@example.com");
+            assertThat(orphanedUser.getCompanies()).contains(company);
+            verify(userRepository, never()).existsByCpf(any());
         }
 
         @Test

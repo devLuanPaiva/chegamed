@@ -34,8 +34,8 @@ describe('ai-usage-format.util', () => {
     });
 
     describe('formatDateTime', () => {
-        it('should format a date with day, month, year, hour and minute', () => {
-            const result = formatDateTime(new Date(2026, 0, 5, 14, 30));
+        it('should format a date with day, month, year, hour and minute in America/Fortaleza time', () => {
+            const result = formatDateTime(new Date('2026-01-05T14:30:00-03:00'));
 
             expect(result).toContain('05/01/2026');
             expect(result).toContain('14:30');

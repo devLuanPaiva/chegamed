@@ -351,6 +351,57 @@ class DeliveryServiceImplTest {
     }
 
     @Nested
+    @DisplayName("listMyDeliveries")
+    class ListMyDeliveries {
+
+        @Test
+        @DisplayName("should throw 403 when the actor is not a patient")
+        void shouldThrowWhenActorIsNotPatient() {
+            User manager = buildUser(UserRole.MANAGER);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+
+            assertThatThrownBy(() -> deliveryService.listMyDeliveries(PageRequest.of(0, 20)))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
+                    });
+
+            verify(deliveryRepository, never()).findAll(any(Specification.class), any(Pageable.class));
+        }
+
+        @SuppressWarnings("unchecked")
+        @Test
+        @DisplayName("should list the deliveries belonging to the logged-in patient")
+        void shouldListDeliveriesForTheLoggedInPatient() {
+            User patientUser = buildUser(UserRole.PATIENT);
+            Company company = buildCompany();
+            PrescriptionItem item = buildItem(company, 30, 30);
+            item.getPrescription().getPatient().setUser(patientUser);
+            Delivery delivery = Delivery.builder()
+                    .id(UUID.randomUUID())
+                    .company(company)
+                    .patient(item.getPrescription().getPatient())
+                    .prescriptionItem(item)
+                    .deliveryDate(LocalDate.now())
+                    .deliveryQuantity(30)
+                    .build();
+            Pageable pageable = PageRequest.of(0, 20);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(patientUser);
+            when(deliveryRepository.findAll(any(Specification.class), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(List.of(delivery)));
+
+            Page<DeliveryResponseDTO> result = deliveryService.listMyDeliveries(pageable);
+
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).companyId()).isEqualTo(company.getId());
+        }
+    }
+
+    @Nested
     @DisplayName("listPendingDeliveryItems")
     class ListPendingDeliveryItems {
 

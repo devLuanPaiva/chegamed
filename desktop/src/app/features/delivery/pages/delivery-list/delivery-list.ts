@@ -40,7 +40,6 @@ export class DeliveryList implements OnInit {
     private readonly store = inject(Store);
     private readonly actions$ = inject(Actions);
 
-    readonly formatCpf = formatCpf;
     readonly UnityTypeLabels = UnityTypeLabels;
 
     readonly deliveries = this.store.selectSignal(selectAllDeliveries);

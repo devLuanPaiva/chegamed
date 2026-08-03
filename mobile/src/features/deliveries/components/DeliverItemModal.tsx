@@ -1,5 +1,16 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { AlertCircle } from "lucide-react-native";
 
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
@@ -33,7 +44,8 @@ export function DeliverItemModal({
 
     return (
         <Modal visible={Boolean(item)} transparent animationType="fade" onRequestClose={onCancel}>
-            <Pressable style={styles.backdrop} onPress={onCancel} accessibilityLabel="Fechar">
+            <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+                <Pressable style={styles.backdrop} onPress={onCancel} accessibilityLabel="Fechar">
                 <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
                     <Text style={styles.title}>Registrar entrega</Text>
 
@@ -97,12 +109,17 @@ export function DeliverItemModal({
                         </TouchableOpacity>
                     </View>
                 </Pressable>
-            </Pressable>
+                </Pressable>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
+    flex: {
+        flex: 1,
+    },
+
     backdrop: {
         flex: 1,
         backgroundColor: "rgba(26,26,26,0.5)",

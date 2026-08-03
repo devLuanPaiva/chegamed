@@ -57,7 +57,6 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.repository.Pre
 import com.devluanpaiva.controle_de_remedios.modules.prescription.service.impl.PrescriptionServiceImpl;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.CreatePrescriptionItemMedicineRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.CreatePrescriptionItemRequestDTO;
-import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.FrequencyType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.TreatmentType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.enums.UnityType;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.mapper.PrescriptionItemMapper;
@@ -160,7 +159,7 @@ class PrescriptionServiceImplTest {
 
     private CreatePrescriptionItemRequestDTO buildItemDto(UUID medicineId) {
         return new CreatePrescriptionItemRequestDTO(
-                medicineId, null, "10mg", 30, UnityType.TABLET, 2, FrequencyType.PER_DAY,
+                medicineId, null, "10mg", 30, UnityType.BOTTLE,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -169,7 +168,7 @@ class PrescriptionServiceImplTest {
                 medicineName, null, null);
 
         return new CreatePrescriptionItemRequestDTO(
-                null, medicine, "10mg", 30, UnityType.TABLET, 2, FrequencyType.PER_DAY,
+                null, medicine, "10mg", 30, UnityType.BOTTLE,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -269,7 +268,7 @@ class PrescriptionServiceImplTest {
             User admin = buildUser(UserRole.ADMIN);
             Patient patient = buildPatient(buildCompany());
             CreatePrescriptionItemRequestDTO itemWithoutMedicine = new CreatePrescriptionItemRequestDTO(
-                    null, null, "10mg", 30, UnityType.TABLET, 2, FrequencyType.PER_DAY,
+                    null, null, "10mg", 30, UnityType.BOTTLE,
                     TreatmentType.CONTINUOUS, 15);
             CreatePrescriptionRequestDTO dto = new CreatePrescriptionRequestDTO(
                     null, LocalDate.now(), patient.getId(), List.of(itemWithoutMedicine));

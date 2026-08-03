@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/apiFetch";
 import { createLocalId } from "@/lib/createLocalId";
-import { FrequencyType, TreatmentType, UnityType } from "@/data/models/prescription-item.model";
+import { TreatmentType, UnityType } from "@/data/models/prescription-item.model";
 
 export type PrescriptionType = "DIGITAL" | "HANDWRITTEN";
 
@@ -11,8 +11,6 @@ export interface ExtractedMedication {
     dosage: string | null;
     prescribedQuantity: number | null;
     unityType: UnityType | null;
-    frequency: number | null;
-    frequencyType: FrequencyType | null;
     treatmentType: TreatmentType | null;
     treatmentDays: number | null;
 }
@@ -37,8 +35,6 @@ interface ExtractedMedicationDto {
     dosage: string | null;
     prescribedQuantity: number | null;
     unityType: UnityType | null;
-    frequency: number | null;
-    frequencyType: FrequencyType | null;
     treatmentType: TreatmentType | null;
     treatmentDays: number | null;
 }

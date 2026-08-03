@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import com.devluanpaiva.controle_de_remedios.modules.ai.service.AiUsageLogService;
 import com.devluanpaiva.controle_de_remedios.modules.assistant.client.N8nAssistantClient;
 import com.devluanpaiva.controle_de_remedios.modules.assistant.dto.ChatRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.assistant.dto.ChatResponseDTO;
@@ -28,6 +29,7 @@ import com.devluanpaiva.controle_de_remedios.modules.assistant.service.impl.Assi
 import com.devluanpaiva.controle_de_remedios.modules.company.repository.CompanyRepository;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
+import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserRepository;
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
@@ -43,14 +45,21 @@ class AssistantServiceImplTest {
     private CompanyRepository companyRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private N8nAssistantClient n8nAssistantClient;
+
+    @Mock
+    private AiUsageLogService aiUsageLogService;
 
     private AssistantServiceImpl assistantService;
 
     @BeforeEach
     void setUp() {
         assistantService = new AssistantServiceImpl(
-                securityContextHelper, new AuthorizationPolicy(), companyRepository, n8nAssistantClient);
+                securityContextHelper, new AuthorizationPolicy(), companyRepository, userRepository,
+                n8nAssistantClient, aiUsageLogService);
     }
 
     private User buildUser(UserRole role) {
@@ -86,7 +95,8 @@ class AssistantServiceImplTest {
 
             when(securityContextHelper.getCurrentUser()).thenReturn(manager);
             when(companyRepository.existsByIdAndUsers_Id(companyId, manager.getId())).thenReturn(true);
-            when(n8nAssistantClient.ask(eq("Olá"), eq(companyId), any(UUID.class))).thenReturn("Resposta do assistente");
+            when(n8nAssistantClient.ask(eq("Olá"), eq(companyId), any(UUID.class), eq(manager.getId())))
+                    .thenReturn("Resposta do assistente");
 
             ChatResponseDTO response = assistantService.chat(new ChatRequestDTO(companyId, "Olá", null));
 
@@ -103,12 +113,12 @@ class AssistantServiceImplTest {
 
             when(securityContextHelper.getCurrentUser()).thenReturn(manager);
             when(companyRepository.existsByIdAndUsers_Id(companyId, manager.getId())).thenReturn(true);
-            when(n8nAssistantClient.ask("Olá", companyId, conversationId)).thenReturn("Resposta");
+            when(n8nAssistantClient.ask("Olá", companyId, conversationId, manager.getId())).thenReturn("Resposta");
 
             ChatResponseDTO response = assistantService.chat(new ChatRequestDTO(companyId, "Olá", conversationId));
 
             assertThat(response.conversationId()).isEqualTo(conversationId);
-            verify(n8nAssistantClient).ask("Olá", companyId, conversationId);
+            verify(n8nAssistantClient).ask("Olá", companyId, conversationId, manager.getId());
         }
 
         @Test
@@ -119,7 +129,7 @@ class AssistantServiceImplTest {
 
             when(securityContextHelper.getCurrentUser()).thenReturn(manager);
             when(companyRepository.existsByIdAndUsers_Id(companyId, manager.getId())).thenReturn(true);
-            when(n8nAssistantClient.ask(any(), any(), any())).thenReturn("Resposta");
+            when(n8nAssistantClient.ask(any(), any(), any(), any())).thenReturn("Resposta");
 
             ChatRequestDTO dto = new ChatRequestDTO(companyId, "Olá", null);
 
@@ -136,7 +146,7 @@ class AssistantServiceImplTest {
             User admin = buildUser(UserRole.ADMIN);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(n8nAssistantClient.ask(any(), any(), any())).thenReturn("Resposta");
+            when(n8nAssistantClient.ask(any(), any(), any(), any())).thenReturn("Resposta");
 
             ChatResponseDTO response = assistantService.chat(new ChatRequestDTO(companyId, "Olá", null));
 
@@ -181,7 +191,7 @@ class AssistantServiceImplTest {
 
             when(securityContextHelper.getCurrentUser()).thenReturn(manager);
             when(companyRepository.existsByIdAndUsers_Id(companyId, manager.getId())).thenReturn(true);
-            when(n8nAssistantClient.ask(any(), any(), any())).thenThrow(new BusinessException(
+            when(n8nAssistantClient.ask(any(), any(), any(), any())).thenThrow(new BusinessException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Assistente indisponível",
                     "ASSISTANT_UNAVAILABLE",

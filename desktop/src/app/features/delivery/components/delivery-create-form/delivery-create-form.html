@@ -3,7 +3,7 @@
         <button type="button" class="btn btn-primary" (click)="openCpfModal()">Buscar paciente</button>
 
         @if (searchedCpf(); as cpf) {
-            <span class="delivery-create-form__searched-cpf">CPF pesquisado: {{ formatCpf(cpf) }}</span>
+            <span class="delivery-create-form__searched-cpf">CPF pesquisado: {{ cpf | maskCpf }}</span>
         }
     </div>
 

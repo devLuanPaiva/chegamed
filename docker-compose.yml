@@ -4,6 +4,7 @@ services:
     container_name: postgres-chegamed
     restart: always
     environment:
+      TZ: ${TZ:-America/Fortaleza}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -25,6 +26,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
+      TZ: ${TZ:-America/Fortaleza}
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       DB_USERNAME: ${POSTGRES_USER}
       DB_PASSWORD: ${POSTGRES_PASSWORD}

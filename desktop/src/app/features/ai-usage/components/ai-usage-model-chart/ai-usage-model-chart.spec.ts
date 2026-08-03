@@ -12,7 +12,7 @@ const SUMMARY: IAiUsageSummary = {
     totalCostUsd: 1.5,
     avgCostPerRequestUsd: 0.3,
     byModel: [
-        { model: 'gemini-2.5-flash', requests: 3, totalTokens: 450, costUsd: 1.0 },
+        { model: 'gemini-3.5-flash', requests: 3, totalTokens: 450, costUsd: 1.0 },
         { model: 'gemini-3.1-flash-lite', requests: 2, totalTokens: 300, costUsd: 0.5 },
     ],
     byDay: [],
@@ -36,7 +36,7 @@ describe('AiUsageModelChart', () => {
     it('should build one label per model and a single cost dataset in the same order', () => {
         const chartData = component.chartData();
 
-        expect(chartData.labels).toEqual(['gemini-2.5-flash', 'gemini-3.1-flash-lite']);
+        expect(chartData.labels).toEqual(['gemini-3.5-flash', 'gemini-3.1-flash-lite']);
         expect(chartData.datasets).toHaveLength(1);
         expect(chartData.datasets[0].data).toEqual([1.0, 0.5]);
     });

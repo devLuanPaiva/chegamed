@@ -19,7 +19,7 @@ const EMPTY_VALUES: PatientFormValues = { name: "", cpf: "", birthDate: "", cont
 function patientToFormValues(patient: IPatient): PatientFormValues {
     return {
         name: patient.name,
-        cpf: patient.cpf,
+        cpf: "",
         birthDate: formatDateBr(patient.birthDate),
         contact: patient.contact ?? "",
         address: patient.address ?? "",
@@ -52,7 +52,10 @@ export function usePatientForm({ patient, companyId, onSuccess }: UsePatientForm
             return "Informe o nome do paciente.";
         }
 
-        if (onlyDigits(values.cpf).length !== 11) {
+        const cpfDigits = onlyDigits(values.cpf);
+        const cpfRequired = !patient || cpfDigits.length > 0;
+
+        if (cpfRequired && cpfDigits.length !== 11) {
             setFormErrorField("cpf");
             return "Informe um CPF válido.";
         }
@@ -87,17 +90,17 @@ export function usePatientForm({ patient, companyId, onSuccess }: UsePatientForm
             setFormError(null);
             setIsSubmitting(true);
 
-            const basePayload = {
+            const cpfDigits = onlyDigits(values.cpf);
+            const commonPayload = {
                 name: values.name.trim(),
-                cpf: onlyDigits(values.cpf),
                 birthDate: brToIso(values.birthDate),
                 contact: values.contact.trim() || undefined,
                 address: values.address.trim() || undefined,
             };
 
             const result = patient
-                ? await updatePatient(patient.id, basePayload)
-                : await createPatient({ ...basePayload, companyId: companyId! });
+                ? await updatePatient(patient.id, { ...commonPayload, cpf: cpfDigits || undefined })
+                : await createPatient({ ...commonPayload, cpf: cpfDigits, companyId: companyId! });
 
             onSuccess(result);
 

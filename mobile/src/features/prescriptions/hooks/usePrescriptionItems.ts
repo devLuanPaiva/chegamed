@@ -4,7 +4,6 @@ import { createLocalId } from "@/lib/createLocalId";
 import { ExtractedMedication } from "@/data/services/extraction.service";
 import {
     CreatePrescriptionItemRequest,
-    FrequencyType,
     PrescriptionItemDraft,
     TreatmentType,
     UnityType,
@@ -12,9 +11,7 @@ import {
 
 const DEFAULT_DOSAGE = "Conforme orientação médica";
 const DEFAULT_PRESCRIBED_QUANTITY = 1;
-const DEFAULT_UNITY_TYPE = UnityType.TABLET;
-const DEFAULT_FREQUENCY = 1;
-const DEFAULT_FREQUENCY_TYPE = FrequencyType.PER_DAY;
+const DEFAULT_UNITY_TYPE = UnityType.BOTTLE;
 const DEFAULT_TREATMENT_TYPE = TreatmentType.SHORT_TERM;
 const DEFAULT_TREATMENT_DAYS = 1;
 
@@ -23,8 +20,6 @@ export const BLANK_PRESCRIPTION_ITEM: CreatePrescriptionItemRequest = {
     dosage: "",
     prescribedQuantity: DEFAULT_PRESCRIBED_QUANTITY,
     unityType: DEFAULT_UNITY_TYPE,
-    frequency: DEFAULT_FREQUENCY,
-    frequencyType: DEFAULT_FREQUENCY_TYPE,
     treatmentType: DEFAULT_TREATMENT_TYPE,
     treatmentDays: DEFAULT_TREATMENT_DAYS,
 };
@@ -39,8 +34,6 @@ function toDraft(medication: ExtractedMedication): PrescriptionItemDraft {
         dosage: medication.dosage ?? DEFAULT_DOSAGE,
         prescribedQuantity: medication.prescribedQuantity ?? DEFAULT_PRESCRIBED_QUANTITY,
         unityType: medication.unityType ?? DEFAULT_UNITY_TYPE,
-        frequency: medication.frequency ?? DEFAULT_FREQUENCY,
-        frequencyType: medication.frequencyType ?? DEFAULT_FREQUENCY_TYPE,
         treatmentType: medication.treatmentType ?? DEFAULT_TREATMENT_TYPE,
         treatmentDays: medication.treatmentDays ?? DEFAULT_TREATMENT_DAYS,
     };

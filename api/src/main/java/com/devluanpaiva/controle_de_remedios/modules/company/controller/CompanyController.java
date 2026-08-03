@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -117,7 +118,7 @@ public class CompanyController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String eanCode) {
 
-        Pageable pageable = PageableFactory.build(page, size);
+        Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         MedicineFilter filter = new MedicineFilter(name, eanCode);
         Page<MedicineResponseDTO> result = companyService.getCompanyMedicines(id, filter, pageable);
 

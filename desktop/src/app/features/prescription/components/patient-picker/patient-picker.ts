@@ -8,11 +8,12 @@ import * as PatientActions from '@features/patient/store/patient.actions';
 import { PatientCreateModal } from '@features/patient/components/patient-create-modal/patient-create-modal';
 import { IPatient } from '@features/patient/models/patient.model';
 import { PatientService } from '@features/patient/services/patient.service';
-import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
+import { MaskCpfPipe } from '@core/pipes/mask-cpf.pipe';
+import { onlyDigits } from '@shared/utils/cpf.util';
 
 @Component({
     selector: 'app-patient-picker',
-    imports: [PatientCreateModal],
+    imports: [PatientCreateModal, MaskCpfPipe],
     templateUrl: './patient-picker.html',
     styleUrl: './patient-picker.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,8 +24,6 @@ export class PatientPicker {
     private readonly actions$ = inject(Actions);
 
     readonly patientSelected = output<IPatient>();
-
-    readonly formatCpf = formatCpf;
 
     private readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
 

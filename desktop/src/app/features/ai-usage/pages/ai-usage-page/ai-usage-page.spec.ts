@@ -57,7 +57,7 @@ describe('AiUsagePage', () => {
 
     beforeEach(async () => {
         aiUsageService = {
-            getModels: vi.fn(() => of(['gemini-2.5-flash'])),
+            getModels: vi.fn(() => of(['gemini-3.5-flash'])),
             getSummary: vi.fn(() => of(EMPTY_SUMMARY)),
             getLogs: vi.fn(() => of(buildLogsPage())),
         };
@@ -84,13 +84,13 @@ describe('AiUsagePage', () => {
         expect(userService.getAllUsers).toHaveBeenCalled();
         expect(aiUsageService.getSummary).toHaveBeenCalledWith({});
         expect(aiUsageService.getLogs).toHaveBeenCalledWith(0, {});
-        expect(component.models()).toEqual(['gemini-2.5-flash']);
+        expect(component.models()).toEqual(['gemini-3.5-flash']);
     });
 
     it('should reset the requested page and refetch when the filter changes', async () => {
         component.requestedPage.set(2);
 
-        const filter: IAiUsageFilter = { model: 'gemini-2.5-flash' };
+        const filter: IAiUsageFilter = { model: 'gemini-3.5-flash' };
         component.onFilterChange(filter);
         fixture.detectChanges();
         await fixture.whenStable();

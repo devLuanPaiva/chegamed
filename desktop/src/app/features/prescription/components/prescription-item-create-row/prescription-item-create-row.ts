@@ -2,8 +2,6 @@ import { ChangeDetectionStrategy, Component, input, output, signal } from '@angu
 
 import { CreatePrescriptionItemRequestDraft } from '../../models/prescription-item-api.model';
 import {
-    FrequencyType,
-    FrequencyTypeLabels,
     TreatmentType,
     TreatmentTypeLabels,
     UnityType,
@@ -16,8 +14,6 @@ interface ItemRowModel {
     dosage: string;
     prescribedQuantity: number | null;
     unityType: UnityType;
-    frequency: number | null;
-    frequencyType: FrequencyType;
     treatmentType: TreatmentType;
     treatmentDays: number | null;
 }
@@ -26,9 +22,7 @@ const EMPTY_MODEL: ItemRowModel = {
     medicineSelection: null,
     dosage: '',
     prescribedQuantity: null,
-    unityType: UnityType.BOX,
-    frequency: null,
-    frequencyType: FrequencyType.PER_DAY,
+    unityType: UnityType.BOTTLE,
     treatmentType: TreatmentType.CONTINUOUS,
     treatmentDays: null,
 };
@@ -39,8 +33,6 @@ function buildPayload(model: ItemRowModel): CreatePrescriptionItemRequestDraft |
         !model.dosage.trim() ||
         !model.prescribedQuantity ||
         model.prescribedQuantity <= 0 ||
-        !model.frequency ||
-        model.frequency <= 0 ||
         !model.treatmentDays ||
         model.treatmentDays <= 0
     ) {
@@ -57,8 +49,6 @@ function buildPayload(model: ItemRowModel): CreatePrescriptionItemRequestDraft |
         dosage: model.dosage.trim(),
         prescribedQuantity: model.prescribedQuantity,
         unityType: model.unityType,
-        frequency: model.frequency,
-        frequencyType: model.frequencyType,
         treatmentType: model.treatmentType,
         treatmentDays: model.treatmentDays,
     };
@@ -81,9 +71,6 @@ export class PrescriptionItemCreateRow {
 
     readonly unityOptions = Object.values(UnityType);
     readonly UnityTypeLabels = UnityTypeLabels;
-
-    readonly frequencyOptions = Object.values(FrequencyType);
-    readonly FrequencyTypeLabels = FrequencyTypeLabels;
 
     readonly treatmentOptions = Object.values(TreatmentType);
     readonly TreatmentTypeLabels = TreatmentTypeLabels;
@@ -108,14 +95,6 @@ export class PrescriptionItemCreateRow {
 
     onUnityTypeChange(value: string): void {
         this.updateModel((current) => ({ ...current, unityType: value as UnityType }));
-    }
-
-    onFrequencyChange(value: string): void {
-        this.updateModel((current) => ({ ...current, frequency: value ? Number(value) : null }));
-    }
-
-    onFrequencyTypeChange(value: string): void {
-        this.updateModel((current) => ({ ...current, frequencyType: value as FrequencyType }));
     }
 
     onTreatmentTypeChange(value: string): void {

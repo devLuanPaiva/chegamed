@@ -9,6 +9,9 @@ spring:
     virtual:
       enabled: true
 
+  jackson:
+    time-zone: America/Fortaleza
+
   datasource:
     url: ${DB_URL:}
     username: ${DB_USERNAME:}
@@ -49,12 +52,12 @@ gemini:
   api-key: ${GEMINI_API_KEY:}
   pricing:
     models:
-      gemini-3.1-flash-lite:
+      "[gemini-3.1-flash-lite]":
         input-per-million-tokens: 0.10
         output-per-million-tokens: 0.40
-      gemini-2.5-flash:
-        input-per-million-tokens: 0.30
-        output-per-million-tokens: 2.50
+      "[gemini-3.5-flash]":
+        input-per-million-tokens: 1.50
+        output-per-million-tokens: 9.00
 
 google:
   oauth:

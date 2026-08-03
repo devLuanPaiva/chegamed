@@ -55,6 +55,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.service.impl.UserServi
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
+import com.devluanpaiva.controle_de_remedios.shared.utils.CpfMasker;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserServiceImpl")
@@ -159,7 +160,7 @@ class UserServiceImplTest {
 
             assertThat(response.name()).isEqualTo(dto.name());
             assertThat(response.email()).isEqualTo(dto.email());
-            assertThat(response.cpf()).isEqualTo(dto.cpf());
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(dto.cpf()));
             assertThat(response.role()).isEqualTo(UserRole.ASSISTANT);
 
             ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -584,7 +585,7 @@ class UserServiceImplTest {
             UserResponseDTO response = userService.updateUser(target.getId(), dto);
 
             assertThat(response.name()).isEqualTo("Updated Name");
-            assertThat(response.cpf()).isEqualTo(originalCpf);
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(originalCpf));
             assertThat(response.imageUrl()).isEqualTo(originalImageUrl);
         }
 
@@ -603,7 +604,7 @@ class UserServiceImplTest {
             UserResponseDTO response = userService.updateUser(target.getId(), dto);
 
             assertThat(response.name()).isEqualTo("New Name");
-            assertThat(response.cpf()).isEqualTo("98765432100");
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask("98765432100"));
             assertThat(response.imageUrl()).isEqualTo("https://new.example.com/pic.png");
         }
 
@@ -624,7 +625,7 @@ class UserServiceImplTest {
             UserResponseDTO response = userService.updateUser(target.getId(), dto);
 
             assertThat(response.name()).isEqualTo(originalName);
-            assertThat(response.cpf()).isEqualTo(originalCpf);
+            assertThat(response.cpf()).isEqualTo(CpfMasker.mask(originalCpf));
             assertThat(response.imageUrl()).isEqualTo(originalImageUrl);
             verify(userRepository).save(target);
         }

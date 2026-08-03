@@ -56,6 +56,33 @@ public class AiUsageLogServiceImpl implements AiUsageLogService {
         aiUsageLogRepository.save(log);
     }
 
+    @Override
+    @Transactional
+    public void recordExternalUsage(
+            User actor,
+            String model,
+            AiUsageOperationType operationType,
+            AiUsageContentType contentType,
+            ExternalAiUsage usage) {
+
+        if (usage.totalTokens() <= 0) {
+            return;
+        }
+
+        AiUsageLog log = AiUsageLog.builder()
+                .user(actor)
+                .model(model)
+                .operationType(operationType)
+                .contentType(contentType)
+                .promptTokens(usage.promptTokens())
+                .candidatesTokens(usage.candidatesTokens())
+                .totalTokens(usage.totalTokens())
+                .estimatedCostUsd(usage.estimatedCostUsd())
+                .build();
+
+        aiUsageLogRepository.save(log);
+    }
+
     private BigDecimal estimateCost(String model, GeminiUsage usage) {
         ModelPricing pricing = geminiPricingProperties.pricingFor(model);
 

@@ -12,6 +12,9 @@ RUN mvn -B clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
+RUN apk add --no-cache tzdata
+ENV TZ=America/Fortaleza
+
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
@@ -22,4 +25,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD wget -q --spider http://localhost:8080/v3/api-docs || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Duser.timezone=America/Fortaleza", "-jar", "app.jar"]

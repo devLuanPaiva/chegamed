@@ -11,5 +11,7 @@ import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 public interface PatientRepository extends JpaRepository<Patient, UUID>, JpaSpecificationExecutor<Patient> {
     boolean existsByCompanyIdAndCpf(UUID companyId, String cpf);
 
+    boolean existsByUser_Id(UUID userId);
+
     Optional<Patient> findByCompany_IdAndCpf(UUID companyId, String cpf);
 }

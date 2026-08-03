@@ -27,6 +27,8 @@ public interface DeliveryService {
 
     Page<DeliveryResponseDTO> listDeliveries(DeliveryFilter filter, Pageable pageable);
 
+    Page<DeliveryResponseDTO> listMyDeliveries(Pageable pageable);
+
     Page<PendingDeliveryItemResponseDTO> listPendingDeliveryItems(PendingDeliveryItemFilter filter, Pageable pageable);
 
     Page<PendingDeliveryItemResponseDTO> listMyPendingDeliveryItems(Pageable pageable);

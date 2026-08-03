@@ -5,12 +5,13 @@ import { FormField, form, maxLength, minLength, required, validate } from '@angu
 import { Store } from '@ngrx/store';
 import { map } from 'rxjs';
 
+import { MaskCpfPipe } from '@core/pipes/mask-cpf.pipe';
 import { Field } from '@shared/ui/field/field';
 import { CpfField } from '@shared/ui/cpf-field/cpf-field';
 import { DateField } from '@shared/ui/date-field/date-field';
 import { ConfirmDialog } from '@shared/ui/confirm-dialog/confirm-dialog';
 import { DangerCard } from '@shared/ui/danger-card/danger-card';
-import { formatCpf, isValidCpf, onlyDigits } from '@shared/utils/cpf.util';
+import { isValidCpf, maskCpf, onlyDigits } from '@shared/utils/cpf.util';
 import { isNotFutureDate, toDateInputValue } from '@shared/utils/date.util';
 import { diffPrimitive } from '@shared/utils/diff.util';
 
@@ -26,7 +27,7 @@ import {
 
 @Component({
     selector: 'app-patient-edit',
-    imports: [FormField, Field, CpfField, DateField, ConfirmDialog, DangerCard, PatientAccountPanel],
+    imports: [FormField, Field, CpfField, DateField, ConfirmDialog, DangerCard, PatientAccountPanel, MaskCpfPipe],
     templateUrl: './patient-edit.html',
     styleUrl: './patient-edit.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,7 +38,6 @@ export class PatientEdit implements OnDestroy {
     private readonly router = inject(Router);
 
     readonly maxBirthDate = toDateInputValue(new Date());
-    readonly formatCpf = formatCpf;
 
     readonly patientId = toSignal(
         this.route.paramMap.pipe(map((params) => params.get('id') ?? '')),
@@ -63,8 +63,9 @@ export class PatientEdit implements OnDestroy {
         required(schema.name, { message: 'O nome é obrigatório.' });
         minLength(schema.name, 3, { message: 'O nome deve ter ao menos 3 caracteres.' });
 
-        required(schema.cpf, { message: 'O CPF é obrigatório.' });
-        validate(schema.cpf, ({ value }) => (isValidCpf(value()) ? null : { kind: 'cpf', message: 'CPF inválido.' }));
+        validate(schema.cpf, ({ value }) =>
+            !value() || isValidCpf(value()) ? null : { kind: 'cpf', message: 'CPF inválido.' },
+        );
 
         required(schema.birthDate, { message: 'A data de nascimento é obrigatória.' });
         validate(schema.birthDate, ({ value }) =>
@@ -76,6 +77,11 @@ export class PatientEdit implements OnDestroy {
     });
 
     readonly canSubmit = computed(() => this.editForm().valid() && !this.mutating());
+
+    readonly cpfLabel = computed(() => {
+        const patient = this.patient();
+        return patient ? `CPF (atual: ${maskCpf(patient.cpf)} — deixe em branco para manter)` : 'CPF';
+    });
 
     constructor() {
         effect(() => {
@@ -90,7 +96,7 @@ export class PatientEdit implements OnDestroy {
             if (patient) {
                 this.model.set({
                     name: patient.name,
-                    cpf: formatCpf(patient.cpf),
+                    cpf: '',
                     birthDate: toDateInputValue(patient.birthDate),
                     contact: patient.contact ?? '',
                     address: patient.address ?? '',
@@ -121,7 +127,7 @@ export class PatientEdit implements OnDestroy {
 
         const payload: UpdatePatientRequest = {
             name: diffPrimitive(original.name, value.name),
-            cpf: diffPrimitive(original.cpf, onlyDigits(value.cpf)),
+            cpf: value.cpf.trim() ? onlyDigits(value.cpf) : undefined,
             birthDate: diffPrimitive(toDateInputValue(original.birthDate), value.birthDate),
             contact: diffPrimitive(original.contact ?? '', value.contact),
             address: diffPrimitive(original.address ?? '', value.address),
