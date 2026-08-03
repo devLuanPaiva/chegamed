@@ -11,7 +11,7 @@ import {
 
 const DEFAULT_DOSAGE = "Conforme orientação médica";
 const DEFAULT_PRESCRIBED_QUANTITY = 1;
-const DEFAULT_UNITY_TYPE = UnityType.BOTTLE;
+const DEFAULT_UNITY_TYPE = UnityType.TABLET;
 const DEFAULT_TREATMENT_TYPE = TreatmentType.SHORT_TERM;
 const DEFAULT_TREATMENT_DAYS = 1;
 

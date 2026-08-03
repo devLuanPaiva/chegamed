@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         paddingHorizontal: Spacing.xl,
-        paddingTop: Spacing.md,
+        paddingTop: Spacing.lg,
     },
 
     bottomArea: {

@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         gap: Spacing.sm,
         paddingHorizontal: Spacing.xl,
-        paddingTop: Spacing.md,
+        paddingTop: Spacing.lg,
     },
 
     title: {
