@@ -68,7 +68,7 @@ export class PrescriptionItemEditCard {
         status: PrescriptionStatus.PENDING,
         dosage: '',
         prescribedQuantity: 0,
-        unityType: UnityType.BOTTLE,
+        unityType: UnityType.TABLET,
         treatmentType: TreatmentType.CONTINUOUS,
         treatmentDays: 0,
         observations: '',

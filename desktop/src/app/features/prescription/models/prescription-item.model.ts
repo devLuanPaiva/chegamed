@@ -3,13 +3,13 @@ import { IMedicine } from '@features/medicine/models/medicine.model';
 import { PrescriptionStatus } from './prescription.model';
 
 export enum UnityType {
-    BOTTLE = 'BOTTLE',
+    TABLET = 'TABLET',
     CREAM = 'CREAM',
     LIQUID = 'LIQUID',
 }
 
 export const UnityTypeLabels: Record<UnityType, string> = {
-    [UnityType.BOTTLE]: 'Frasco',
+    [UnityType.TABLET]: 'Comprimido',
     [UnityType.CREAM]: 'Creme',
     [UnityType.LIQUID]: 'Líquido',
 };
@@ -17,13 +17,11 @@ export const UnityTypeLabels: Record<UnityType, string> = {
 export enum TreatmentType {
     CONTINUOUS = 'CONTINUOUS',
     SHORT_TERM = 'SHORT_TERM',
-    LONG_TERM = 'LONG_TERM',
 }
 
 export const TreatmentTypeLabels: Record<TreatmentType, string> = {
     [TreatmentType.CONTINUOUS]: 'Contínuo',
     [TreatmentType.SHORT_TERM]: 'Curto prazo',
-    [TreatmentType.LONG_TERM]: 'Longo prazo',
 };
 
 export interface IPrescriptionItem {
