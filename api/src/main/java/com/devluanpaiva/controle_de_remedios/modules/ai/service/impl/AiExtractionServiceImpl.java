@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AiExtractionServiceImpl implements AiExtractionService {
     private static final String ESUS_MODEL = "gemini-3.1-flash-lite";
-    private static final String HANDWRITTEN_MODEL = "gemini-3.5-flash";
+    private static final String HANDWRITTEN_MODEL = "gemini-3.1-flash-lite";
     private static final String MEDICINE_MODEL = "gemini-3.1-flash-lite";
 
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
@@ -165,7 +165,8 @@ public class AiExtractionServiceImpl implements AiExtractionService {
         return actor;
     }
 
-    private void recordUsage(User actor, String model, AiUsageOperationType operationType, GeminiGenerationResult result) {
+    private void recordUsage(User actor, String model, AiUsageOperationType operationType,
+            GeminiGenerationResult result) {
         aiUsageLogService.record(actor, model, operationType, AiUsageContentType.IMAGE, result.usage());
     }
 
