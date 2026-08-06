@@ -458,7 +458,7 @@ class PrescriptionServiceImplTest {
             Prescription prescription = buildPrescription(patient);
             LocalDate originalIssueDate = prescription.getIssueDate();
             UpdatePrescriptionRequestDTO dto = new UpdatePrescriptionRequestDTO(
-                    PrescriptionStatus.APPROVED, null, null);
+                    PrescriptionStatus.OUT_FOR_DELIVERY, null, null);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(prescriptionRepository.findById(prescription.getId())).thenReturn(Optional.of(prescription));
@@ -466,7 +466,7 @@ class PrescriptionServiceImplTest {
 
             PrescriptionResponseDTO response = prescriptionService.updatePrescription(prescription.getId(), dto);
 
-            assertThat(response.status()).isEqualTo(PrescriptionStatus.APPROVED);
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.OUT_FOR_DELIVERY);
             assertThat(response.issueDate()).isEqualTo(originalIssueDate);
         }
     }

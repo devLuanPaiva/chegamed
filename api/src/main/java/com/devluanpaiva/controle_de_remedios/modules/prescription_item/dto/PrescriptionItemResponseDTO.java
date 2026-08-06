@@ -24,6 +24,7 @@ public record PrescriptionItemResponseDTO(
         Integer receivedQuantity,
         Integer deliveredQuantity,
         LocalDateTime requestedAt,
+        LocalDateTime outForDeliveryAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
 }

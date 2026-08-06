@@ -201,8 +201,27 @@ class UserServiceImplTest {
             assertThat(response.role()).isEqualTo(UserRole.MANAGER);
         }
 
+        @Test
+        @DisplayName("should allow a MANAGER to create a DELIVERER for the pharmacy")
+        void shouldAllowManagerToCreateDeliverer() {
+            User manager = buildUser(UserRole.MANAGER);
+            CreateUserRequestDTO delivererDto = new CreateUserRequestDTO(
+                    "Jane Doe", "jane@example.com", "raw-password", "12345678901", null, UserRole.DELIVERER, null);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+            when(userRepository.existsByEmail(delivererDto.email())).thenReturn(false);
+            when(userRepository.existsByCpf(delivererDto.cpf())).thenReturn(false);
+            when(passwordEncoder.encode(delivererDto.password())).thenReturn("hashed-password");
+            when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            UserResponseDTO response = userService.createUser(delivererDto);
+
+            assertThat(response.role()).isEqualTo(UserRole.DELIVERER);
+        }
+
         @ParameterizedTest(name = "should deny a MANAGER creating a {0}")
-        @EnumSource(value = UserRole.class, names = { "ASSISTANT", "PATIENT" }, mode = EnumSource.Mode.EXCLUDE)
+        @EnumSource(value = UserRole.class, names = { "ASSISTANT", "PATIENT",
+                "DELIVERER" }, mode = EnumSource.Mode.EXCLUDE)
         @DisplayName("should deny creating a user with a role the actor cannot manage")
         void shouldDenyCreatingUserWithRoleActorCannotManage(UserRole requestedRole) {
             User manager = buildUser(UserRole.MANAGER);

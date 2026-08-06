@@ -10,5 +10,7 @@ public interface PrescriptionItemService {
 
     PrescriptionItemResponseDTO updatePrescriptionItem(UUID id, UpdatePrescriptionItemRequestDTO dto);
 
+    PrescriptionItemResponseDTO cancelPrescriptionItem(UUID id);
+
     void deletePrescriptionItem(UUID id);
 }

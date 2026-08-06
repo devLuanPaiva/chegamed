@@ -85,6 +85,9 @@ public class PrescriptionItem {
     @Column(name = "requested_at")
     private LocalDateTime requestedAt;
 
+    @Column(name = "out_for_delivery_at")
+    private LocalDateTime outForDeliveryAt;
+
     @CreatedDate
     @Column(nullable = false, updatable = false, name = "created_at")
     private LocalDateTime createdAt;
