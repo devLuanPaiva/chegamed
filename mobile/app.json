@@ -18,7 +18,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS"
       ],
       "package": "com.devluan.chegamed",
       "allowBackup": false
@@ -44,7 +45,14 @@
           "cameraPermission": "O ChegaMed precisa acessar a câmera para fotografar receitas médicas."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-notifications",
+        {
+          "color": "#035941",
+          "defaultChannel": "deliveries"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
