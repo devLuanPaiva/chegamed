@@ -3,18 +3,18 @@ import { PrescriptionStatus } from '@features/prescription/models/prescription.m
 
 export const PRESCRIPTION_STATUS_CHART_ORDER: PrescriptionStatus[] = [
     PrescriptionStatus.PENDING,
-    PrescriptionStatus.APPROVED,
+    PrescriptionStatus.OUT_FOR_DELIVERY,
     PrescriptionStatus.DELIVERED,
     PrescriptionStatus.PARTIAL_DELIVERED,
-    PrescriptionStatus.REJECTED,
+    PrescriptionStatus.CANCELED,
 ];
 
 export const PRESCRIPTION_STATUS_COLORS: Record<PrescriptionStatus, string> = {
     [PrescriptionStatus.PENDING]: '#2a78d6',
-    [PrescriptionStatus.APPROVED]: '#e87ba4',
+    [PrescriptionStatus.OUT_FOR_DELIVERY]: '#e87ba4',
     [PrescriptionStatus.DELIVERED]: '#008300',
     [PrescriptionStatus.PARTIAL_DELIVERED]: '#4a3aa7',
-    [PrescriptionStatus.REJECTED]: '#e34948',
+    [PrescriptionStatus.CANCELED]: '#e34948',
 };
 
 export const FULFILLMENT_DELIVERED_COLOR = PRESCRIPTION_STATUS_COLORS[PrescriptionStatus.DELIVERED];
