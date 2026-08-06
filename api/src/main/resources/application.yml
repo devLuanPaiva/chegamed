@@ -71,6 +71,11 @@ resend:
   api-key: ${RESEND_API_KEY:}
   from-email: ${RESEND_FROM_EMAIL:}
 
+expo:
+  push:
+    enabled: ${EXPO_PUSH_ENABLED:true}
+    access-token: ${EXPO_ACCESS_TOKEN:}
+
 app:
   branding:
     logo-url: ${APP_LOGO_URL:https://cdn.chegamed.com.br/branding/logo.png}
