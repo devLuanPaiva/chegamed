@@ -49,11 +49,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
-    private static final List<PrescriptionStatus> DELIVERABLE_STATUSES = List.of(
-            PrescriptionStatus.PENDING, PrescriptionStatus.APPROVED);
+    private static final List<PrescriptionStatus> DELIVERABLE_STATUSES = PrescriptionStatus.deliverable();
 
-    private static final List<PrescriptionStatus> FULFILLED_STATUSES = List.of(
-            PrescriptionStatus.DELIVERED, PrescriptionStatus.PARTIAL_DELIVERED);
+    private static final List<PrescriptionStatus> FULFILLED_STATUSES = PrescriptionStatus.fulfilled();
 
     private static final int QUEUE_PREVIEW_LIMIT = 5;
     private static final int AVAILABILITY_PREVIEW_LIMIT = 10;
