@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.user.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
+import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
@@ -24,4 +26,8 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     Optional<User> findById(UUID id);
 
     Page<User> findByCompanies_Id(UUID companyId, Pageable pageable);
+
+    List<User> findByRoleAndActiveTrueAndCompanies_Id(UserRole role, UUID companyId);
+
+    boolean existsByIdAndActiveTrue(UUID id);
 }
