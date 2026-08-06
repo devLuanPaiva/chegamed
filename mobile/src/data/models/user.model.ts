@@ -3,6 +3,7 @@ export enum UserRole {
     MANAGER = "MANAGER",
     ASSISTANT = "ASSISTANT",
     PATIENT = "PATIENT",
+    DELIVERER = "DELIVERER",
 }
 
 export const UserRoleLabels: Record<UserRole, string> = {
@@ -10,7 +11,10 @@ export const UserRoleLabels: Record<UserRole, string> = {
     [UserRole.MANAGER]: "Gerente",
     [UserRole.ASSISTANT]: "Assistente",
     [UserRole.PATIENT]: "Paciente",
+    [UserRole.DELIVERER]: "Entregador",
 };
+
+export const PHARMACY_STAFF_ROLES: UserRole[] = [UserRole.MANAGER, UserRole.ASSISTANT];
 
 export function normalizeUserRole(rawRole: unknown): UserRole | null {
     if (typeof rawRole === "string" && rawRole in UserRole) {
