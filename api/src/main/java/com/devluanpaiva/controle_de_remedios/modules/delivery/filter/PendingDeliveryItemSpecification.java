@@ -10,16 +10,38 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.Prescrip
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
 
 public final class PendingDeliveryItemSpecification {
-    private static final List<PrescriptionStatus> DELIVERABLE_STATUSES = List.of(
-            PrescriptionStatus.PENDING, PrescriptionStatus.APPROVED);
-
     private PendingDeliveryItemSpecification() {
     }
 
     public static Specification<PrescriptionItem> isDeliverable() {
+        return hasStatusIn(PrescriptionStatus.deliverable());
+    }
+
+    public static Specification<PrescriptionItem> isAwaitingDispatch() {
+        return hasStatusIn(PrescriptionStatus.dispatchable());
+    }
+
+    public static Specification<PrescriptionItem> isOutForDelivery() {
+        return hasStatusIn(List.of(PrescriptionStatus.OUT_FOR_DELIVERY));
+    }
+
+    public static Specification<PrescriptionItem> atDeliveryStage(PrescriptionStatus status) {
+        if (status == null || !PrescriptionStatus.deliverable().contains(status)) {
+            return isDeliverable();
+        }
+
+        return hasStatusIn(List.of(status));
+    }
+
+    private static Specification<PrescriptionItem> hasStatusIn(List<PrescriptionStatus> statuses) {
         return (root, query, builder) -> builder.and(
-                root.get("status").in(DELIVERABLE_STATUSES),
+                root.get("status").in(statuses),
                 builder.isNull(root.get("delivery")));
+    }
+
+    public static Specification<PrescriptionItem> associatedWithCompanyMember(UUID userId) {
+        return (root, query, builder) -> builder.equal(
+                root.join("prescription").join("patient").join("company").join("users").get("id"), userId);
     }
 
     public static Specification<PrescriptionItem> associatedWithPatientUser(UUID userId) {
