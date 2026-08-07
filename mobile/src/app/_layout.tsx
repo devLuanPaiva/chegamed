@@ -4,6 +4,7 @@ import * as ScreenOrientation from "expo-screen-orientation";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/data/contexts/AuthContext";
 import { CompanyProvider } from "@/data/contexts/CompanyContext";
+import { NotificationProvider } from "@/data/contexts/NotificationContext";
 import { useFonts } from "expo-font";
 
 import {
@@ -37,22 +38,24 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <CompanyProvider>
-          <Stack>
-            <Stack.Screen
-              name="index"
-              options={{ headerShown: false, animation: "none" }}
-            />
-            <Stack.Screen
-              name="(authentication)"
-              options={{ headerShown: false, animation: "none" }}
-            />
-            <Stack.Screen
-              name="(protected)"
-              options={{ headerShown: false, animation: "none" }}
-            />
-          </Stack>
-        </CompanyProvider>
+        <NotificationProvider>
+          <CompanyProvider>
+            <Stack>
+              <Stack.Screen
+                name="index"
+                options={{ headerShown: false, animation: "none" }}
+              />
+              <Stack.Screen
+                name="(authentication)"
+                options={{ headerShown: false, animation: "none" }}
+              />
+              <Stack.Screen
+                name="(protected)"
+                options={{ headerShown: false, animation: "none" }}
+              />
+            </Stack>
+          </CompanyProvider>
+        </NotificationProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
