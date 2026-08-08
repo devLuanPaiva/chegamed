@@ -1,5 +1,6 @@
 import { useAuth } from "@/data/contexts/AuthContext";
 import { GoogleSignInCancelledError } from "@/data/services/googleAuth.service";
+import { AppleSignInCancelledError } from "@/data/services/appleAuth.service";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { useLocalSearchParams, useRouter, type Href } from "expo-router";
 import { useRef, useState } from "react";
@@ -15,6 +16,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +24,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react
 import { Wave } from "@/components/shared/Wave";
 
 export default function SignIn() {
-    const { login, loginWithGoogle } = useAuth();
+    const { login, loginWithGoogle, loginWithApple } = useAuth();
     const router = useRouter();
     const { resetSuccess } = useLocalSearchParams<{ resetSuccess?: string }>();
     const [username, setUsername] = useState("");
@@ -30,6 +32,7 @@ export default function SignIn() {
     const [secure, setSecure] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isAppleLoading, setIsAppleLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
@@ -65,6 +68,20 @@ export default function SignIn() {
             setError(err instanceof Error ? err.message : "Erro ao entrar com o Google.");
         } finally {
             setIsGoogleLoading(false);
+        }
+    }
+
+    async function handleAppleLogin() {
+        try {
+            setError(null);
+            setIsAppleLoading(true);
+            await loginWithApple();
+            router.replace("/(protected)/home");
+        } catch (err) {
+            if (err instanceof AppleSignInCancelledError) return;
+            setError(err instanceof Error ? err.message : "Erro ao entrar com a Apple.");
+        } finally {
+            setIsAppleLoading(false);
         }
     }
 
@@ -195,7 +212,7 @@ export default function SignIn() {
                             style={[styles.button, isLoading && styles.buttonDisabled]}
                             activeOpacity={0.85}
                             onPress={handleLogin}
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || isAppleLoading}
                             accessibilityRole="button"
                             accessibilityLabel="Entrar"
                         >
@@ -216,7 +233,7 @@ export default function SignIn() {
                             style={[styles.googleButton, isGoogleLoading && styles.buttonDisabled]}
                             activeOpacity={0.85}
                             onPress={handleGoogleLogin}
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || isAppleLoading}
                             accessibilityRole="button"
                             accessibilityLabel="Entrar com o Google"
                         >
@@ -226,6 +243,22 @@ export default function SignIn() {
                                 <Text style={styles.googleButtonText}>Entrar com o Google</Text>
                             )}
                         </TouchableOpacity>
+
+                        {Platform.OS === "ios" ? (
+                            isLoading || isGoogleLoading || isAppleLoading ? (
+                                <View style={[styles.googleButton, styles.buttonDisabled]}>
+                                    {isAppleLoading ? <ActivityIndicator color={Colors.text} /> : null}
+                                </View>
+                            ) : (
+                                <AppleAuthentication.AppleAuthenticationButton
+                                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                                    cornerRadius={Radius.full}
+                                    style={styles.appleButton}
+                                    onPress={handleAppleLogin}
+                                />
+                            )
+                        ) : null}
                     </View>
                 </SafeAreaView>
             </ScrollView>
@@ -447,5 +480,9 @@ const styles = StyleSheet.create({
         fontSize: Typography.sizes.md,
         color: Colors.text,
         letterSpacing: 0.5,
+    },
+
+    appleButton: {
+        height: 54,
     },
 });
