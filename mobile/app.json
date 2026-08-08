@@ -8,7 +8,12 @@
     "scheme": "chegamed",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.devluan.chegamed",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -45,7 +50,12 @@
           "cameraPermission": "O ChegaMed precisa acessar a câmera para fotografar receitas médicas."
         }
       ],
-      "@react-native-google-signin/google-signin",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.SUBSTITUIR_PELO_IOS_CLIENT_ID"
+        }
+      ],
       [
         "expo-notifications",
         {
