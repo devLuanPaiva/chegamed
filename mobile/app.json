@@ -8,7 +8,7 @@
     "scheme": "chegamed",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon-ios.png",
       "bundleIdentifier": "com.devluan.chegamed",
       "supportsTablet": false,
       "infoPlist": {
