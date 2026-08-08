@@ -67,6 +67,10 @@ google:
     client-secret: ${OAUTH_CLIENT_SECRET:}
     token-uri: https://oauth2.googleapis.com/token
 
+apple:
+  oauth:
+    bundle-id: ${APPLE_BUNDLE_ID:}
+
 resend:
   api-key: ${RESEND_API_KEY:}
   from-email: ${RESEND_FROM_EMAIL:}
