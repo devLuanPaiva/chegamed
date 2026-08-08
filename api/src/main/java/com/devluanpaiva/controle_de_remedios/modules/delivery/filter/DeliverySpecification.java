@@ -21,6 +21,11 @@ public final class DeliverySpecification {
                 root.join("patient").join("user").get("id"), userId);
     }
 
+    public static Specification<Delivery> deliveredBy(UUID delivererId) {
+        return (root, query, builder) -> builder.equal(
+                root.join("deliverer").get("id"), delivererId);
+    }
+
     public static Specification<Delivery> hasCompanyId(UUID companyId) {
         if (companyId == null) {
             return Specification.unrestricted();

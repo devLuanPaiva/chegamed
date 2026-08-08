@@ -136,7 +136,7 @@ public class MedicineMovementServiceImpl implements MedicineMovementService {
         return switch (actor.getRole()) {
             case ADMIN -> Specification.unrestricted();
             case MANAGER, ASSISTANT -> MedicineMovementSpecification.associatedWithManager(actor.getId());
-            case PATIENT -> throw authorizationPolicy.forbidden();
+            case PATIENT, DELIVERER -> throw authorizationPolicy.forbidden();
         };
     }
 

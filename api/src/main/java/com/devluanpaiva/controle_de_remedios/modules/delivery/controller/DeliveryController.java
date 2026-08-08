@@ -18,7 +18,9 @@ import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.PendingQueueIt
 import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.ReserveStockRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.filter.DeliveryFilter;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.filter.PendingDeliveryItemFilter;
+import com.devluanpaiva.controle_de_remedios.modules.delivery.service.DeliveryQueryService;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.service.DeliveryService;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.PrescriptionItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponse;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponseFactory;
@@ -32,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DeliveryController {
     private final DeliveryService deliveryService;
+    private final DeliveryQueryService deliveryQueryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -41,7 +44,7 @@ public class DeliveryController {
 
     @GetMapping("/{id}")
     public ApiResponse<DeliveryResponseDTO> getDeliveryById(@PathVariable UUID id) {
-        return ApiResponseFactory.success("Entrega encontrada com sucesso", deliveryService.getDeliveryById(id));
+        return ApiResponseFactory.success("Entrega encontrada com sucesso", deliveryQueryService.getDeliveryById(id));
     }
 
     @GetMapping
@@ -59,7 +62,7 @@ public class DeliveryController {
         Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         DeliveryFilter filter = new DeliveryFilter(
                 companyId, patientId, medicineId, medicineName, patientName, patientEmail, patientCpf);
-        Page<DeliveryResponseDTO> result = deliveryService.listDeliveries(filter, pageable);
+        Page<DeliveryResponseDTO> result = deliveryQueryService.listDeliveries(filter, pageable);
 
         String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
         String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
@@ -73,7 +76,7 @@ public class DeliveryController {
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<DeliveryResponseDTO> result = deliveryService.listMyDeliveries(pageable);
+        Page<DeliveryResponseDTO> result = deliveryQueryService.listDeliveriesOfCurrentPatient(pageable);
 
         String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
         String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
@@ -94,11 +97,12 @@ public class DeliveryController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) String patientName,
-            @RequestParam(required = false) String patientCpf) {
+            @RequestParam(required = false) String patientCpf,
+            @RequestParam(required = false) PrescriptionStatus status) {
 
         Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.ASC, "requestedAt"));
-        PendingDeliveryItemFilter filter = new PendingDeliveryItemFilter(companyId, patientName, patientCpf);
-        Page<PendingDeliveryItemResponseDTO> result = deliveryService.listPendingDeliveryItems(filter, pageable);
+        PendingDeliveryItemFilter filter = new PendingDeliveryItemFilter(companyId, patientName, patientCpf, status);
+        Page<PendingDeliveryItemResponseDTO> result = deliveryQueryService.listPendingDeliveryItems(filter, pageable);
 
         String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
         String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
@@ -113,7 +117,7 @@ public class DeliveryController {
             @RequestParam(defaultValue = "20") int size) {
 
         Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.ASC, "requestedAt"));
-        Page<PendingDeliveryItemResponseDTO> result = deliveryService.listMyPendingDeliveryItems(pageable);
+        Page<PendingDeliveryItemResponseDTO> result = deliveryQueryService.listPendingItemsOfCurrentPatient(pageable);
 
         String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
         String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
@@ -122,10 +126,40 @@ public class DeliveryController {
                 "Lista dos seus itens pendentes de entrega obtida com sucesso", result, next, previous);
     }
 
+    @GetMapping("/me/out-for-delivery")
+    public ApiResponse<List<PendingDeliveryItemResponseDTO>> getMyOutForDeliveryItems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.ASC, "outForDeliveryAt"));
+        Page<PendingDeliveryItemResponseDTO> result = deliveryQueryService.listOutForDeliveryItemsOfCurrentDeliverer(pageable);
+
+        String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
+        String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
+
+        return ApiResponseFactory.paginated(
+                "Lista das suas entregas pendentes obtida com sucesso", result, next, previous);
+    }
+
+    @GetMapping("/me/completed")
+    public ApiResponse<List<DeliveryResponseDTO>> getMyCompletedDeliveries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Pageable pageable = PageableFactory.build(page, size, Sort.by(Sort.Direction.DESC, "deliveryDate"));
+        Page<DeliveryResponseDTO> result = deliveryQueryService.listDeliveriesCompletedByCurrentDeliverer(pageable);
+
+        String next = result.hasNext() ? buildPageUri(page + 1, size) : null;
+        String previous = result.hasPrevious() ? buildPageUri(page - 1, size) : null;
+
+        return ApiResponseFactory.paginated(
+                "Lista das entregas realizadas obtida com sucesso", result, next, previous);
+    }
+
     @GetMapping("/pending-queue/{medicineId}")
     public ApiResponse<List<PendingQueueItemResponseDTO>> getPendingQueue(@PathVariable UUID medicineId) {
         return ApiResponseFactory.list(
-                "Fila de entregas pendentes obtida com sucesso", deliveryService.getPendingQueue(medicineId));
+                "Fila de entregas pendentes obtida com sucesso", deliveryQueryService.getPendingQueue(medicineId));
     }
 
     @GetMapping("/eligible-prescriptions")
@@ -133,7 +167,7 @@ public class DeliveryController {
             @RequestParam UUID companyId, @RequestParam String cpf) {
         return ApiResponseFactory.list(
                 "Receitas elegíveis para entrega obtidas com sucesso",
-                deliveryService.getEligiblePrescriptions(companyId, cpf));
+                deliveryQueryService.getEligiblePrescriptions(companyId, cpf));
     }
 
     @PostMapping("/prescriptions/{prescriptionId}")
@@ -141,6 +175,19 @@ public class DeliveryController {
     public ApiResponse<List<DeliveryResponseDTO>> deliverAllPendingItems(@PathVariable UUID prescriptionId) {
         return ApiResponseFactory.list(
                 "Receita entregue com sucesso", deliveryService.deliverAllPendingItems(prescriptionId));
+    }
+
+    @PostMapping("/dispatches/{prescriptionItemId}")
+    public ApiResponse<PendingDeliveryItemResponseDTO> dispatchForDelivery(@PathVariable UUID prescriptionItemId) {
+        return ApiResponseFactory.success(
+                "Item enviado para entrega com sucesso", deliveryService.dispatchForDelivery(prescriptionItemId));
+    }
+
+    @PostMapping("/dispatches/prescriptions/{prescriptionId}")
+    public ApiResponse<List<PendingDeliveryItemResponseDTO>> dispatchAllPendingItems(
+            @PathVariable UUID prescriptionId) {
+        return ApiResponseFactory.list(
+                "Receita enviada para entrega com sucesso", deliveryService.dispatchAllPendingItems(prescriptionId));
     }
 
     @PatchMapping("/reservations/{prescriptionItemId}")

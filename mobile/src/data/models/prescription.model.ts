@@ -2,18 +2,18 @@ import { CreatePrescriptionItemRequest } from "@/data/models/prescription-item.m
 
 export enum PrescriptionStatus {
     PENDING = "PENDING",
-    APPROVED = "APPROVED",
-    REJECTED = "REJECTED",
+    OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
     DELIVERED = "DELIVERED",
     PARTIAL_DELIVERED = "PARTIAL_DELIVERED",
+    CANCELED = "CANCELED",
 }
 
 export const PrescriptionStatusLabels: Record<PrescriptionStatus, string> = {
     [PrescriptionStatus.PENDING]: "Pendente",
-    [PrescriptionStatus.APPROVED]: "Aprovada",
-    [PrescriptionStatus.REJECTED]: "Rejeitada",
+    [PrescriptionStatus.OUT_FOR_DELIVERY]: "Em entrega",
     [PrescriptionStatus.DELIVERED]: "Entregue",
     [PrescriptionStatus.PARTIAL_DELIVERED]: "Entrega parcial",
+    [PrescriptionStatus.CANCELED]: "Cancelada",
 };
 
 export interface IPrescription {

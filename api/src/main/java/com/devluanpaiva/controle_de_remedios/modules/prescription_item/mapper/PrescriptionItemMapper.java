@@ -29,6 +29,7 @@ public class PrescriptionItemMapper {
                 item.getReceivedQuantity(),
                 item.getDeliveredQuantity(),
                 item.getRequestedAt(),
+                item.getOutForDeliveryAt(),
                 item.getCreatedAt(),
                 item.getUpdatedAt());
     }

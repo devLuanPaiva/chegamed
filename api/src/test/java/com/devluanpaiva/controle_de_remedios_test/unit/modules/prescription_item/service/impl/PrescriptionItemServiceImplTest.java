@@ -27,7 +27,10 @@ import com.devluanpaiva.controle_de_remedios.modules.medicine.entity.Medicine;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.mapper.MedicineMapper;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescription;
+import com.devluanpaiva.controle_de_remedios.modules.notification.service.DeliveryNotificationService;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.repository.PrescriptionRepository;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.service.PrescriptionStatusResolver;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.PrescriptionItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.UpdatePrescriptionItemRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
@@ -53,6 +56,12 @@ class PrescriptionItemServiceImplTest {
     private CompanyRepository companyRepository;
 
     @Mock
+    private PrescriptionRepository prescriptionRepository;
+
+    @Mock
+    private DeliveryNotificationService deliveryNotificationService;
+
+    @Mock
     private SecurityContextHelper securityContextHelper;
 
     private PrescriptionItemServiceImpl prescriptionItemService;
@@ -60,8 +69,9 @@ class PrescriptionItemServiceImplTest {
     @BeforeEach
     void setUp() {
         prescriptionItemService = new PrescriptionItemServiceImpl(
-                prescriptionItemRepository, companyRepository, new PrescriptionItemMapper(new MedicineMapper()),
-                securityContextHelper, new AuthorizationPolicy());
+                prescriptionItemRepository, prescriptionRepository, companyRepository,
+                new PrescriptionItemMapper(new MedicineMapper()), new PrescriptionStatusResolver(),
+                deliveryNotificationService, securityContextHelper, new AuthorizationPolicy());
     }
 
     private Company buildCompany() {
@@ -218,7 +228,7 @@ class PrescriptionItemServiceImplTest {
             Patient patient = buildPatient(buildCompany());
             PrescriptionItem item = buildItem(patient);
             UpdatePrescriptionItemRequestDTO dto = new UpdatePrescriptionItemRequestDTO(
-                    PrescriptionStatus.APPROVED, null, null, null, null, null, null, null, null, null, null);
+                    PrescriptionStatus.OUT_FOR_DELIVERY, null, null, null, null, null, null, null, null, null, null);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
@@ -226,7 +236,7 @@ class PrescriptionItemServiceImplTest {
 
             PrescriptionItemResponseDTO response = prescriptionItemService.updatePrescriptionItem(item.getId(), dto);
 
-            assertThat(response.status()).isEqualTo(PrescriptionStatus.APPROVED);
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.OUT_FOR_DELIVERY);
             assertThat(response.dosage()).isEqualTo("10mg");
             assertThat(response.prescribedQuantity()).isEqualTo(30);
         }
@@ -318,6 +328,101 @@ class PrescriptionItemServiceImplTest {
 
             verify(companyRepository, never()).existsByIdAndUsers_Id(any(), any());
             verify(prescriptionItemRepository, never()).delete(any(PrescriptionItem.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("cancelPrescriptionItem")
+    class CancelPrescriptionItem {
+
+        @Test
+        @DisplayName("should cancel the item, re-evaluate the prescription and notify the patient")
+        void shouldCancelItemAndNotifyPatient() {
+            User manager = buildUser(UserRole.MANAGER);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            PrescriptionItem item = buildItem(patient);
+            item.getPrescription().getItems().add(item);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), manager.getId())).thenReturn(true);
+            when(prescriptionItemRepository.save(item)).thenReturn(item);
+
+            PrescriptionItemResponseDTO response = prescriptionItemService.cancelPrescriptionItem(item.getId());
+
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.CANCELED);
+            assertThat(item.getPrescription().getStatus()).isEqualTo(PrescriptionStatus.CANCELED);
+
+            verify(prescriptionRepository).save(item.getPrescription());
+            verify(deliveryNotificationService).notifyCanceled(item);
+        }
+
+        @Test
+        @DisplayName("should allow cancelling an item that is already out for delivery")
+        void shouldAllowCancellingItemOutForDelivery() {
+            User assistant = buildUser(UserRole.ASSISTANT);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            PrescriptionItem item = buildItem(patient);
+            item.setStatus(PrescriptionStatus.OUT_FOR_DELIVERY);
+            item.getPrescription().getItems().add(item);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(assistant);
+            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), assistant.getId())).thenReturn(true);
+            when(prescriptionItemRepository.save(item)).thenReturn(item);
+
+            PrescriptionItemResponseDTO response = prescriptionItemService.cancelPrescriptionItem(item.getId());
+
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.CANCELED);
+        }
+
+        @Test
+        @DisplayName("should throw 409 when the item was already delivered")
+        void shouldThrowWhenItemWasAlreadyDelivered() {
+            User manager = buildUser(UserRole.MANAGER);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            PrescriptionItem item = buildItem(patient);
+            item.setStatus(PrescriptionStatus.DELIVERED);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), manager.getId())).thenReturn(true);
+
+            assertThatThrownBy(() -> prescriptionItemService.cancelPrescriptionItem(item.getId()))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                        assertThat(businessException.getCode()).isEqualTo("PRESCRIPTION_ITEM_NOT_CANCELABLE");
+                    });
+
+            verify(prescriptionItemRepository, never()).save(any(PrescriptionItem.class));
+            verify(deliveryNotificationService, never()).notifyCanceled(any());
+        }
+
+        @Test
+        @DisplayName("should mark the prescription as DELIVERED when every remaining item was delivered")
+        void shouldMarkPrescriptionAsDeliveredWhenRemainingItemsWereDelivered() {
+            User manager = buildUser(UserRole.MANAGER);
+            Company company = buildCompany();
+            Patient patient = buildPatient(company);
+            PrescriptionItem item = buildItem(patient);
+            PrescriptionItem deliveredItem = buildItem(patient);
+            deliveredItem.setStatus(PrescriptionStatus.DELIVERED);
+            item.getPrescription().getItems().add(item);
+            item.getPrescription().getItems().add(deliveredItem);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
+            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), manager.getId())).thenReturn(true);
+            when(prescriptionItemRepository.save(item)).thenReturn(item);
+
+            prescriptionItemService.cancelPrescriptionItem(item.getId());
+
+            assertThat(item.getPrescription().getStatus()).isEqualTo(PrescriptionStatus.DELIVERED);
         }
     }
 }

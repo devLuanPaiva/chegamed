@@ -13,10 +13,10 @@ interface PendingMedicationCardProps {
 
 const STATUS_COLOR: Record<PrescriptionStatus, string> = {
     [PrescriptionStatus.PENDING]: Colors.warning,
-    [PrescriptionStatus.APPROVED]: Colors.info,
-    [PrescriptionStatus.REJECTED]: Colors.danger,
+    [PrescriptionStatus.OUT_FOR_DELIVERY]: Colors.info,
     [PrescriptionStatus.DELIVERED]: Colors.success,
     [PrescriptionStatus.PARTIAL_DELIVERED]: Colors.success,
+    [PrescriptionStatus.CANCELED]: Colors.danger,
 };
 
 export function PendingMedicationCard({ item }: Readonly<PendingMedicationCardProps>) {

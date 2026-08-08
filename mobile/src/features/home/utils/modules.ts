@@ -47,6 +47,14 @@ export const HOME_MODULES: ModuleDefinition[] = [
         allowedRoles: [UserRole.MANAGER, UserRole.ASSISTANT],
     },
     {
+        id: "my-deliveries",
+        title: "Minhas entregas",
+        subtitle: "Entregar medicamentos nos endereços",
+        icon: Truck,
+        route: "/(protected)/my-deliveries" as Href,
+        allowedRoles: [UserRole.DELIVERER],
+    },
+    {
         id: "history",
         title: "Histórico de receitas",
         subtitle: "Acompanhe seus medicamentos",

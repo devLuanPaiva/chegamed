@@ -6,9 +6,12 @@ export interface IDelivery {
     companyId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
     prescriptionItemId: string;
     medicineName: string;
     unityType: UnityType;
+    delivererId: string | null;
+    delivererName: string | null;
     deliveryDate: Date;
     nextAvailableDate: Date;
     deliveryQuantity: number;
@@ -35,5 +38,5 @@ export interface IEligiblePrescription {
 }
 
 export function isDeliverableStatus(status: PrescriptionStatus): boolean {
-    return status === PrescriptionStatus.PENDING || status === PrescriptionStatus.APPROVED;
+    return status === PrescriptionStatus.PENDING || status === PrescriptionStatus.OUT_FOR_DELIVERY;
 }
