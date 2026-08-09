@@ -49,8 +49,7 @@ import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException
 @DisplayName("AuthService")
 class AuthServiceTest {
 
-    private static final String DESKTOP_URL = "chegamed-desktop://reset-password";
-    private static final String MOBILE_URL = "chegamed://reset-password";
+    private static final String WEB_URL = "https://chegamed.com.br";
 
     @Mock
     private UserRepository userRepository;
@@ -85,8 +84,7 @@ class AuthServiceTest {
                 .imageUrl("https://example.com/avatar.png")
                 .build();
 
-        ReflectionTestUtils.setField(authService, "desktopResetPasswordUrl", DESKTOP_URL);
-        ReflectionTestUtils.setField(authService, "mobileResetPasswordUrl", MOBILE_URL);
+        ReflectionTestUtils.setField(authService, "webUrl", WEB_URL);
         ReflectionTestUtils.setField(authService, "tokenExpirationMinutes", 60L);
     }
 
@@ -295,8 +293,8 @@ class AuthServiceTest {
                 "luan@example.com", RequestContext.DESKTOP);
 
         @Test
-        @DisplayName("should issue a token and send an e-mail with the desktop URL when the e-mail exists")
-        void shouldIssueTokenAndSendEmailWithDesktopUrl() {
+        @DisplayName("should issue a token and send an e-mail with the smart-redirect proxy link when the e-mail exists")
+        void shouldIssueTokenAndSendEmailWithProxyLink() {
             when(userRepository.findByEmail(desktopDto.email())).thenReturn(Optional.of(user));
 
             authService.forgotPassword(desktopDto);
@@ -307,12 +305,12 @@ class AuthServiceTest {
             ArgumentCaptor<String> resetUrlCaptor = ArgumentCaptor.forClass(String.class);
             verify(emailService).sendPasswordResetEmail(eq(user), resetUrlCaptor.capture(), eq(60L));
 
-            assertThat(resetUrlCaptor.getValue()).startsWith(DESKTOP_URL + "?token=");
+            assertThat(resetUrlCaptor.getValue()).startsWith(WEB_URL + "/link?to=reset-password%3Ftoken%3D");
         }
 
         @Test
-        @DisplayName("should send an e-mail with the mobile URL when the context is MOBILE")
-        void shouldSendEmailWithMobileUrl() {
+        @DisplayName("should send the same proxy link regardless of the request context")
+        void shouldSendSameProxyLinkRegardlessOfContext() {
             ForgotPasswordRequestDTO mobileDto = new ForgotPasswordRequestDTO(
                     "luan@example.com", RequestContext.MOBILE);
             when(userRepository.findByEmail(mobileDto.email())).thenReturn(Optional.of(user));
@@ -322,7 +320,7 @@ class AuthServiceTest {
             ArgumentCaptor<String> resetUrlCaptor = ArgumentCaptor.forClass(String.class);
             verify(emailService).sendPasswordResetEmail(eq(user), resetUrlCaptor.capture(), eq(60L));
 
-            assertThat(resetUrlCaptor.getValue()).startsWith(MOBILE_URL + "?token=");
+            assertThat(resetUrlCaptor.getValue()).startsWith(WEB_URL + "/link?to=reset-password%3Ftoken%3D");
         }
 
         @Test
