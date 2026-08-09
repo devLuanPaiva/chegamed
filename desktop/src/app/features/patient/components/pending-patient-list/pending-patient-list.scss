@@ -1,0 +1,69 @@
+@use "../../../../../styles/abstracts/breakpoints" as bp;
+
+.pending-patient-list__state {
+    padding: var(--space-10) 0;
+}
+
+.pending-patient-list__state--error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+
+    text-align: center;
+    color: var(--color-danger);
+}
+
+.pending-patient-list__table {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+}
+
+.pending-patient-list__col-actions {
+    text-align: right;
+    white-space: nowrap;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+@media (max-width: bp.$sm) {
+    .pending-patient-list__table thead {
+        display: none;
+    }
+
+    .pending-patient-list__table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0 var(--space-3);
+
+        padding: var(--space-4);
+        border-bottom: 1px solid var(--color-neutral-300);
+    }
+
+    .pending-patient-list__table td {
+        border-bottom: none;
+        padding: 0.25rem 0;
+    }
+
+    .pending-patient-list__col-name {
+        order: 1;
+        flex: 0 0 100%;
+        font-weight: 600;
+    }
+
+    .pending-patient-list__table td[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .pending-patient-list__col-actions {
+        order: 5;
+        flex: 0 0 100%;
+        text-align: left;
+        margin-top: var(--space-2);
+    }
+}
