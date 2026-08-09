@@ -6,9 +6,11 @@ import { Store } from '@ngrx/store';
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { Pagination } from '@shared/ui/pagination/pagination';
+import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
 
 import { PatientCreateModal } from '../../components/patient-create-modal/patient-create-modal';
+import { PendingPatientList } from '../../components/pending-patient-list/pending-patient-list';
 import * as PatientActions from '../../store/patient.actions';
 import { PatientFilterParams } from '../../models/patient-api.model';
 import {
@@ -30,7 +32,7 @@ const EMPTY_FILTER_FORM: PatientListFilterForm = {
 
 @Component({
     selector: 'app-patient-list',
-    imports: [RouterLink, DatePipe, PatientCreateModal, Pagination, NotFound],
+    imports: [RouterLink, DatePipe, PatientCreateModal, PendingPatientList, Pagination, Tabs, NotFound],
     templateUrl: './patient-list.html',
     styleUrl: './patient-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +45,12 @@ export class PatientList implements OnInit {
     readonly error = this.store.selectSignal(selectPatientsError);
     readonly pagination = this.store.selectSignal(selectPatientsPagination);
     readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    readonly tabs: TabConfig[] = [
+        { id: 'list', label: 'Listagem' },
+        { id: 'pending', label: 'Pendentes' },
+    ];
+    readonly activeTabId = signal('list');
 
     readonly showCreateModal = signal(false);
     readonly filterForm = signal<PatientListFilterForm>({ ...EMPTY_FILTER_FORM });
@@ -60,6 +68,10 @@ export class PatientList implements OnInit {
 
     ngOnInit(): void {
         this.loadPage(0);
+    }
+
+    onTabChange(tabId: string): void {
+        this.activeTabId.set(tabId);
     }
 
     openCreateModal(): void {

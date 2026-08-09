@@ -7,15 +7,18 @@
         </button>
     </header>
 
-    @if (showNotFound()) {
-        <app-not-found
-            icon="patients"
-            message="Nenhum paciente cadastrado ainda."
-            actionLabel="Novo paciente"
-            (action)="openCreateModal()"
-        />
-    } @else {
-        <form class="patient-list__filters" (submit)="applyFilters($event)">
+    <app-tabs [tabs]="tabs" [activeTabId]="activeTabId()" (tabChange)="onTabChange($event)" />
+
+    @if (activeTabId() === 'list') {
+        @if (showNotFound()) {
+            <app-not-found
+                icon="patients"
+                message="Nenhum paciente cadastrado ainda."
+                actionLabel="Novo paciente"
+                (action)="openCreateModal()"
+            />
+        } @else {
+            <form class="patient-list__filters" (submit)="applyFilters($event)">
             <div class="patient-list__filter-field">
                 <label class="patient-list__filter-label" for="filter-name">Nome</label>
                 <input
@@ -106,6 +109,9 @@
 
             <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
         }
+        }
+    } @else {
+        <app-pending-patient-list />
     }
 </section>
 
