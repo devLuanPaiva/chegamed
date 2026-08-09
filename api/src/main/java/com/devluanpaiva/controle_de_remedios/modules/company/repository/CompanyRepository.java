@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.company.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface CompanyRepository extends JpaRepository<Company, UUID>, JpaSpec
     boolean existsBySlugAndIdNot(String slug, UUID id);
 
     boolean existsByIdAndUsers_Id(UUID id, UUID userId);
+
+    Optional<Company> findBySlug(String slug);
 }
