@@ -167,7 +167,8 @@ class UserServiceImplTest {
             verify(userRepository).save(userCaptor.capture());
             assertThat(userCaptor.getValue().getPassword()).isEqualTo("hashed-password");
 
-            verify(emailService).sendWelcomeEmail(userCaptor.getValue(), dto.password(), "https://chegamed.com.br");
+            verify(emailService).sendWelcomeEmail(
+                    userCaptor.getValue(), dto.password(), "https://chegamed.com.br/link?to=");
         }
 
         @Test
