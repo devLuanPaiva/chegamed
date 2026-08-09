@@ -1,4 +1,4 @@
-import { IPatient } from '../models/patient.model';
+import { IPatient, IPatientRegistrationRequest } from '../models/patient.model';
 
 export interface PatientState {
     items: IPatient[];
@@ -17,4 +17,14 @@ export interface PatientState {
     selectedPatientLoading: boolean;
 
     accountMutating: boolean;
+
+    pendingRequests: IPatientRegistrationRequest[];
+    pendingLoading: boolean;
+    pendingError: string | null;
+    pendingCount: number;
+    pendingCurrentPage: number;
+    pendingTotalPages: number;
+    pendingNext: string | null;
+    pendingPrevious: string | null;
+    reviewingRequestId: string | null;
 }

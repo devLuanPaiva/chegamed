@@ -276,4 +276,112 @@ export class PatientEffects {
             ),
         { dispatch: false },
     );
+
+    loadPendingRegistrationRequests$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(PatientActions.loadPendingRegistrationRequests),
+            switchMap((action) =>
+                this.patientService.getPendingRegistrationRequests(action.page).pipe(
+                    map((page) =>
+                        PatientActions.loadPendingRegistrationRequestsSuccess({
+                            requests: page.requests,
+                            count: page.count,
+                            currentPage: page.currentPage,
+                            totalPages: page.totalPages,
+                            next: page.next,
+                            previous: page.previous,
+                        }),
+                    ),
+                    catchError((error) =>
+                        of(
+                            PatientActions.loadPendingRegistrationRequestsFailure({
+                                message: extractErrorMessage(error, 'Erro ao carregar solicitações pendentes.'),
+                            }),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    );
+
+    loadPendingRegistrationRequestsFailure$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(PatientActions.loadPendingRegistrationRequestsFailure),
+                tap((action) => this.toast.show(ToastType.Error, action.message)),
+            ),
+        { dispatch: false },
+    );
+
+    approveRegistrationRequest$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(PatientActions.approveRegistrationRequest),
+            exhaustMap((action) =>
+                this.patientService.approveRegistrationRequest(action.id).pipe(
+                    map((patient) => PatientActions.approveRegistrationRequestSuccess({ id: action.id, patient })),
+                    catchError((error) =>
+                        of(
+                            PatientActions.approveRegistrationRequestFailure({
+                                message: extractErrorMessage(error, 'Erro ao aprovar cadastro.'),
+                            }),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    );
+
+    approveRegistrationRequestSuccess$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(PatientActions.approveRegistrationRequestSuccess),
+                tap(() => this.toast.show(ToastType.Success, 'Cadastro aprovado com sucesso!')),
+            ),
+        { dispatch: false },
+    );
+
+    approveRegistrationRequestFailure$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(PatientActions.approveRegistrationRequestFailure),
+                tap((action) => this.toast.show(ToastType.Error, action.message)),
+            ),
+        { dispatch: false },
+    );
+
+    rejectRegistrationRequest$ = createEffect(() =>
+        this.actions$.pipe(
+            ofType(PatientActions.rejectRegistrationRequest),
+            exhaustMap((action) =>
+                this.patientService.rejectRegistrationRequest(action.id).pipe(
+                    map(() => PatientActions.rejectRegistrationRequestSuccess({ id: action.id })),
+                    catchError((error) =>
+                        of(
+                            PatientActions.rejectRegistrationRequestFailure({
+                                message: extractErrorMessage(error, 'Erro ao recusar cadastro.'),
+                            }),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+    );
+
+    rejectRegistrationRequestSuccess$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(PatientActions.rejectRegistrationRequestSuccess),
+                tap(() => this.toast.show(ToastType.Success, 'Cadastro recusado com sucesso!')),
+            ),
+        { dispatch: false },
+    );
+
+    rejectRegistrationRequestFailure$ = createEffect(
+        () =>
+            this.actions$.pipe(
+                ofType(PatientActions.rejectRegistrationRequestFailure),
+                tap((action) => this.toast.show(ToastType.Error, action.message)),
+            ),
+        { dispatch: false },
+    );
 }

@@ -13,8 +13,11 @@ import {
     CreatePatientWithAccountRequest,
     PatientApiDto,
     PatientFilterParams,
+    PatientRegistrationRequestApiDto,
     PatientsPage,
+    PendingPatientRegistrationRequestsPage,
     toPatient,
+    toPatientRegistrationRequest,
     UpdatePatientRequest,
 } from '../models/patient-api.model';
 import { IPatient } from '../models/patient.model';
@@ -101,6 +104,35 @@ export class PatientService {
     removePatientAccount(patientId: string): Observable<void> {
         return this.http
             .delete<ApiResponse<null>>(`${this.apiUrl()}/patients/${patientId}/account`)
+            .pipe(map(() => undefined));
+    }
+
+    getPendingRegistrationRequests(page = 0, size = DEFAULT_PAGE_SIZE): Observable<PendingPatientRegistrationRequestsPage> {
+        return this.http
+            .get<ApiResponse<PatientRegistrationRequestApiDto[]>>(`${this.apiUrl()}/patient-registration-requests`, {
+                params: { page, size },
+            })
+            .pipe(
+                map((response) => ({
+                    requests: response.data.map(toPatientRegistrationRequest),
+                    count: response.count ?? response.data.length,
+                    currentPage: response.currentPage ?? 1,
+                    totalPages: response.totalPages ?? 1,
+                    next: response.next,
+                    previous: response.previous,
+                })),
+            );
+    }
+
+    approveRegistrationRequest(id: string): Observable<IPatient> {
+        return this.http
+            .post<ApiResponse<PatientApiDto>>(`${this.apiUrl()}/patient-registration-requests/${id}/approve`, {})
+            .pipe(map((response) => toPatient(response.data)));
+    }
+
+    rejectRegistrationRequest(id: string): Observable<void> {
+        return this.http
+            .post<ApiResponse<null>>(`${this.apiUrl()}/patient-registration-requests/${id}/reject`, {})
             .pipe(map(() => undefined));
     }
 }

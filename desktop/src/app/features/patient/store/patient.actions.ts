@@ -9,7 +9,7 @@ import {
     PatientFilterParams,
     UpdatePatientRequest,
 } from '../models/patient-api.model';
-import { IPatient } from '../models/patient.model';
+import { IPatient, IPatientRegistrationRequest } from '../models/patient.model';
 
 export const loadPatients = createAction(
     '[Patients] Load Patients',
@@ -140,4 +140,56 @@ export const removePatientAccountFailure = createAction(
 
 export const clearSelectedPatient = createAction(
     '[Patients] Clear Selected Patient',
+);
+
+export const loadPendingRegistrationRequests = createAction(
+    '[Patients] Load Pending Registration Requests',
+    props<{ page: number }>(),
+);
+
+export const loadPendingRegistrationRequestsSuccess = createAction(
+    '[Patients] Load Pending Registration Requests Success',
+    props<{
+        requests: IPatientRegistrationRequest[];
+        count: number;
+        currentPage: number;
+        totalPages: number;
+        next: string | null;
+        previous: string | null;
+    }>(),
+);
+
+export const loadPendingRegistrationRequestsFailure = createAction(
+    '[Patients] Load Pending Registration Requests Failure',
+    props<{ message: string }>(),
+);
+
+export const approveRegistrationRequest = createAction(
+    '[Patients] Approve Registration Request',
+    props<{ id: string }>(),
+);
+
+export const approveRegistrationRequestSuccess = createAction(
+    '[Patients] Approve Registration Request Success',
+    props<{ id: string; patient: IPatient }>(),
+);
+
+export const approveRegistrationRequestFailure = createAction(
+    '[Patients] Approve Registration Request Failure',
+    props<{ message: string }>(),
+);
+
+export const rejectRegistrationRequest = createAction(
+    '[Patients] Reject Registration Request',
+    props<{ id: string }>(),
+);
+
+export const rejectRegistrationRequestSuccess = createAction(
+    '[Patients] Reject Registration Request Success',
+    props<{ id: string }>(),
+);
+
+export const rejectRegistrationRequestFailure = createAction(
+    '[Patients] Reject Registration Request Failure',
+    props<{ message: string }>(),
 );
