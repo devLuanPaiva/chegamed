@@ -30,6 +30,10 @@ export const CONTACT_EMAIL = "devluanpaiva@gmail.com";
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.devluan.chegamed";
 
+export const APP_STORE_URL = "https://apps.apple.com/app/id6799482723";
+
+export const DEEP_LINK_SCHEME = "chegamed";
+
 export const NAV_LINKS: NavLink[] = [
   { label: "Como funciona", href: "/#como-funciona" },
   { label: "Funcionalidades", href: "/#funcionalidades" },
