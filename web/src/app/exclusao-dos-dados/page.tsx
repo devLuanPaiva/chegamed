@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalLayout } from "@/components/legal/LegalLayout";
+import { CONTACT_EMAIL } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Exclusão de dados | ChegaMed",
   description:
     "Como solicitar a exclusão de dados de pacientes, prescrições e entregas no ChegaMed.",
 };
-
-const SUPPORT_EMAIL = "suporte@chegamed.com.br";
 
 export default function ExclusaoDosDadosPage() {
   return (
@@ -59,9 +58,9 @@ export default function ExclusaoDosDadosPage() {
           Se você não consegue fazer login, envie sua solicitação por e-mail para{" "}
           <a
             className="font-bold text-primary-600 underline underline-offset-2"
-            href={`mailto:${SUPPORT_EMAIL}`}
+            href={`mailto:${CONTACT_EMAIL}`}
           >
-            {SUPPORT_EMAIL}
+            {CONTACT_EMAIL}
           </a>
           .
         </p>
