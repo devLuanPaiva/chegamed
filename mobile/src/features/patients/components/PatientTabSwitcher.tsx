@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { Colors, Radius, Spacing, Typography } from "@/theme";
 
-export type PatientTab = "list" | "create";
+export type PatientTab = "list" | "create" | "pending";
 
 interface PatientTabOption {
     value: PatientTab;
@@ -12,6 +12,7 @@ interface PatientTabOption {
 const TABS: PatientTabOption[] = [
     { value: "list", label: "Listagem" },
     { value: "create", label: "Cadastro" },
+    { value: "pending", label: "Pendentes" },
 ];
 
 interface PatientTabSwitcherProps {
