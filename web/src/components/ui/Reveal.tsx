@@ -8,7 +8,7 @@ interface RevealProps {
   className?: string;
 }
 
-export function Reveal({ children, delayMs = 0, className = "" }: RevealProps) {
+export function Reveal({ children, delayMs = 0, className = "" }: Readonly<RevealProps>) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 

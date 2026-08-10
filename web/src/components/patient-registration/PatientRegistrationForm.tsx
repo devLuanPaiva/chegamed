@@ -18,7 +18,7 @@ interface PatientRegistrationFormProps {
   companyName: string;
 }
 
-export function PatientRegistrationForm({ companySlug, companyName }: PatientRegistrationFormProps) {
+export function PatientRegistrationForm({ companySlug, companyName }: Readonly<PatientRegistrationFormProps>) {
   const submitForCompany = submitPatientRegistration.bind(null, companySlug);
   const [state, formAction] = useActionState(submitForCompany, INITIAL_FORM_STATE);
 

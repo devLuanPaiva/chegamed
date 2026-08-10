@@ -25,7 +25,7 @@ interface PatientRegistrationPageProps {
   params: Promise<{ "company-slug": string }>;
 }
 
-export default async function PatientRegistrationPage({ params }: PatientRegistrationPageProps) {
+export default async function PatientRegistrationPage({ params }: Readonly<PatientRegistrationPageProps>) {
   const { "company-slug": companySlug } = await params;
   const company = await getPublicCompany(companySlug);
 
@@ -38,19 +38,25 @@ export default async function PatientRegistrationPage({ params }: PatientRegistr
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-primary-50 blur-3xl" />
 
         <div className="relative w-full">
-          {!company ? (
-            <CompanyNotFoundCard />
-          ) : !isWithinBusinessHours() ? (
-            <BusinessHoursNotice />
-          ) : (
-            <PatientRegistrationForm companySlug={companySlug} companyName={company.name} />
-          )}
+          {renderRegistrationContent(company, companySlug)}
         </div>
       </main>
 
       <Footer />
     </div>
   );
+}
+
+function renderRegistrationContent(company: PublicCompanySummary | null, companySlug: string) {
+  if (!company) {
+    return <CompanyNotFoundCard />;
+  }
+
+  if (!isWithinBusinessHours()) {
+    return <BusinessHoursNotice />;
+  }
+
+  return <PatientRegistrationForm companySlug={companySlug} companyName={company.name} />;
 }
 
 async function getPublicCompany(slug: string): Promise<PublicCompanySummary | null> {

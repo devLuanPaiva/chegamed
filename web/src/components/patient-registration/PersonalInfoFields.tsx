@@ -8,7 +8,7 @@ interface PersonalInfoFieldsProps {
   errors: Record<string, string>;
 }
 
-export function PersonalInfoFields({ errors }: PersonalInfoFieldsProps) {
+export function PersonalInfoFields({ errors }: Readonly<PersonalInfoFieldsProps>) {
   return (
     <div className="flex flex-col gap-5">
       <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-500">

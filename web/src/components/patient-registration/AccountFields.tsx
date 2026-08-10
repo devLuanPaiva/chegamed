@@ -6,7 +6,7 @@ interface AccountFieldsProps {
   errors: Record<string, string>;
 }
 
-export function AccountFields({ errors }: AccountFieldsProps) {
+export function AccountFields({ errors }: Readonly<AccountFieldsProps>) {
   return (
     <div className="flex flex-col gap-5">
       <h2 className="text-sm font-bold uppercase tracking-wide text-neutral-500">

@@ -22,7 +22,7 @@ export function FormField({
   placeholder,
   maxLength,
   onChange,
-}: FormFieldProps) {
+}: Readonly<FormFieldProps>) {
   return (
     <label className="flex flex-col gap-2">
       <span className="text-sm font-bold text-neutral-800">{label}</span>
