@@ -14,7 +14,7 @@ const registrationSchema = z
     birthDate: z.string().min(1, "Informe a data de nascimento"),
     contact: z.string().trim().max(20, "Contato muito longo").optional(),
     address: z.string().trim().max(255, "Endereço muito longo").optional(),
-    email: z.string().trim().min(1, "Informe o e-mail").email("E-mail inválido").max(180),
+    email: z.email("E-mail inválido").trim().min(1, "Informe o e-mail").max(180),
     password: z.string().min(6, "A senha deve ter entre 6 e 20 caracteres").max(20),
     confirmPassword: z.string(),
   })
@@ -37,14 +37,14 @@ export async function submitPatientRegistration(
   formData: FormData,
 ): Promise<PatientRegistrationFormState> {
   const parsed = registrationSchema.safeParse({
-    name: formData.get("name")?.toString() ?? "",
-    cpf: formData.get("cpf")?.toString() ?? "",
-    birthDate: formData.get("birthDate")?.toString() ?? "",
-    contact: formData.get("contact")?.toString() ?? "",
-    address: formData.get("address")?.toString() ?? "",
-    email: formData.get("email")?.toString() ?? "",
-    password: formData.get("password")?.toString() ?? "",
-    confirmPassword: formData.get("confirmPassword")?.toString() ?? "",
+    name: getStringField(formData, "name"),
+    cpf: getStringField(formData, "cpf"),
+    birthDate: getStringField(formData, "birthDate"),
+    contact: getStringField(formData, "contact"),
+    address: getStringField(formData, "address"),
+    email: getStringField(formData, "email"),
+    password: getStringField(formData, "password"),
+    confirmPassword: getStringField(formData, "confirmPassword"),
   });
 
   if (!parsed.success) {
@@ -71,7 +71,12 @@ export async function submitPatientRegistration(
   }
 }
 
-function flattenZodIssues(issues: z.ZodIssue[]): Record<string, string> {
+function getStringField(formData: FormData, field: string): string {
+  const value = formData.get(field);
+  return typeof value === "string" ? value : "";
+}
+
+function flattenZodIssues(issues: z.core.$ZodIssue[]): Record<string, string> {
   const fieldErrors: Record<string, string> = {};
 
   for (const issue of issues) {
