@@ -85,6 +85,30 @@ export default function SignIn() {
         }
     }
 
+    function renderAppleAuthButton() {
+        if (Platform.OS !== "ios") {
+            return null;
+        }
+
+        if (isLoading || isGoogleLoading || isAppleLoading) {
+            return (
+                <View style={[styles.googleButton, styles.buttonDisabled]}>
+                    {isAppleLoading ? <ActivityIndicator color={Colors.text} /> : null}
+                </View>
+            );
+        }
+
+        return (
+            <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+                cornerRadius={Radius.full}
+                style={styles.appleButton}
+                onPress={handleAppleLogin}
+            />
+        );
+    }
+
     return (
         <KeyboardAvoidingView
             style={styles.flex}
@@ -244,21 +268,7 @@ export default function SignIn() {
                             )}
                         </TouchableOpacity>
 
-                        {Platform.OS === "ios" ? (
-                            isLoading || isGoogleLoading || isAppleLoading ? (
-                                <View style={[styles.googleButton, styles.buttonDisabled]}>
-                                    {isAppleLoading ? <ActivityIndicator color={Colors.text} /> : null}
-                                </View>
-                            ) : (
-                                <AppleAuthentication.AppleAuthenticationButton
-                                    buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                                    buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-                                    cornerRadius={Radius.full}
-                                    style={styles.appleButton}
-                                    onPress={handleAppleLogin}
-                                />
-                            )
-                        ) : null}
+                        {renderAppleAuthButton()}
                     </View>
                 </SafeAreaView>
             </ScrollView>

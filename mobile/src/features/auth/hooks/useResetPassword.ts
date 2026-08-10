@@ -11,7 +11,7 @@ interface UseResetPasswordOptions {
     onSuccess: () => void;
 }
 
-export function useResetPassword({ initialToken = "", onSuccess }: UseResetPasswordOptions) {
+export function useResetPassword({ initialToken = "", onSuccess }: Readonly<UseResetPasswordOptions>) {
     const [token, setToken] = useState(initialToken);
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");

@@ -10,7 +10,7 @@ interface UseChangePasswordOptions {
     onSuccess: () => void;
 }
 
-export function useChangePassword({ onSuccess }: UseChangePasswordOptions) {
+export function useChangePassword({ onSuccess }: Readonly<UseChangePasswordOptions>) {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");

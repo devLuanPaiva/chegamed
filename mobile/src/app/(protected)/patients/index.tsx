@@ -56,6 +56,87 @@ export default function PatientsScreen() {
         },
     });
 
+    function renderTabContent() {
+        switch (activeTab) {
+            case "list":
+                return (
+                    <PaginatedList
+                        data={patients.items}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <PatientCard
+                                patient={item}
+                                onPress={() => router.push(`/(protected)/patients/${item.id}` as Href)}
+                            />
+                        )}
+                        isLoading={patients.isLoading}
+                        isLoadingMore={patients.isLoadingMore}
+                        error={patients.error}
+                        emptyMessage="Nenhum paciente encontrado."
+                        onLoadMore={patients.loadMore}
+                        onRefresh={patients.refresh}
+                    />
+                );
+            case "pending":
+                return (
+                    <PaginatedList
+                        data={pendingRequests.items}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <PendingPatientRequestCard
+                                request={item}
+                                isBusy={pendingRequests.reviewingId === item.id}
+                                onApprove={() => setConfirmTarget({ request: item, kind: "approve" })}
+                                onReject={() => setConfirmTarget({ request: item, kind: "reject" })}
+                            />
+                        )}
+                        isLoading={pendingRequests.isLoading}
+                        isLoadingMore={pendingRequests.isLoadingMore}
+                        error={pendingRequests.error}
+                        emptyMessage="Nenhuma solicitação de cadastro pendente."
+                        onLoadMore={pendingRequests.loadMore}
+                        onRefresh={pendingRequests.refresh}
+                    />
+                );
+            case "create":
+                return (
+                    <KeyboardAvoidingView
+                        style={styles.formContainer}
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    >
+                        <ScrollView
+                            contentContainerStyle={styles.formContent}
+                            keyboardShouldPersistTaps="handled"
+                            keyboardDismissMode="on-drag"
+                            showsVerticalScrollIndicator={false}
+                        >
+                            <PatientForm
+                                values={values}
+                                onChangeField={setField}
+                                formError={formError}
+                                formErrorField={formErrorField}
+                                isSubmitting={isSubmitting}
+                                submitLabel="Cadastrar paciente"
+                                onSubmit={submit}
+                            />
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                );
+        }
+    }
+
+    function getConfirmMessage() {
+        if (!confirmTarget) {
+            return "";
+        }
+
+        if (confirmTarget.kind === "approve") {
+            return `${confirmTarget.request.name} terá uma conta de acesso criada ou vinculada e receberá um e-mail de confirmação.`;
+        }
+
+        return `A solicitação de ${confirmTarget.request.name} será recusada. Esta ação não pode ser desfeita.`;
+    }
+
     async function handleConfirmAction() {
         if (!confirmTarget) {
             return;
@@ -93,76 +174,12 @@ export default function PatientsScreen() {
                 ) : null}
             </View>
 
-            {activeTab === "list" ? (
-                <PaginatedList
-                    data={patients.items}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <PatientCard
-                            patient={item}
-                            onPress={() => router.push(`/(protected)/patients/${item.id}` as Href)}
-                        />
-                    )}
-                    isLoading={patients.isLoading}
-                    isLoadingMore={patients.isLoadingMore}
-                    error={patients.error}
-                    emptyMessage="Nenhum paciente encontrado."
-                    onLoadMore={patients.loadMore}
-                    onRefresh={patients.refresh}
-                />
-            ) : activeTab === "pending" ? (
-                <PaginatedList
-                    data={pendingRequests.items}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <PendingPatientRequestCard
-                            request={item}
-                            isBusy={pendingRequests.reviewingId === item.id}
-                            onApprove={() => setConfirmTarget({ request: item, kind: "approve" })}
-                            onReject={() => setConfirmTarget({ request: item, kind: "reject" })}
-                        />
-                    )}
-                    isLoading={pendingRequests.isLoading}
-                    isLoadingMore={pendingRequests.isLoadingMore}
-                    error={pendingRequests.error}
-                    emptyMessage="Nenhuma solicitação de cadastro pendente."
-                    onLoadMore={pendingRequests.loadMore}
-                    onRefresh={pendingRequests.refresh}
-                />
-            ) : (
-                <KeyboardAvoidingView
-                    style={styles.formContainer}
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                >
-                    <ScrollView
-                        contentContainerStyle={styles.formContent}
-                        keyboardShouldPersistTaps="handled"
-                        keyboardDismissMode="on-drag"
-                        showsVerticalScrollIndicator={false}
-                    >
-                        <PatientForm
-                            values={values}
-                            onChangeField={setField}
-                            formError={formError}
-                            formErrorField={formErrorField}
-                            isSubmitting={isSubmitting}
-                            submitLabel="Cadastrar paciente"
-                            onSubmit={submit}
-                        />
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            )}
+            {renderTabContent()}
 
             <ConfirmDialog
                 visible={Boolean(confirmTarget)}
                 title={confirmTarget?.kind === "approve" ? "Aprovar cadastro" : "Recusar cadastro"}
-                message={
-                    confirmTarget
-                        ? confirmTarget.kind === "approve"
-                            ? `${confirmTarget.request.name} terá uma conta de acesso criada ou vinculada e receberá um e-mail de confirmação.`
-                            : `A solicitação de ${confirmTarget.request.name} será recusada. Esta ação não pode ser desfeita.`
-                        : ""
-                }
+                message={getConfirmMessage()}
                 confirmLabel={confirmTarget?.kind === "approve" ? "Aprovar" : "Recusar"}
                 cancelLabel="Voltar"
                 destructive={confirmTarget?.kind === "reject"}

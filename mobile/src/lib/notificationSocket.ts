@@ -65,7 +65,7 @@ function parseEvent(raw: string): NotificationSocketEvent | null {
     }
 }
 
-export function connectNotificationSocket({ onNotification }: NotificationSocketOptions): () => void {
+export function connectNotificationSocket({ onNotification }: Readonly<NotificationSocketOptions>): () => void {
     let socket: WebSocket | null = null;
     let pingTimer: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;

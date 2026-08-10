@@ -7,7 +7,7 @@ interface UseDeleteAccountOptions {
     onSuccess: () => void;
 }
 
-export function useDeleteAccount({ onSuccess }: UseDeleteAccountOptions) {
+export function useDeleteAccount({ onSuccess }: Readonly<UseDeleteAccountOptions>) {
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);

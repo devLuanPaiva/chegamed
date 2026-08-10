@@ -20,7 +20,7 @@ export async function getAccessToken(): Promise<string | null> {
     return SecureStore.getItemAsync(AUTH_STORAGE_KEYS.ACCESS);
 }
 
-export async function persistTokens({ access, refresh }: AuthTokens): Promise<void> {
+export async function persistTokens({ access, refresh }: Readonly<AuthTokens>): Promise<void> {
     await Promise.all([
         SecureStore.setItemAsync(AUTH_STORAGE_KEYS.ACCESS, access),
         SecureStore.setItemAsync(AUTH_STORAGE_KEYS.REFRESH, refresh),
