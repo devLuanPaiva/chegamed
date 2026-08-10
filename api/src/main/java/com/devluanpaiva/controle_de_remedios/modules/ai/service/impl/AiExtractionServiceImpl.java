@@ -211,7 +211,7 @@ public class AiExtractionServiceImpl implements AiExtractionService {
     }
 
     private String textOrNull(JsonNode node) {
-        String value = node.isTextual() ? node.asText().trim() : null;
+        String value = node.isString() ? node.asString().trim() : null;
         return StringUtils.hasText(value) ? value : null;
     }
 

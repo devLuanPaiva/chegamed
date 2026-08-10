@@ -1,7 +1,7 @@
 package com.devluanpaiva.controle_de_remedios.security;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -28,7 +28,7 @@ public class AppleIdTokenVerifierConfig {
     public ConfigurableJWTProcessor<SecurityContext> appleJwtProcessor(
             @Value("${apple.oauth.bundle-id}") String bundleId) throws MalformedURLException {
 
-        JWKSource<SecurityContext> keySource = new RemoteJWKSet<>(new URL(APPLE_JWKS_URL));
+        JWKSource<SecurityContext> keySource = JWKSourceBuilder.<SecurityContext>create(URI.create(APPLE_JWKS_URL).toURL()).build();
 
         ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
         jwtProcessor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, keySource));

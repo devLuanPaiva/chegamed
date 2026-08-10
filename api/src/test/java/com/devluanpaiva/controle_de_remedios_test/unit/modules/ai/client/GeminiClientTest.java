@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -100,7 +101,7 @@ class GeminiClientTest {
                     """;
 
             mockServer.expect(requestTo(URL))
-                    .andExpect(content().json(expectedBody, true))
+                    .andExpect(content().json(expectedBody, JsonCompareMode.STRICT))
                     .andRespond(withSuccess(
                             "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ok\"}]}}]}",
                             MediaType.APPLICATION_JSON));

@@ -72,7 +72,7 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
 
         if (!BusinessHoursValidator.isWithinBusinessHours()) {
             throw new BusinessException(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    HttpStatus.UNPROCESSABLE_CONTENT,
                     "Fora do horário de atendimento",
                     "OUTSIDE_BUSINESS_HOURS",
                     "createdAt",
