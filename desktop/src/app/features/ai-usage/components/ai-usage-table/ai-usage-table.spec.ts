@@ -70,6 +70,16 @@ describe('AiUsageTable', () => {
         expect(nextEmitted).toBe(1);
     });
 
+    it('should emit pageSelected with the page number clicked in the shared pagination control', () => {
+        let selected: number | undefined;
+        component.pageSelected.subscribe((page) => (selected = page));
+
+        const pageButton = fixture.nativeElement.querySelector('.pagination__page-btn') as HTMLButtonElement;
+        pageButton.click();
+
+        expect(selected).toBe(1);
+    });
+
     it('should show the loading state instead of the table when loading', () => {
         fixture.componentRef.setInput('loading', true);
         fixture.detectChanges();

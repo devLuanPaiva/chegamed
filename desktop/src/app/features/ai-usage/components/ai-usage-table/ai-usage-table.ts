@@ -21,6 +21,7 @@ export class AiUsageTable {
     readonly retry = output<void>();
     readonly previousPage = output<void>();
     readonly nextPage = output<void>();
+    readonly pageSelected = output<number>();
 
     readonly AiOperationTypeLabels = AiOperationTypeLabels;
     readonly AiContentTypeLabels = AiContentTypeLabels;
