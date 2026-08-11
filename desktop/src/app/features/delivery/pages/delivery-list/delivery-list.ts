@@ -1,21 +1,32 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Actions, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
+import { IDeliveriesSummary } from '@features/dashboard/models/dashboard.model';
+import { DashboardService } from '@features/dashboard/services/dashboard.service';
 import { UnityTypeLabels } from '@features/prescription/models/prescription-item.model';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { Pagination } from '@shared/ui/pagination/pagination';
 import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
 import { ViewMode, ViewToggle } from '@shared/ui/view-toggle/view-toggle';
+import { extractErrorMessage } from '@shared/utils/api-error.util';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
 
 import { DeliveryCreateForm } from '../../components/delivery-create-form/delivery-create-form';
+import { DeliverySummaryWidget } from '../../components/delivery-summary-widget/delivery-summary-widget';
 import { DeliveryFilterParams } from '../../models/delivery-api.model';
 import * as DeliveryActions from '../../store/delivery.actions';
 import { selectAllDeliveries, selectDeliveriesError, selectDeliveriesLoading, selectDeliveriesPagination } from '../../store/delivery.selectors';
+
+const EMPTY_DELIVERIES_SUMMARY: IDeliveriesSummary = {
+    totalCount: 0,
+    thisMonthCount: 0,
+    overdueCount: 0,
+    upcomingCount: 0,
+};
 
 interface DeliveryListFilterForm {
     patientName: string;
@@ -31,7 +42,7 @@ const EMPTY_FILTER_FORM: DeliveryListFilterForm = {
 
 @Component({
     selector: 'app-delivery-list',
-    imports: [DatePipe, Tabs, ViewToggle, Pagination, DeliveryCreateForm, NotFound],
+    imports: [DatePipe, Tabs, ViewToggle, Pagination, DeliveryCreateForm, NotFound, DeliverySummaryWidget],
     templateUrl: './delivery-list.html',
     styleUrl: './delivery-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +50,7 @@ const EMPTY_FILTER_FORM: DeliveryListFilterForm = {
 export class DeliveryList implements OnInit {
     private readonly store = inject(Store);
     private readonly actions$ = inject(Actions);
+    private readonly dashboardService = inject(DashboardService);
 
     readonly UnityTypeLabels = UnityTypeLabels;
 
@@ -47,6 +59,19 @@ export class DeliveryList implements OnInit {
     readonly error = this.store.selectSignal(selectDeliveriesError);
     readonly pagination = this.store.selectSignal(selectDeliveriesPagination);
     private readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    private readonly summaryResource = rxResource({
+        params: () => (this.connectedCompanyId() ? { companyId: this.connectedCompanyId()! } : undefined),
+        stream: ({ params }) => this.dashboardService.getDeliveriesSummary(params.companyId),
+        defaultValue: EMPTY_DELIVERIES_SUMMARY,
+    });
+
+    readonly summary = this.summaryResource.value;
+    readonly summaryLoading = this.summaryResource.isLoading;
+    readonly summaryError = computed(() => {
+        const error = this.summaryResource.error();
+        return error ? extractErrorMessage(error, 'Erro ao carregar os indicadores de entregas.') : null;
+    });
 
     readonly tabs: TabConfig[] = [
         { id: 'list', label: 'Listagem' },
@@ -129,6 +154,10 @@ export class DeliveryList implements OnInit {
         if (this.pagination().next) {
             this.loadPage(this.requestedPage() + 1);
         }
+    }
+
+    goToPage(page: number): void {
+        this.loadPage(page - 1);
     }
 
     private loadPage(page: number): void {

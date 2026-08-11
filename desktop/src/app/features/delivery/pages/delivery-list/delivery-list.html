@@ -3,6 +3,8 @@
         <h1 class="delivery-list__title">Entregas</h1>
     </header>
 
+    <app-delivery-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+
     <app-tabs [tabs]="tabs" [activeTabId]="activeTabId()" (tabChange)="onTabChange($event)" />
 
     @if (activeTabId() === 'list') {
@@ -126,7 +128,12 @@
             }
 
             @if (!loading() && !error()) {
-                <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
+                <app-pagination
+                    [pagination]="pagination()"
+                    (previousPage)="goToPreviousPage()"
+                    (nextPage)="goToNextPage()"
+                    (pageSelected)="goToPage($event)"
+                />
             }
         }
     } @else {
