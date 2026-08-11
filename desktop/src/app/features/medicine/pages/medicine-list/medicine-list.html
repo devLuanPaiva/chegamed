@@ -8,6 +8,8 @@
         </div>
     </header>
 
+    <app-medicine-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+
     @if (showNotFound()) {
         <app-not-found
             icon="medicines"
@@ -115,7 +117,12 @@
         }
 
         @if (!loading() && !error()) {
-            <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
+            <app-pagination
+                [pagination]="pagination()"
+                (previousPage)="goToPreviousPage()"
+                (nextPage)="goToNextPage()"
+                (pageSelected)="goToPage($event)"
+            />
         }
     }
 </section>
