@@ -3,6 +3,8 @@
         <h1 class="prescription-list__title">Receituários</h1>
     </header>
 
+    <app-prescription-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+
     <app-tabs [tabs]="tabs" [activeTabId]="activeTabId()" (tabChange)="onTabChange($event)" />
 
     @if (activeTabId() === 'list') {
@@ -132,7 +134,12 @@
                     </table>
                 </div>
 
-                <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
+                <app-pagination
+                    [pagination]="pagination()"
+                    (previousPage)="goToPreviousPage()"
+                    (nextPage)="goToNextPage()"
+                    (pageSelected)="goToPage($event)"
+                />
             }
         }
     } @else {
