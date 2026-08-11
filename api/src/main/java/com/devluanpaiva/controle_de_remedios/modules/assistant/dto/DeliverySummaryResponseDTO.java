@@ -7,6 +7,8 @@ import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.PendingDeliver
 
 public record DeliverySummaryResponseDTO(
         long pendingCount,
+        long totalDeliveredCount,
+        long deliveredThisMonthCount,
         List<PendingDeliveryItemResponseDTO> pendingItems,
         List<DeliveryResponseDTO> recentDeliveries) {
 }

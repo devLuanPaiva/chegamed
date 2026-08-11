@@ -16,6 +16,10 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID>, JpaSp
     boolean existsByPatient_IdAndPrescriptionItem_Medicine_IdAndNextAvailableDateAfter(
             UUID patientId, UUID medicineId, LocalDate date);
 
+    long countByCompany_Id(UUID companyId);
+
+    long countByCompany_IdAndDeliveryDateBetween(UUID companyId, LocalDate from, LocalDate to);
+
     Optional<Delivery> findTopByPatient_IdAndPrescriptionItem_Medicine_IdOrderByNextAvailableDateDesc(
             UUID patientId, UUID medicineId);
 
