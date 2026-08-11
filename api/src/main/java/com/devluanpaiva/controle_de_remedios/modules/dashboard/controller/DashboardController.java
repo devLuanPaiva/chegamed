@@ -6,12 +6,18 @@ import java.util.UUID;
 import org.springframework.web.bind.annotation.*;
 
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.AvailabilityListResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.DeliveriesSummaryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.DeliveryQueueSummaryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.DeliveryTimelineResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.FulfillmentSummaryResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.MedicinesSummaryResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.PatientsSummaryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.PrescriptionStatusBreakdownResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.PrescriptionsSummaryResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.UsersSummaryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.enums.DeliveryTimelineGranularity;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.service.DashboardService;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.service.EntitySummaryService;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponse;
 import com.devluanpaiva.controle_de_remedios.shared.responses.ApiResponseFactory;
 
@@ -24,6 +30,7 @@ public class DashboardController {
     private static final int DEFAULT_UPCOMING_DAYS = 7;
 
     private final DashboardService dashboardService;
+    private final EntitySummaryService entitySummaryService;
 
     @GetMapping("/prescriptions/status-breakdown")
     public ApiResponse<PrescriptionStatusBreakdownResponseDTO> getPrescriptionStatusBreakdown(
@@ -72,5 +79,37 @@ public class DashboardController {
         return ApiResponseFactory.success(
                 "Linha do tempo de entregas obtida com sucesso",
                 dashboardService.getDeliveryTimeline(companyId, from, to, granularity));
+    }
+
+    @GetMapping("/patients/summary")
+    public ApiResponse<PatientsSummaryResponseDTO> getPatientsSummary(@RequestParam UUID companyId) {
+        return ApiResponseFactory.success(
+                "Indicadores de pacientes obtidos com sucesso", entitySummaryService.getPatientsSummary(companyId));
+    }
+
+    @GetMapping("/prescriptions/summary")
+    public ApiResponse<PrescriptionsSummaryResponseDTO> getPrescriptionsSummary(@RequestParam UUID companyId) {
+        return ApiResponseFactory.success(
+                "Indicadores de receitas obtidos com sucesso",
+                entitySummaryService.getPrescriptionsSummary(companyId));
+    }
+
+    @GetMapping("/deliveries/summary")
+    public ApiResponse<DeliveriesSummaryResponseDTO> getDeliveriesSummary(@RequestParam UUID companyId) {
+        return ApiResponseFactory.success(
+                "Indicadores de entregas obtidos com sucesso", entitySummaryService.getDeliveriesSummary(companyId));
+    }
+
+    @GetMapping("/medicines/summary")
+    public ApiResponse<MedicinesSummaryResponseDTO> getMedicinesSummary(@RequestParam UUID companyId) {
+        return ApiResponseFactory.success(
+                "Indicadores de medicamentos obtidos com sucesso",
+                entitySummaryService.getMedicinesSummary(companyId));
+    }
+
+    @GetMapping("/users/summary")
+    public ApiResponse<UsersSummaryResponseDTO> getUsersSummary(@RequestParam UUID companyId) {
+        return ApiResponseFactory.success(
+                "Indicadores de usuários obtidos com sucesso", entitySummaryService.getUsersSummary(companyId));
     }
 }
