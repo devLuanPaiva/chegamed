@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.user.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,4 +31,12 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     List<User> findByRoleAndActiveTrueAndCompanies_Id(UserRole role, UUID companyId);
 
     boolean existsByIdAndActiveTrue(UUID id);
+
+    long countByCompanies_Id(UUID companyId);
+
+    long countByCompanies_IdAndActiveTrue(UUID companyId);
+
+    long countByCompanies_IdAndActiveFalse(UUID companyId);
+
+    long countByCompanies_IdAndCreatedAtBetween(UUID companyId, LocalDateTime from, LocalDateTime to);
 }

@@ -17,4 +17,6 @@ public interface PatientRegistrationRequestRepository extends JpaRepository<Pati
 
     Page<PatientRegistrationRequest> findAllByCompanyIdInAndStatus(
             Set<UUID> companyIds, PatientRegistrationRequestStatus status, Pageable pageable);
+
+    long countByCompanyIdAndStatus(UUID companyId, PatientRegistrationRequestStatus status);
 }

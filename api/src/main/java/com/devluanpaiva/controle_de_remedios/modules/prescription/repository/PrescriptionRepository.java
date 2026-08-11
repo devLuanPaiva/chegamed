@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.prescription.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,4 +19,6 @@ public interface PrescriptionRepository
     @Query("select p.status as status, count(p) as count "
             + "from Prescription p where p.patient.company.id = :companyId group by p.status")
     List<PrescriptionStatusCount> countByCompanyGroupedByStatus(@Param("companyId") UUID companyId);
+
+    long countByPatient_Company_IdAndIssueDateBetween(UUID companyId, LocalDate from, LocalDate to);
 }
