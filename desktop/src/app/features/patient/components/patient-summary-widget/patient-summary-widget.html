@@ -1,0 +1,8 @@
+<app-widget-card title="Indicadores de pacientes" [loading]="loading()" [error]="error()">
+    <div class="patient-summary-widget__stats">
+        <app-stat-tile label="Total de pacientes" [value]="totalLabel()" accent="neutral" />
+        <app-stat-tile label="Novos neste mês" [value]="newThisMonthLabel()" accent="success" />
+        <app-stat-tile label="Sem conta vinculada" [value]="withoutAccountLabel()" accent="warning" />
+        <app-stat-tile label="Cadastros pendentes" [value]="pendingRegistrationRequestsLabel()" accent="info" />
+    </div>
+</app-widget-card>
