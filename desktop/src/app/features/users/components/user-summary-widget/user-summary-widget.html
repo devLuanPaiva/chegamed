@@ -1,0 +1,8 @@
+<app-widget-card title="Indicadores de usuários" [loading]="loading()" [error]="error()">
+    <div class="user-summary-widget__stats">
+        <app-stat-tile label="Total de usuários" [value]="totalLabel()" accent="neutral" />
+        <app-stat-tile label="Ativos" [value]="activeLabel()" accent="success" />
+        <app-stat-tile label="Inativos" [value]="inactiveLabel()" accent="danger" />
+        <app-stat-tile label="Novos neste mês" [value]="newThisMonthLabel()" accent="info" />
+    </div>
+</app-widget-card>
