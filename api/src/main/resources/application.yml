@@ -69,7 +69,7 @@ google:
 
 apple:
   oauth:
-    bundle-id: ${APPLE_BUNDLE_ID:}
+    bundle-id: ${APPLE_BUNDLE_ID:com.devluan.chegamed}
 
 resend:
   api-key: ${RESEND_API_KEY:}
