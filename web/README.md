@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ChegaMed Web
 
-## Getting Started
+<div align="center">
+    <div data-badges>
+        <img src="https://img.shields.io/badge/next.js-%23000000.svg?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js" />
+        <img src="https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+        <img src="https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React" />
+        <img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+    </div>
+</div>
 
-First, run the development server:
+<br/>
+
+Site público do **ChegaMed**: página institucional/landing, autocadastro de pacientes por prefeitura e páginas legais (política de privacidade e solicitações de exclusão de conta/dados). É o único dos quatro clientes voltado ao público geral — não requer autenticação.
+
+Para a visão geral do produto e a arquitetura completa, veja o [README raiz](../README.md).
+
+## Tecnologias e dependências principais
+
+- **Framework:** Next.js `16.2.11` (App Router), React `19.2.4`
+- **Linguagem:** TypeScript
+- **Estilo:** Tailwind CSS `4`, Sass
+- **Validação:** Zod `4.4.3`
+- **Ícones:** lucide-react
+- **Compilador:** React Compiler (`babel-plugin-react-compiler`)
+
+## Pré-requisitos
+
+- **Node.js** 20+
+- **pnpm** (gerenciador de pacotes usado no projeto — `pnpm-lock.yaml`)
+
+## Instalação
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd web
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuração
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+O projeto lê a URL base da API através da variável de ambiente `API_BASE_URL` (usada no lado do servidor, em `src/lib/api-client.ts`). Crie um arquivo `.env.local` na pasta `web/`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+API_BASE_URL=http://localhost:8080
+```
 
-## Learn More
+## Executando em desenvolvimento
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Aplicação disponível em `http://localhost:3000`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Build de produção
 
-## Deploy on Vercel
+```bash
+pnpm build
+pnpm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Lint
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm lint
+```
+
+## Testes
+
+Não há framework de testes configurado neste projeto no momento.
+
+## Estrutura e rotas
+
+Roteamento via **App Router** (`src/app`):
+
+| Rota | Descrição |
+| --- | --- |
+| `/` | Landing page institucional |
+| `/cadastro-de-paciente/[company-slug]` | Autocadastro público de pacientes, específico por prefeitura/empresa |
+| `/exclusao-de-conta` | Solicitação de exclusão de conta |
+| `/exclusao-dos-dados` | Solicitação de exclusão de dados (conformidade LGPD) |
+| `/politica-de-privacidade` | Política de privacidade |
+| `/link` | Página de redirecionamento/deep-link (handoff para lojas de aplicativo) |
+
+Componentes organizados em `src/components` (`landing`, `patient-registration`, `legal`, `ui`) e utilitários em `src/lib` (`api-client.ts`, `business-hours.ts`, `format.ts`, `site-config.ts`).
