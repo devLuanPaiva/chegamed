@@ -1,17 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
+import { IMedicinesSummary } from '@features/dashboard/models/dashboard.model';
+import { DashboardService } from '@features/dashboard/services/dashboard.service';
 import { ImageFallback } from '@shared/ui/image-fallback/image-fallback';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { Pagination } from '@shared/ui/pagination/pagination';
 import { ViewMode, ViewToggle } from '@shared/ui/view-toggle/view-toggle';
+import { extractErrorMessage } from '@shared/utils/api-error.util';
 
 import { MedicineCreateModal } from '../../components/medicine-create-modal/medicine-create-modal';
+import { MedicineSummaryWidget } from '../../components/medicine-summary-widget/medicine-summary-widget';
 import { MedicineFilterParams } from '../../models/medicine-api.model';
 import * as MedicineActions from '../../store/medicine.actions';
 import { selectAllMedicines, selectMedicinesError, selectMedicinesLoading, selectMedicinesPagination } from '../../store/medicine.selectors';
+
+const EMPTY_MEDICINES_SUMMARY: IMedicinesSummary = {
+    totalCount: 0,
+    newThisMonthCount: 0,
+    withoutEanCodeCount: 0,
+    movementsThisMonthCount: 0,
+};
 
 interface MedicineListFilterForm {
     name: string;
@@ -25,13 +37,14 @@ const EMPTY_FILTER_FORM: MedicineListFilterForm = {
 
 @Component({
     selector: 'app-medicine-list',
-    imports: [RouterLink, Pagination, ViewToggle, MedicineCreateModal, ImageFallback, NotFound],
+    imports: [RouterLink, Pagination, ViewToggle, MedicineCreateModal, ImageFallback, NotFound, MedicineSummaryWidget],
     templateUrl: './medicine-list.html',
     styleUrl: './medicine-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MedicineList {
     private readonly store = inject(Store);
+    private readonly dashboardService = inject(DashboardService);
 
     readonly medicines = this.store.selectSignal(selectAllMedicines);
     readonly loading = this.store.selectSignal(selectMedicinesLoading);
@@ -39,6 +52,19 @@ export class MedicineList {
     readonly pagination = this.store.selectSignal(selectMedicinesPagination);
 
     private readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    private readonly summaryResource = rxResource({
+        params: () => (this.connectedCompanyId() ? { companyId: this.connectedCompanyId()! } : undefined),
+        stream: ({ params }) => this.dashboardService.getMedicinesSummary(params.companyId),
+        defaultValue: EMPTY_MEDICINES_SUMMARY,
+    });
+
+    readonly summary = this.summaryResource.value;
+    readonly summaryLoading = this.summaryResource.isLoading;
+    readonly summaryError = computed(() => {
+        const error = this.summaryResource.error();
+        return error ? extractErrorMessage(error, 'Erro ao carregar os indicadores de medicamentos.') : null;
+    });
 
     readonly viewMode = signal<ViewMode>('cards');
     readonly filterForm = signal<MedicineListFilterForm>({ ...EMPTY_FILTER_FORM });
@@ -101,6 +127,10 @@ export class MedicineList {
         if (this.pagination().next) {
             this.loadPage(this.requestedPage() + 1);
         }
+    }
+
+    goToPage(page: number): void {
+        this.loadPage(page - 1);
     }
 
     openCreateModal(): void {

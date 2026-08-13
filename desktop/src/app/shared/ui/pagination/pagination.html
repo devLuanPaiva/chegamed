@@ -9,9 +9,23 @@
         Anterior
     </button>
 
-    <span class="pagination__label" aria-live="polite">
-        Página {{ pagination().currentPage }} de {{ pagination().totalPages }}
-    </span>
+    <ul class="pagination__pages" aria-label="Páginas">
+        @for (page of pageNumbers(); track page) {
+            <li>
+                <button
+                    type="button"
+                    class="btn btn-sm pagination__page-btn"
+                    [class.btn-primary]="page === pagination().currentPage"
+                    [class.btn-outline]="page !== pagination().currentPage"
+                    [attr.aria-current]="page === pagination().currentPage ? 'page' : null"
+                    [attr.aria-label]="'Página ' + page"
+                    (click)="pageSelected.emit(page)"
+                >
+                    {{ page }}
+                </button>
+            </li>
+        }
+    </ul>
 
     <button
         type="button"
@@ -22,4 +36,8 @@
     >
         Próxima
     </button>
+
+    <span class="pagination__label sr-only" aria-live="polite">
+        Página {{ pagination().currentPage }} de {{ pagination().totalPages }}
+    </span>
 </nav>

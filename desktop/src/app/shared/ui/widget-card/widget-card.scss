@@ -1,5 +1,7 @@
 .widget-card {
     height: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .widget-card__header {

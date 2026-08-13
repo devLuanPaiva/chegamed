@@ -3,19 +3,27 @@ package com.devluanpaiva.controle_de_remedios.modules.prescription_item.reposito
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
 
 public interface PrescriptionItemRepository
         extends JpaRepository<PrescriptionItem, UUID>, JpaSpecificationExecutor<PrescriptionItem> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from PrescriptionItem i where i.id = :id")
+    Optional<PrescriptionItem> findByIdForUpdate(@Param("id") UUID id);
+
     List<PrescriptionItem> findByMedicine_IdAndStatusInAndDeliveryIsNullOrderByCreatedAtAsc(
             UUID medicineId, List<PrescriptionStatus> statuses);
 

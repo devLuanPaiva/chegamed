@@ -159,7 +159,7 @@ class PrescriptionServiceImplTest {
 
     private CreatePrescriptionItemRequestDTO buildItemDto(UUID medicineId) {
         return new CreatePrescriptionItemRequestDTO(
-                medicineId, null, "10mg", 30, UnityType.BOTTLE,
+                medicineId, null, "10mg", 30, UnityType.TABLET,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -168,7 +168,7 @@ class PrescriptionServiceImplTest {
                 medicineName, null, null);
 
         return new CreatePrescriptionItemRequestDTO(
-                null, medicine, "10mg", 30, UnityType.BOTTLE,
+                null, medicine, "10mg", 30, UnityType.TABLET,
                 TreatmentType.CONTINUOUS, 15);
     }
 
@@ -268,7 +268,7 @@ class PrescriptionServiceImplTest {
             User admin = buildUser(UserRole.ADMIN);
             Patient patient = buildPatient(buildCompany());
             CreatePrescriptionItemRequestDTO itemWithoutMedicine = new CreatePrescriptionItemRequestDTO(
-                    null, null, "10mg", 30, UnityType.BOTTLE,
+                    null, null, "10mg", 30, UnityType.TABLET,
                     TreatmentType.CONTINUOUS, 15);
             CreatePrescriptionRequestDTO dto = new CreatePrescriptionRequestDTO(
                     null, LocalDate.now(), patient.getId(), List.of(itemWithoutMedicine));
@@ -458,7 +458,7 @@ class PrescriptionServiceImplTest {
             Prescription prescription = buildPrescription(patient);
             LocalDate originalIssueDate = prescription.getIssueDate();
             UpdatePrescriptionRequestDTO dto = new UpdatePrescriptionRequestDTO(
-                    PrescriptionStatus.APPROVED, null, null);
+                    PrescriptionStatus.OUT_FOR_DELIVERY, null, null);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
             when(prescriptionRepository.findById(prescription.getId())).thenReturn(Optional.of(prescription));
@@ -466,7 +466,7 @@ class PrescriptionServiceImplTest {
 
             PrescriptionResponseDTO response = prescriptionService.updatePrescription(prescription.getId(), dto);
 
-            assertThat(response.status()).isEqualTo(PrescriptionStatus.APPROVED);
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.OUT_FOR_DELIVERY);
             assertThat(response.issueDate()).isEqualTo(originalIssueDate);
         }
     }

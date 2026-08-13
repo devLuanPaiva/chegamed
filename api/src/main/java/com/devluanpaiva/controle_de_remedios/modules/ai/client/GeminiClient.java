@@ -146,7 +146,7 @@ public class GeminiClient {
 
         JsonNode textNode = response.path("candidates").path(0).path("content").path("parts").path(0).path("text");
 
-        return textNode.isTextual() ? textNode.asText() : null;
+        return textNode.isString() ? textNode.asString() : null;
     }
 
     private GeminiUsage extractUsage(JsonNode response) {

@@ -1,6 +1,6 @@
 import { parseLocalDate } from '@shared/utils/date.util';
 
-import { IPatient } from './patient.model';
+import { IPatient, IPatientRegistrationRequest, PatientRegistrationRequestStatus } from './patient.model';
 
 export interface PatientApiDto {
     id: string;
@@ -76,5 +76,40 @@ export function toPatient(dto: PatientApiDto): IPatient {
         address: dto.address ?? undefined,
         createdAt: new Date(dto.createdAt),
         updatedAt: new Date(dto.updatedAt),
+    };
+}
+
+export interface PatientRegistrationRequestApiDto {
+    id: string;
+    companyId: string;
+    name: string;
+    maskedCpf: string;
+    contact: string | null;
+    address: string | null;
+    email: string;
+    status: string;
+    createdAt: string;
+}
+
+export interface PendingPatientRegistrationRequestsPage {
+    requests: IPatientRegistrationRequest[];
+    count: number;
+    currentPage: number;
+    totalPages: number;
+    next: string | null;
+    previous: string | null;
+}
+
+export function toPatientRegistrationRequest(dto: PatientRegistrationRequestApiDto): IPatientRegistrationRequest {
+    return {
+        id: dto.id,
+        companyId: dto.companyId,
+        name: dto.name,
+        maskedCpf: dto.maskedCpf,
+        contact: dto.contact ?? undefined,
+        address: dto.address ?? undefined,
+        email: dto.email,
+        status: dto.status as PatientRegistrationRequestStatus,
+        createdAt: new Date(dto.createdAt),
     };
 }

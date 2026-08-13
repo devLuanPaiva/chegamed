@@ -8,7 +8,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,11 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 
 import com.devluanpaiva.controle_de_remedios.modules.company.entity.Company;
@@ -33,21 +27,22 @@ import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.DeliveryRespon
 import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.PendingDeliveryItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.ReserveStockRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.entity.Delivery;
-import com.devluanpaiva.controle_de_remedios.modules.delivery.filter.DeliveryFilter;
-import com.devluanpaiva.controle_de_remedios.modules.delivery.filter.PendingDeliveryItemFilter;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.mapper.DeliveryMapper;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.mapper.PendingDeliveryItemMapper;
+import com.devluanpaiva.controle_de_remedios.modules.delivery.policy.DeliveryAuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.repository.DeliveryRepository;
+import com.devluanpaiva.controle_de_remedios.modules.delivery.service.DeliveryTransitionService;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.service.impl.DeliveryServiceImpl;
+import com.devluanpaiva.controle_de_remedios.modules.delivery.service.impl.DeliveryTransitionServiceImpl;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.entity.Medicine;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.mapper.MedicineMapper;
-import com.devluanpaiva.controle_de_remedios.modules.medicine.repository.MedicineRepository;
 import com.devluanpaiva.controle_de_remedios.modules.medicine_movement.service.MedicineMovementService;
+import com.devluanpaiva.controle_de_remedios.modules.notification.service.DeliveryNotificationService;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
-import com.devluanpaiva.controle_de_remedios.modules.patient.repository.PatientRepository;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescription;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
 import com.devluanpaiva.controle_de_remedios.modules.prescription.repository.PrescriptionRepository;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.service.PrescriptionStatusResolver;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.PrescriptionItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.mapper.PrescriptionItemMapper;
@@ -72,16 +67,13 @@ class DeliveryServiceImplTest {
     private PrescriptionRepository prescriptionRepository;
 
     @Mock
-    private PatientRepository patientRepository;
-
-    @Mock
-    private MedicineRepository medicineRepository;
-
-    @Mock
     private CompanyRepository companyRepository;
 
     @Mock
     private MedicineMovementService medicineMovementService;
+
+    @Mock
+    private DeliveryNotificationService deliveryNotificationService;
 
     @Mock
     private SecurityContextHelper securityContextHelper;
@@ -90,11 +82,16 @@ class DeliveryServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        DeliveryTransitionService deliveryTransitionService = new DeliveryTransitionServiceImpl(
+                deliveryRepository, prescriptionItemRepository, prescriptionRepository,
+                new PrescriptionStatusResolver(), medicineMovementService, deliveryNotificationService);
+
         deliveryService = new DeliveryServiceImpl(
-                deliveryRepository, prescriptionItemRepository, prescriptionRepository, patientRepository,
-                medicineRepository, companyRepository, new DeliveryMapper(), new PendingDeliveryItemMapper(),
-                new PrescriptionItemMapper(new MedicineMapper()), medicineMovementService, securityContextHelper,
-                new AuthorizationPolicy());
+                prescriptionItemRepository, prescriptionRepository, new DeliveryMapper(),
+                new PendingDeliveryItemMapper(), new PrescriptionItemMapper(new MedicineMapper()),
+                deliveryTransitionService,
+                new DeliveryAuthorizationPolicy(new AuthorizationPolicy(), companyRepository),
+                securityContextHelper);
     }
 
     private Company buildCompany() {
@@ -115,6 +112,7 @@ class DeliveryServiceImplTest {
                 .password("encoded-password")
                 .cpf("11144477735")
                 .role(role)
+                .active(true)
                 .build();
     }
 
@@ -140,6 +138,10 @@ class DeliveryServiceImplTest {
         return item;
     }
 
+    private void givenLockedItem(PrescriptionItem item) {
+        when(prescriptionItemRepository.findByIdForUpdate(item.getId())).thenReturn(Optional.of(item));
+    }
+
     @Nested
     @DisplayName("createDelivery")
     class CreateDelivery {
@@ -148,18 +150,18 @@ class DeliveryServiceImplTest {
         @DisplayName("should compute nextAvailableDate as deliveryDate plus treatmentDays and mark item as DELIVERED")
         void shouldComputeNextAvailableDateAndMarkAsDelivered() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             LocalDate deliveryDate = LocalDate.now();
             CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), deliveryDate, 30);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
             when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             DeliveryResponseDTO response = deliveryService.createDelivery(dto);
 
             assertThat(response.nextAvailableDate()).isEqualTo(deliveryDate.plusDays(30));
+            assertThat(response.delivererId()).isNull();
             assertThat(item.getStatus()).isEqualTo(PrescriptionStatus.DELIVERED);
             assertThat(item.getDeliveredQuantity()).isEqualTo(30);
             assertThat(item.getPrescription().getStatus()).isEqualTo(PrescriptionStatus.DELIVERED);
@@ -169,12 +171,11 @@ class DeliveryServiceImplTest {
         @DisplayName("should mark item as PARTIAL_DELIVERED when the delivered quantity is less than prescribed")
         void shouldMarkAsPartialDeliveredWhenQuantityIsLower() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 10);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
             when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             deliveryService.createDelivery(dto);
@@ -187,8 +188,7 @@ class DeliveryServiceImplTest {
         @DisplayName("should mark prescription as PARTIAL_DELIVERED when other items are still pending")
         void shouldMarkPrescriptionAsPartialDeliveredWhenOtherItemsArePending() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             PrescriptionItem otherItem = PrescriptionItem.builder()
                     .id(UUID.randomUUID())
                     .prescription(item.getPrescription())
@@ -203,7 +203,7 @@ class DeliveryServiceImplTest {
             CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
             when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             deliveryService.createDelivery(dto);
@@ -216,12 +216,11 @@ class DeliveryServiceImplTest {
         @DisplayName("should throw 422 when the delivery quantity exceeds the prescribed quantity")
         void shouldThrowWhenDeliveryQuantityExceedsPrescribed() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 40);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
 
             assertThatThrownBy(() -> deliveryService.createDelivery(dto))
                     .isInstanceOf(BusinessException.class)
@@ -237,13 +236,12 @@ class DeliveryServiceImplTest {
         @DisplayName("should throw 409 when the item's status is not deliverable")
         void shouldThrowWhenItemIsNotDeliverable() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
-            item.setStatus(PrescriptionStatus.REJECTED);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+            item.setStatus(PrescriptionStatus.CANCELED);
             CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
 
             assertThatThrownBy(() -> deliveryService.createDelivery(dto))
                     .isInstanceOf(BusinessException.class)
@@ -252,6 +250,171 @@ class DeliveryServiceImplTest {
                         assertThat(businessException.getStatus()).isEqualTo(HttpStatus.CONFLICT);
                         assertThat(businessException.getCode()).isEqualTo("PRESCRIPTION_ITEM_NOT_DELIVERABLE");
                     });
+        }
+
+        @Test
+        @DisplayName("should load the item with a write lock so concurrent deliveries cannot duplicate")
+        void shouldLoadItemWithWriteLock() {
+            User admin = buildUser(UserRole.ADMIN);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+            CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            givenLockedItem(item);
+            when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            deliveryService.createDelivery(dto);
+
+            verify(prescriptionItemRepository).findByIdForUpdate(item.getId());
+            verify(prescriptionItemRepository, never()).findById(item.getId());
+        }
+    }
+
+    @Nested
+    @DisplayName("createDelivery as a DELIVERER")
+    class CreateDeliveryAsDeliverer {
+
+        @Test
+        @DisplayName("should record the deliverer on the delivery")
+        void shouldRecordDelivererOnDelivery() {
+            User deliverer = buildUser(UserRole.DELIVERER);
+            Company company = buildCompany();
+            PrescriptionItem item = buildItem(company, 30, 30);
+            item.setStatus(PrescriptionStatus.OUT_FOR_DELIVERY);
+            CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(deliverer);
+            givenLockedItem(item);
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), deliverer.getId())).thenReturn(true);
+            when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            DeliveryResponseDTO response = deliveryService.createDelivery(dto);
+
+            assertThat(response.delivererId()).isEqualTo(deliverer.getId());
+            assertThat(response.delivererName()).isEqualTo(deliverer.getName());
+            assertThat(item.getStatus()).isEqualTo(PrescriptionStatus.DELIVERED);
+        }
+
+        @Test
+        @DisplayName("should throw 409 when the item was not sent for delivery yet")
+        void shouldThrowWhenItemWasNotDispatched() {
+            User deliverer = buildUser(UserRole.DELIVERER);
+            Company company = buildCompany();
+            PrescriptionItem item = buildItem(company, 30, 30);
+            CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(deliverer);
+            givenLockedItem(item);
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), deliverer.getId())).thenReturn(true);
+
+            assertThatThrownBy(() -> deliveryService.createDelivery(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                        assertThat(businessException.getCode()).isEqualTo("PRESCRIPTION_ITEM_NOT_OUT_FOR_DELIVERY");
+                    });
+
+            verify(deliveryRepository, never()).save(any(Delivery.class));
+        }
+
+        @Test
+        @DisplayName("should deny a deliverer that does not belong to the patient's pharmacy")
+        void shouldDenyDelivererFromAnotherPharmacy() {
+            User deliverer = buildUser(UserRole.DELIVERER);
+            Company company = buildCompany();
+            PrescriptionItem item = buildItem(company, 30, 30);
+            item.setStatus(PrescriptionStatus.OUT_FOR_DELIVERY);
+            CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(deliverer);
+            givenLockedItem(item);
+            when(companyRepository.existsByIdAndUsers_Id(company.getId(), deliverer.getId())).thenReturn(false);
+
+            assertThatThrownBy(() -> deliveryService.createDelivery(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
+                    });
+        }
+
+        @Test
+        @DisplayName("should deny a patient from registering a delivery")
+        void shouldDenyPatientFromRegisteringDelivery() {
+            User patientUser = buildUser(UserRole.PATIENT);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+            CreateDeliveryRequestDTO dto = new CreateDeliveryRequestDTO(item.getId(), LocalDate.now(), 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(patientUser);
+            givenLockedItem(item);
+
+            assertThatThrownBy(() -> deliveryService.createDelivery(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
+
+            verify(deliveryRepository, never()).save(any(Delivery.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("dispatchForDelivery")
+    class DispatchForDelivery {
+
+        @Test
+        @DisplayName("should move the item to OUT_FOR_DELIVERY and notify the deliverers and the patient")
+        void shouldMoveItemToOutForDeliveryAndNotify() {
+            User admin = buildUser(UserRole.ADMIN);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            givenLockedItem(item);
+            when(prescriptionItemRepository.save(item)).thenReturn(item);
+
+            PendingDeliveryItemResponseDTO response = deliveryService.dispatchForDelivery(item.getId());
+
+            assertThat(response.status()).isEqualTo(PrescriptionStatus.OUT_FOR_DELIVERY);
+            assertThat(item.getOutForDeliveryAt()).isNotNull();
+            assertThat(item.getPrescription().getStatus()).isEqualTo(PrescriptionStatus.OUT_FOR_DELIVERY);
+
+            verify(deliveryNotificationService).notifyDispatched(item);
+            verify(deliveryRepository, never()).save(any(Delivery.class));
+        }
+
+        @Test
+        @DisplayName("should throw 409 when the item was already sent for delivery")
+        void shouldThrowWhenItemWasAlreadyDispatched() {
+            User admin = buildUser(UserRole.ADMIN);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+            item.setStatus(PrescriptionStatus.OUT_FOR_DELIVERY);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
+            givenLockedItem(item);
+
+            assertThatThrownBy(() -> deliveryService.dispatchForDelivery(item.getId()))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                        assertThat(businessException.getCode()).isEqualTo("PRESCRIPTION_ITEM_NOT_DISPATCHABLE");
+                    });
+        }
+
+        @Test
+        @DisplayName("should deny a deliverer from dispatching an item")
+        void shouldDenyDelivererFromDispatching() {
+            User deliverer = buildUser(UserRole.DELIVERER);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(deliverer);
+            givenLockedItem(item);
+
+            assertThatThrownBy(() -> deliveryService.dispatchForDelivery(item.getId()))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> assertThat(((BusinessException) ex).getStatus()).isEqualTo(HttpStatus.FORBIDDEN));
+
+            verify(deliveryNotificationService, never()).notifyDispatched(any());
         }
     }
 
@@ -263,12 +426,11 @@ class DeliveryServiceImplTest {
         @DisplayName("should increment the item's receivedQuantity")
         void shouldIncrementReceivedQuantity() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             ReserveStockRequestDTO dto = new ReserveStockRequestDTO(20);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
             when(prescriptionItemRepository.save(item)).thenReturn(item);
 
             PrescriptionItemResponseDTO response = deliveryService.reserveStock(item.getId(), dto);
@@ -280,13 +442,12 @@ class DeliveryServiceImplTest {
         @DisplayName("should throw 422 when the reservation would exceed the prescribed quantity")
         void shouldThrowWhenReservationExceedsPrescribedQuantity() {
             User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
+            PrescriptionItem item = buildItem(buildCompany(), 30, 30);
             item.setReceivedQuantity(25);
             ReserveStockRequestDTO dto = new ReserveStockRequestDTO(10);
 
             when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+            givenLockedItem(item);
 
             assertThatThrownBy(() -> deliveryService.reserveStock(item.getId(), dto))
                     .isInstanceOf(BusinessException.class)
@@ -295,227 +456,6 @@ class DeliveryServiceImplTest {
                         assertThat(businessException.getStatus()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                         assertThat(businessException.getCode()).isEqualTo("RESERVATION_EXCEEDS_PRESCRIBED_QUANTITY");
                     });
-        }
-    }
-
-    @Nested
-    @DisplayName("listDeliveries")
-    class ListDeliveries {
-
-        @Test
-        @DisplayName("should throw 400 when companyId is not provided")
-        void shouldThrowWhenCompanyIdIsMissing() {
-            User admin = buildUser(UserRole.ADMIN);
-            DeliveryFilter filter = new DeliveryFilter(null, null, null, null, null, null, null);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-
-            assertThatThrownBy(() -> deliveryService.listDeliveries(filter, PageRequest.of(0, 20)))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> {
-                        BusinessException businessException = (BusinessException) ex;
-                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-                        assertThat(businessException.getCode()).isEqualTo("COMPANY_ID_REQUIRED");
-                    });
-
-            verify(deliveryRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @SuppressWarnings("unchecked")
-        @Test
-        @DisplayName("should list deliveries scoped by the provided companyId")
-        void shouldListDeliveriesScopedByCompany() {
-            User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
-            Delivery delivery = Delivery.builder()
-                    .id(UUID.randomUUID())
-                    .company(company)
-                    .patient(item.getPrescription().getPatient())
-                    .prescriptionItem(item)
-                    .deliveryDate(LocalDate.now())
-                    .deliveryQuantity(30)
-                    .build();
-            DeliveryFilter filter = new DeliveryFilter(company.getId(), null, null, null, null, null, null);
-            Pageable pageable = PageRequest.of(0, 20);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(deliveryRepository.findAll(any(Specification.class), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(delivery)));
-
-            Page<DeliveryResponseDTO> result = deliveryService.listDeliveries(filter, pageable);
-
-            assertThat(result.getContent()).hasSize(1);
-            assertThat(result.getContent().get(0).companyId()).isEqualTo(company.getId());
-        }
-    }
-
-    @Nested
-    @DisplayName("listMyDeliveries")
-    class ListMyDeliveries {
-
-        @Test
-        @DisplayName("should throw 403 when the actor is not a patient")
-        void shouldThrowWhenActorIsNotPatient() {
-            User manager = buildUser(UserRole.MANAGER);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
-
-            assertThatThrownBy(() -> deliveryService.listMyDeliveries(PageRequest.of(0, 20)))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> {
-                        BusinessException businessException = (BusinessException) ex;
-                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
-                    });
-
-            verify(deliveryRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @SuppressWarnings("unchecked")
-        @Test
-        @DisplayName("should list the deliveries belonging to the logged-in patient")
-        void shouldListDeliveriesForTheLoggedInPatient() {
-            User patientUser = buildUser(UserRole.PATIENT);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
-            item.getPrescription().getPatient().setUser(patientUser);
-            Delivery delivery = Delivery.builder()
-                    .id(UUID.randomUUID())
-                    .company(company)
-                    .patient(item.getPrescription().getPatient())
-                    .prescriptionItem(item)
-                    .deliveryDate(LocalDate.now())
-                    .deliveryQuantity(30)
-                    .build();
-            Pageable pageable = PageRequest.of(0, 20);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(patientUser);
-            when(deliveryRepository.findAll(any(Specification.class), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(delivery)));
-
-            Page<DeliveryResponseDTO> result = deliveryService.listMyDeliveries(pageable);
-
-            assertThat(result.getContent()).hasSize(1);
-            assertThat(result.getContent().get(0).companyId()).isEqualTo(company.getId());
-        }
-    }
-
-    @Nested
-    @DisplayName("listPendingDeliveryItems")
-    class ListPendingDeliveryItems {
-
-        @Test
-        @DisplayName("should throw 400 when companyId is not provided")
-        void shouldThrowWhenCompanyIdIsMissing() {
-            User admin = buildUser(UserRole.ADMIN);
-            PendingDeliveryItemFilter filter = new PendingDeliveryItemFilter(null, null, null);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-
-            assertThatThrownBy(() -> deliveryService.listPendingDeliveryItems(filter, PageRequest.of(0, 20)))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> {
-                        BusinessException businessException = (BusinessException) ex;
-                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-                        assertThat(businessException.getCode()).isEqualTo("COMPANY_ID_REQUIRED");
-                    });
-
-            verify(prescriptionItemRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @Test
-        @DisplayName("should throw 403 when the actor is not a member of the company")
-        void shouldThrowWhenActorIsNotMemberOfCompany() {
-            User manager = buildUser(UserRole.MANAGER);
-            Company company = buildCompany();
-            PendingDeliveryItemFilter filter = new PendingDeliveryItemFilter(company.getId(), null, null);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
-            when(companyRepository.existsByIdAndUsers_Id(company.getId(), manager.getId())).thenReturn(false);
-
-            assertThatThrownBy(() -> deliveryService.listPendingDeliveryItems(filter, PageRequest.of(0, 20)))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> {
-                        BusinessException businessException = (BusinessException) ex;
-                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
-                    });
-        }
-
-        @SuppressWarnings("unchecked")
-        @Test
-        @DisplayName("should list pending items scoped by the provided companyId")
-        void shouldListPendingItemsScopedByCompany() {
-            User admin = buildUser(UserRole.ADMIN);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
-            item.getPrescription().setIssueDate(LocalDate.of(2026, 1, 10));
-            PendingDeliveryItemFilter filter = new PendingDeliveryItemFilter(company.getId(), null, null);
-            Pageable pageable = PageRequest.of(0, 20);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(admin);
-            when(prescriptionItemRepository.findAll(any(Specification.class), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(item)));
-
-            Page<PendingDeliveryItemResponseDTO> result = deliveryService.listPendingDeliveryItems(filter, pageable);
-
-            assertThat(result.getContent()).hasSize(1);
-
-            PendingDeliveryItemResponseDTO dto = result.getContent().get(0);
-            assertThat(dto.prescriptionItemId()).isEqualTo(item.getId());
-            assertThat(dto.prescriptionId()).isEqualTo(item.getPrescription().getId());
-            assertThat(dto.patientId()).isEqualTo(item.getPrescription().getPatient().getId());
-            assertThat(dto.issueDate()).isEqualTo(LocalDate.of(2026, 1, 10));
-            assertThat(dto.medicineName()).isEqualTo(item.getMedicine().getName());
-            assertThat(dto.prescribedQuantity()).isEqualTo(30);
-        }
-    }
-
-    @Nested
-    @DisplayName("listMyPendingDeliveryItems")
-    class ListMyPendingDeliveryItems {
-
-        @Test
-        @DisplayName("should throw 403 when the actor is not a patient")
-        void shouldThrowWhenActorIsNotPatient() {
-            User manager = buildUser(UserRole.MANAGER);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(manager);
-
-            assertThatThrownBy(() -> deliveryService.listMyPendingDeliveryItems(PageRequest.of(0, 20)))
-                    .isInstanceOf(BusinessException.class)
-                    .satisfies(ex -> {
-                        BusinessException businessException = (BusinessException) ex;
-                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                        assertThat(businessException.getCode()).isEqualTo("AUTH_FORBIDDEN");
-                    });
-
-            verify(prescriptionItemRepository, never()).findAll(any(Specification.class), any(Pageable.class));
-        }
-
-        @SuppressWarnings("unchecked")
-        @Test
-        @DisplayName("should list the pending items belonging to the logged-in patient")
-        void shouldListPendingItemsForTheLoggedInPatient() {
-            User patientUser = buildUser(UserRole.PATIENT);
-            Company company = buildCompany();
-            PrescriptionItem item = buildItem(company, 30, 30);
-            item.getPrescription().getPatient().setUser(patientUser);
-            Pageable pageable = PageRequest.of(0, 20);
-
-            when(securityContextHelper.getCurrentUser()).thenReturn(patientUser);
-            when(prescriptionItemRepository.findAll(any(Specification.class), any(Pageable.class)))
-                    .thenReturn(new PageImpl<>(List.of(item)));
-
-            Page<PendingDeliveryItemResponseDTO> result = deliveryService.listMyPendingDeliveryItems(pageable);
-
-            assertThat(result.getContent()).hasSize(1);
-
-            PendingDeliveryItemResponseDTO dto = result.getContent().get(0);
-            assertThat(dto.prescriptionItemId()).isEqualTo(item.getId());
-            assertThat(dto.status()).isEqualTo(PrescriptionStatus.PENDING);
-            assertThat(dto.medicineName()).isEqualTo(item.getMedicine().getName());
         }
     }
 }

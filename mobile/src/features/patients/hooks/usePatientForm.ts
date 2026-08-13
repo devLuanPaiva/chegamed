@@ -32,7 +32,7 @@ interface UsePatientFormOptions {
     onSuccess: (patient: IPatient) => void;
 }
 
-export function usePatientForm({ patient, companyId, onSuccess }: UsePatientFormOptions) {
+export function usePatientForm({ patient, companyId, onSuccess }: Readonly<UsePatientFormOptions>) {
     const [values, setValues] = useState<PatientFormValues>(patient ? patientToFormValues(patient) : EMPTY_VALUES);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);

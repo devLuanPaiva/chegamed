@@ -46,5 +46,10 @@
         </table>
     </div>
 
-    <app-pagination [pagination]="pagination()" (previousPage)="previousPage.emit()" (nextPage)="nextPage.emit()" />
+    <app-pagination
+        [pagination]="pagination()"
+        (previousPage)="previousPage.emit()"
+        (nextPage)="nextPage.emit()"
+        (pageSelected)="pageSelected.emit($event)"
+    />
 }

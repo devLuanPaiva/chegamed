@@ -3,6 +3,8 @@
         <h1 class="user-list__title">Usuários</h1>
     </header>
 
+    <app-user-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
+
     <app-tabs [tabs]="tabs" [activeTabId]="activeTabId()" (tabChange)="onTabChange($event)" />
 
     @if (activeTabId() === 'list') {
@@ -149,7 +151,12 @@
                     </table>
                 </div>
 
-                <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
+                <app-pagination
+                    [pagination]="pagination()"
+                    (previousPage)="goToPreviousPage()"
+                    (nextPage)="goToNextPage()"
+                    (pageSelected)="goToPage($event)"
+                />
             }
         }
     } @else {

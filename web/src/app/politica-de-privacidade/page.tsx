@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalLayout } from "@/components/legal/LegalLayout";
+import { CONTACT_EMAIL } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Política de Privacidade | ChegaMed",
@@ -8,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 const LAST_UPDATED = "23 de julho de 2026";
-const SUPPORT_EMAIL = "suporte@chegamed.com.br";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -115,9 +115,9 @@ export default function PrivacyPolicyPage() {
           para{" "}
           <a
             className="font-bold text-primary-600 underline underline-offset-2"
-            href={`mailto:${SUPPORT_EMAIL}`}
+            href={`mailto:${CONTACT_EMAIL}`}
           >
-            {SUPPORT_EMAIL}
+            {CONTACT_EMAIL}
           </a>
           .
         </p>

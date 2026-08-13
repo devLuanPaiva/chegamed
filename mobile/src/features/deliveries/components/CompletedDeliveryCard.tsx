@@ -8,9 +8,15 @@ import { formatDateBr } from "@/lib/dateFormat";
 
 interface CompletedDeliveryCardProps {
     delivery: IDelivery;
+    showNextAvailableDate?: boolean;
+    showPatientAddress?: boolean;
 }
 
-export function CompletedDeliveryCard({ delivery }: Readonly<CompletedDeliveryCardProps>) {
+export function CompletedDeliveryCard({
+    delivery,
+    showNextAvailableDate = false,
+    showPatientAddress = false,
+}: Readonly<CompletedDeliveryCardProps>) {
     return (
         <View style={styles.card}>
             <View style={styles.iconWrapper}>
@@ -30,10 +36,12 @@ export function CompletedDeliveryCard({ delivery }: Readonly<CompletedDeliveryCa
                     <Text style={styles.detailValue}>{formatDateBr(delivery.deliveryDate)}</Text>
                 </View>
 
-                <View style={styles.detailsRow}>
-                    <Text style={styles.detailLabel}>Disponível em</Text>
-                    <Text style={styles.detailValue}>{formatDateBr(delivery.nextAvailableDate)}</Text>
-                </View>
+                {showNextAvailableDate ? (
+                    <View style={styles.detailsRow}>
+                        <Text style={styles.detailLabel}>Disponível em</Text>
+                        <Text style={styles.detailValue}>{formatDateBr(delivery.nextAvailableDate)}</Text>
+                    </View>
+                ) : null}
 
                 <View style={styles.detailsRow}>
                     <Text style={styles.detailLabel}>Quantidade</Text>
@@ -41,6 +49,21 @@ export function CompletedDeliveryCard({ delivery }: Readonly<CompletedDeliveryCa
                         {delivery.deliveryQuantity} {UnityTypeLabels[delivery.unityType]}
                     </Text>
                 </View>
+
+                {delivery.delivererName ? (
+                    <View style={styles.detailsRow}>
+                        <Text style={styles.detailLabel}>Entregador</Text>
+                        <Text style={styles.detailValue} numberOfLines={1}>
+                            {delivery.delivererName}
+                        </Text>
+                    </View>
+                ) : null}
+
+                {showPatientAddress && delivery.patientAddress ? (
+                    <Text style={styles.address} numberOfLines={2}>
+                        {delivery.patientAddress}
+                    </Text>
+                ) : null}
             </View>
         </View>
     );
@@ -89,6 +112,7 @@ const styles = StyleSheet.create({
     detailsRow: {
         flexDirection: "row",
         justifyContent: "space-between",
+        gap: Spacing.sm,
     },
 
     detailLabel: {
@@ -98,8 +122,17 @@ const styles = StyleSheet.create({
     },
 
     detailValue: {
+        flexShrink: 1,
         fontFamily: Typography.fonts.bodyMedium,
         fontSize: Typography.sizes.xs,
         color: Colors.text,
+        textAlign: "right",
+    },
+
+    address: {
+        fontFamily: Typography.fonts.body,
+        fontSize: Typography.sizes.xs,
+        color: Colors.textSecondary,
+        marginTop: Spacing.xs,
     },
 });

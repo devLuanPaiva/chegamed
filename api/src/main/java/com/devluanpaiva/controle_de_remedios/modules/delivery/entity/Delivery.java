@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.devluanpaiva.controle_de_remedios.modules.company.entity.Company;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
+import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 
 @Entity
 @Table(name = "deliveries")
@@ -40,6 +41,10 @@ public class Delivery {
     @OneToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "prescription_item_id", nullable = false, unique = true)
     private PrescriptionItem prescriptionItem;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deliverer_id")
+    private User deliverer;
 
     @Column(name = "delivery_date")
     private LocalDate deliveryDate;

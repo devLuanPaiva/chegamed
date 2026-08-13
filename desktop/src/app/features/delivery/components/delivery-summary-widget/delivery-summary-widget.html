@@ -1,0 +1,8 @@
+<app-widget-card title="Indicadores de entregas" [loading]="loading()" [error]="error()">
+    <div class="delivery-summary-widget__stats">
+        <app-stat-tile label="Total de entregas" [value]="totalLabel()" accent="neutral" />
+        <app-stat-tile label="Entregues neste mês" [value]="thisMonthLabel()" accent="success" />
+        <app-stat-tile label="Em atraso" [value]="overdueLabel()" accent="danger" />
+        <app-stat-tile label="Próximas 7 dias" [value]="upcomingLabel()" accent="info" />
+    </div>
+</app-widget-card>

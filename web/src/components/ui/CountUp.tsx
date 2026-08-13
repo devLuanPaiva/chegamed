@@ -9,7 +9,7 @@ interface CountUpProps {
   className?: string;
 }
 
-export function CountUp({ value, suffix = "", durationMs = 1600, className = "" }: CountUpProps) {
+export function CountUp({ value, suffix = "", durationMs = 1600, className = "" }: Readonly<CountUpProps>) {
   const ref = useRef<HTMLSpanElement>(null);
   const hasAnimated = useRef(false);
   const [display, setDisplay] = useState(0);

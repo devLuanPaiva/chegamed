@@ -6,7 +6,7 @@ import {
 } from "@react-native-google-signin/google-signin";
 
 import { rawFetch } from "@/lib/apiFetch";
-import { GOOGLE_WEB_CLIENT_ID } from "@/lib/env";
+import { GOOGLE_IOS_CLIENT_ID, GOOGLE_WEB_CLIENT_ID } from "@/lib/env";
 import { AuthTokens } from "@/data/models/auth.model";
 
 export class GoogleSignInCancelledError extends Error {
@@ -21,7 +21,10 @@ let isGoogleSignInConfigured = false;
 function ensureGoogleSignInConfigured(): void {
     if (isGoogleSignInConfigured) return;
 
-    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+    GoogleSignin.configure({
+        webClientId: GOOGLE_WEB_CLIENT_ID,
+        iosClientId: GOOGLE_IOS_CLIENT_ID,
+    });
     isGoogleSignInConfigured = true;
 }
 

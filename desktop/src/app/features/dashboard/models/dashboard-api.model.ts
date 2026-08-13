@@ -6,13 +6,18 @@ import {
     DeliveryTimelineGranularity,
     IAvailabilityItem,
     IAvailabilityList,
+    IDeliveriesSummary,
     IDeliveryQueueSummary,
     IDeliveryTimeline,
     IDeliveryTimelinePoint,
     IFulfillmentSummary,
+    IMedicinesSummary,
+    IPatientsSummary,
+    IPrescriptionsSummary,
     IPrescriptionStatusBreakdown,
     IPrescriptionStatusCount,
     IQueueItem,
+    IUsersSummary,
 } from './dashboard.model';
 
 export interface PrescriptionStatusCountApiDto {
@@ -136,4 +141,59 @@ export function toDeliveryTimeline(dto: DeliveryTimelineApiDto): IDeliveryTimeli
         granularity: dto.granularity,
         points: dto.points.map(toDeliveryTimelinePoint),
     };
+}
+
+export interface PatientsSummaryApiDto {
+    totalCount: number;
+    newThisMonthCount: number;
+    withoutAccountCount: number;
+    pendingRegistrationRequestsCount: number;
+}
+
+export interface PrescriptionsSummaryApiDto {
+    totalCount: number;
+    pendingCount: number;
+    canceledCount: number;
+    issuedThisMonthCount: number;
+}
+
+export interface DeliveriesSummaryApiDto {
+    totalCount: number;
+    thisMonthCount: number;
+    overdueCount: number;
+    upcomingCount: number;
+}
+
+export interface MedicinesSummaryApiDto {
+    totalCount: number;
+    newThisMonthCount: number;
+    withoutEanCodeCount: number;
+    movementsThisMonthCount: number;
+}
+
+export interface UsersSummaryApiDto {
+    totalCount: number;
+    activeCount: number;
+    inactiveCount: number;
+    newThisMonthCount: number;
+}
+
+export function toPatientsSummary(dto: PatientsSummaryApiDto): IPatientsSummary {
+    return { ...dto };
+}
+
+export function toPrescriptionsSummary(dto: PrescriptionsSummaryApiDto): IPrescriptionsSummary {
+    return { ...dto };
+}
+
+export function toDeliveriesSummary(dto: DeliveriesSummaryApiDto): IDeliveriesSummary {
+    return { ...dto };
+}
+
+export function toMedicinesSummary(dto: MedicinesSummaryApiDto): IMedicinesSummary {
+    return { ...dto };
+}
+
+export function toUsersSummary(dto: UsersSummaryApiDto): IUsersSummary {
+    return { ...dto };
 }

@@ -1,0 +1,8 @@
+<app-widget-card title="Indicadores de receituários" [loading]="loading()" [error]="error()">
+    <div class="prescription-summary-widget__stats">
+        <app-stat-tile label="Total de receitas" [value]="totalLabel()" accent="neutral" />
+        <app-stat-tile label="Pendentes de entrega" [value]="pendingLabel()" accent="warning" />
+        <app-stat-tile label="Canceladas" [value]="canceledLabel()" accent="danger" />
+        <app-stat-tile label="Emitidas neste mês" [value]="issuedThisMonthLabel()" accent="success" />
+    </div>
+</app-widget-card>

@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.assistant.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,6 +49,11 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
                 .and(PendingDeliveryItemSpecification.hasCompanyId(companyId));
 
         long pendingCount = prescriptionItemRepository.count(pendingSpec);
+        long totalDeliveredCount = deliveryRepository.countByCompany_Id(companyId);
+
+        LocalDate today = LocalDate.now();
+        long deliveredThisMonthCount = deliveryRepository.countByCompany_IdAndDeliveryDateBetween(
+                companyId, today.withDayOfMonth(1), today);
 
         Pageable topPending = PageRequest.of(0, SUMMARY_LIMIT, Sort.by(Sort.Direction.ASC, "requestedAt"));
         List<PendingDeliveryItemResponseDTO> pendingItems = prescriptionItemRepository
@@ -61,7 +67,8 @@ public class AssistantQueryServiceImpl implements AssistantQueryService {
                 .map(deliveryMapper::toResponseDTO)
                 .getContent();
 
-        return new DeliverySummaryResponseDTO(pendingCount, pendingItems, recentDeliveries);
+        return new DeliverySummaryResponseDTO(
+                pendingCount, totalDeliveredCount, deliveredThisMonthCount, pendingItems, recentDeliveries);
     }
 
     @Override

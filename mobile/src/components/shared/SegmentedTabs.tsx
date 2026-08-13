@@ -2,40 +2,38 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import { Colors, Radius, Spacing, Typography } from "@/theme";
 
-export type DeliveryTab = "completed" | "pending";
-
-interface DeliveryTabOption {
-    value: DeliveryTab;
+export interface SegmentedTabOption<TValue extends string> {
+    value: TValue;
     label: string;
 }
 
-const TABS: DeliveryTabOption[] = [
-    { value: "completed", label: "Realizadas" },
-    { value: "pending", label: "Pendentes" },
-];
-
-interface DeliveryTabSwitcherProps {
-    value: DeliveryTab;
-    onChange: (tab: DeliveryTab) => void;
+interface SegmentedTabsProps<TValue extends string> {
+    options: SegmentedTabOption<TValue>[];
+    value: TValue;
+    onChange: (value: TValue) => void;
 }
 
-export function DeliveryTabSwitcher({ value, onChange }: Readonly<DeliveryTabSwitcherProps>) {
+export function SegmentedTabs<TValue extends string>({
+    options,
+    value,
+    onChange,
+}: Readonly<SegmentedTabsProps<TValue>>) {
     return (
         <View style={styles.container}>
-            {TABS.map((tab) => {
-                const selected = tab.value === value;
+            {options.map((option) => {
+                const selected = option.value === value;
 
                 return (
                     <TouchableOpacity
-                        key={tab.value}
+                        key={option.value}
                         style={[styles.tab, selected && styles.tabSelected]}
-                        onPress={() => onChange(tab.value)}
+                        onPress={() => onChange(option.value)}
                         activeOpacity={0.85}
                         accessibilityRole="tab"
                         accessibilityState={{ selected }}
-                        accessibilityLabel={tab.label}
+                        accessibilityLabel={option.label}
                     >
-                        <Text style={[styles.tabText, selected && styles.tabTextSelected]}>{tab.label}</Text>
+                        <Text style={[styles.tabText, selected && styles.tabTextSelected]}>{option.label}</Text>
                     </TouchableOpacity>
                 );
             })}

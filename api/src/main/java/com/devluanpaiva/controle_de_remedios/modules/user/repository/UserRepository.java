@@ -1,16 +1,26 @@
 package com.devluanpaiva.controle_de_remedios.modules.user.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
+import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
+    @EntityGraph(attributePaths = "companies")
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdWithCompanies(@Param("id") UUID id);
+
     Optional<User> findByEmail(String email);
 
     Optional<User> findByEmailIgnoreCase(String email);
@@ -24,4 +34,16 @@ public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificat
     Optional<User> findById(UUID id);
 
     Page<User> findByCompanies_Id(UUID companyId, Pageable pageable);
+
+    List<User> findByRoleAndActiveTrueAndCompanies_Id(UserRole role, UUID companyId);
+
+    boolean existsByIdAndActiveTrue(UUID id);
+
+    long countByCompanies_Id(UUID companyId);
+
+    long countByCompanies_IdAndActiveTrue(UUID companyId);
+
+    long countByCompanies_IdAndActiveFalse(UUID companyId);
+
+    long countByCompanies_IdAndCreatedAtBetween(UUID companyId, LocalDateTime from, LocalDateTime to);
 }

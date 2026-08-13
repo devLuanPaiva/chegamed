@@ -32,3 +32,17 @@ export interface UpdatePatientRequest {
     contact?: string;
     address?: string;
 }
+
+export type PatientRegistrationRequestStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface IPatientRegistrationRequest {
+    id: string;
+    companyId: string;
+    name: string;
+    maskedCpf: string;
+    contact?: string;
+    address?: string;
+    email: string;
+    status: PatientRegistrationRequestStatus;
+    createdAt: Date;
+}

@@ -8,7 +8,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -17,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.devluanpaiva.controle_de_remedios.modules.company.repository.CompanyRepository;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.AvailabilityItemDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.AvailabilityListResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.DeliveryQueueSummaryResponseDTO;
@@ -28,6 +26,7 @@ import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.PrescriptionS
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.PrescriptionStatusCountDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.dto.QueueItemDTO;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.enums.DeliveryTimelineGranularity;
+import com.devluanpaiva.controle_de_remedios.modules.dashboard.service.CompanyAccessGuard;
 import com.devluanpaiva.controle_de_remedios.modules.dashboard.service.DashboardService;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.entity.Delivery;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.repository.DeliveryDailyAggregate;
@@ -38,10 +37,6 @@ import com.devluanpaiva.controle_de_remedios.modules.prescription.repository.Pre
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.repository.PrescriptionItemFulfillmentAggregate;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.repository.PrescriptionItemRepository;
-import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
-import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
-import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
-import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
 
 import lombok.RequiredArgsConstructor;
@@ -49,11 +44,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class DashboardServiceImpl implements DashboardService {
-    private static final List<PrescriptionStatus> DELIVERABLE_STATUSES = List.of(
-            PrescriptionStatus.PENDING, PrescriptionStatus.APPROVED);
+    private static final List<PrescriptionStatus> DELIVERABLE_STATUSES = PrescriptionStatus.deliverable();
 
-    private static final List<PrescriptionStatus> FULFILLED_STATUSES = List.of(
-            PrescriptionStatus.DELIVERED, PrescriptionStatus.PARTIAL_DELIVERED);
+    private static final List<PrescriptionStatus> FULFILLED_STATUSES = PrescriptionStatus.fulfilled();
 
     private static final int QUEUE_PREVIEW_LIMIT = 5;
     private static final int AVAILABILITY_PREVIEW_LIMIT = 10;
@@ -62,14 +55,12 @@ public class DashboardServiceImpl implements DashboardService {
     private final PrescriptionRepository prescriptionRepository;
     private final PrescriptionItemRepository prescriptionItemRepository;
     private final DeliveryRepository deliveryRepository;
-    private final CompanyRepository companyRepository;
-    private final SecurityContextHelper securityContextHelper;
-    private final AuthorizationPolicy authorizationPolicy;
+    private final CompanyAccessGuard companyAccessGuard;
 
     @Override
     @Transactional(readOnly = true)
     public PrescriptionStatusBreakdownResponseDTO getPrescriptionStatusBreakdown(UUID companyId) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
 
         List<PrescriptionStatusCount> counts = prescriptionRepository.countByCompanyGroupedByStatus(companyId);
 
@@ -85,7 +76,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DeliveryQueueSummaryResponseDTO getQueueSummary(UUID companyId) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -111,7 +102,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public AvailabilityListResponseDTO getUpcomingAvailability(UUID companyId, int days) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
 
         LocalDate today = LocalDate.now();
         List<Delivery> deliveries = deliveryRepository
@@ -123,7 +114,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public AvailabilityListResponseDTO getOverdueAvailability(UUID companyId) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
 
         LocalDate today = LocalDate.now();
         List<Delivery> deliveries = deliveryRepository
@@ -135,7 +126,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public FulfillmentSummaryResponseDTO getFulfillmentSummary(UUID companyId, LocalDate from, LocalDate to) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
         assertValidRange(from, to);
 
         LocalDate rangeEnd = to != null ? to : LocalDate.now();
@@ -175,7 +166,7 @@ public class DashboardServiceImpl implements DashboardService {
     @Transactional(readOnly = true)
     public DeliveryTimelineResponseDTO getDeliveryTimeline(
             UUID companyId, LocalDate from, LocalDate to, DeliveryTimelineGranularity granularity) {
-        assertCanView(companyId);
+        companyAccessGuard.assertCanView(companyId);
         assertValidRange(from, to);
 
         LocalDate rangeEnd = to != null ? to : LocalDate.now();
@@ -268,17 +259,5 @@ public class DashboardServiceImpl implements DashboardService {
                     "from",
                     "A data inicial não pode ser posterior à data final.");
         }
-    }
-
-    private void assertCanView(UUID companyId) {
-        User actor = securityContextHelper.getCurrentUser();
-
-        authorizationPolicy.requireAdminOrRolesWithCondition(
-                actor, Set.of(UserRole.MANAGER, UserRole.ASSISTANT),
-                () -> isMemberOf(companyId, actor));
-    }
-
-    private boolean isMemberOf(UUID companyId, User user) {
-        return companyRepository.existsByIdAndUsers_Id(companyId, user.getId());
     }
 }

@@ -12,20 +12,21 @@ import { NotificationButton } from "@/features/home/components/NotificationButto
 import { Colors, Spacing } from "@/theme";
 
 const ASSISTANT_ROLES: UserRole[] = [UserRole.MANAGER, UserRole.ASSISTANT];
+const NOTIFIABLE_ROLES: UserRole[] = [UserRole.PATIENT, UserRole.DELIVERER];
 
 export default function Home() {
     const { user } = useAuth();
     const router = useRouter();
 
     const canUseAssistant = Boolean(user?.role && ASSISTANT_ROLES.includes(user.role));
-    const isPatient = user?.role === UserRole.PATIENT;
+    const receivesNotifications = Boolean(user?.role && NOTIFIABLE_ROLES.includes(user.role));
 
     return (
         <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
             <StatusBar style="dark" />
 
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                {isPatient ? (
+                {receivesNotifications ? (
                     <View style={styles.header}>
                         <NotificationButton />
                     </View>

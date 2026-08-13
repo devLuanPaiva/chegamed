@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.medicine_movement.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,4 +17,6 @@ public interface MedicineMovementRepository
         @Query("select m.movementType as movementType, coalesce(sum(m.quantity), 0) as total "
                         + "from MedicineMovement m where m.medicine.id = :medicineId group by m.movementType")
         List<MovementTypeTotal> sumQuantityByMedicineGroupedByType(@Param("medicineId") UUID medicineId);
+
+        long countByMedicine_Company_IdAndMovementDateBetween(UUID companyId, LocalDate from, LocalDate to);
 }

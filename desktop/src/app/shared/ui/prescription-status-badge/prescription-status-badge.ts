@@ -4,10 +4,10 @@ import { PrescriptionStatus, PrescriptionStatusLabels } from '@features/prescrip
 
 const STATUS_BADGE_CLASS: Record<PrescriptionStatus, string> = {
     [PrescriptionStatus.PENDING]: 'badge-warning',
-    [PrescriptionStatus.APPROVED]: 'badge-success',
-    [PrescriptionStatus.REJECTED]: 'badge-danger',
+    [PrescriptionStatus.OUT_FOR_DELIVERY]: 'badge-success',
     [PrescriptionStatus.DELIVERED]: 'badge-primary',
     [PrescriptionStatus.PARTIAL_DELIVERED]: 'badge-outline',
+    [PrescriptionStatus.CANCELED]: 'badge-danger',
 };
 
 @Component({

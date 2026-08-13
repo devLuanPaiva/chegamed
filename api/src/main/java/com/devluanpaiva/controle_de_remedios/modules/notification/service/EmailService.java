@@ -7,6 +7,8 @@ public interface EmailService {
 
     void sendWelcomeEmail(User user, String rawPassword, String loginUrl);
 
+    void sendPatientRegistrationApprovedEmail(User user, String loginUrl);
+
     void sendDataDeletionRequestConfirmationEmail(User user);
 
     void sendDataDeletionRequestNotificationEmail(User user, String message);

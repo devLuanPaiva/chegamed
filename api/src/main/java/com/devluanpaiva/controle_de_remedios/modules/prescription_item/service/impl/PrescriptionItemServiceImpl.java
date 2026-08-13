@@ -8,7 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.devluanpaiva.controle_de_remedios.modules.company.repository.CompanyRepository;
+import com.devluanpaiva.controle_de_remedios.modules.notification.service.DeliveryNotificationService;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.entity.Prescription;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.enums.PrescriptionStatus;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.repository.PrescriptionRepository;
+import com.devluanpaiva.controle_de_remedios.modules.prescription.service.PrescriptionStatusResolver;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.PrescriptionItemResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.dto.UpdatePrescriptionItemRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.prescription_item.entity.PrescriptionItem;
@@ -27,8 +32,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PrescriptionItemServiceImpl implements PrescriptionItemService {
     private final PrescriptionItemRepository prescriptionItemRepository;
+    private final PrescriptionRepository prescriptionRepository;
     private final CompanyRepository companyRepository;
     private final PrescriptionItemMapper prescriptionItemMapper;
+    private final PrescriptionStatusResolver prescriptionStatusResolver;
+    private final DeliveryNotificationService deliveryNotificationService;
     private final SecurityContextHelper securityContextHelper;
     private final AuthorizationPolicy authorizationPolicy;
 
@@ -97,6 +105,40 @@ public class PrescriptionItemServiceImpl implements PrescriptionItemService {
 
         PrescriptionItem updatedItem = prescriptionItemRepository.save(item);
         return prescriptionItemMapper.toResponseDTO(updatedItem);
+    }
+
+    @Override
+    @Transactional
+    public PrescriptionItemResponseDTO cancelPrescriptionItem(UUID id) {
+        User actor = securityContextHelper.getCurrentUser();
+        PrescriptionItem item = findPrescriptionItemOrThrow(id);
+
+        assertCanManage(actor, item.getPrescription().getPatient());
+        assertCancelable(item);
+
+        item.setStatus(PrescriptionStatus.CANCELED);
+        PrescriptionItem canceledItem = prescriptionItemRepository.save(item);
+
+        Prescription prescription = canceledItem.getPrescription();
+        prescription.setStatus(prescriptionStatusResolver.resolve(prescription));
+        prescriptionRepository.save(prescription);
+
+        deliveryNotificationService.notifyCanceled(canceledItem);
+
+        return prescriptionItemMapper.toResponseDTO(canceledItem);
+    }
+
+    private void assertCancelable(PrescriptionItem item) {
+        if (PrescriptionStatus.cancelable().contains(item.getStatus())) {
+            return;
+        }
+
+        throw new BusinessException(
+                HttpStatus.CONFLICT,
+                "Item de receita não pode ser cancelado",
+                "PRESCRIPTION_ITEM_NOT_CANCELABLE",
+                "id",
+                "O item de receita está com status '" + item.getStatus() + "' e não pode ser cancelado.");
     }
 
     @Override

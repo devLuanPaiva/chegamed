@@ -1,19 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 
 import { AuthSessionService } from '@features/auth/services/auth-session.service';
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
+import { IUsersSummary } from '@features/dashboard/models/dashboard.model';
+import { DashboardService } from '@features/dashboard/services/dashboard.service';
 import { Avatar } from '@shared/ui/avatar/avatar';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { RoleBadge } from '@shared/ui/role-badge/role-badge';
 import { Pagination } from '@shared/ui/pagination/pagination';
 import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
+import { extractErrorMessage } from '@shared/utils/api-error.util';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
 
 import { UserCreateForm } from '../../components/user-create-form/user-create-form';
+import { UserSummaryWidget } from '../../components/user-summary-widget/user-summary-widget';
 import * as UsersActions from '../../store/user.actions';
 import { UserFilterParams } from '../../models/user-api.model';
 import { getManageableRoles, normalizeUserRole, UserRole, UserRoleLabels } from '../../models/user.model';
@@ -23,6 +27,13 @@ import {
     selectUsersLoading,
     selectUsersPagination,
 } from '../../store/user.selectors';
+
+const EMPTY_USERS_SUMMARY: IUsersSummary = {
+    totalCount: 0,
+    activeCount: 0,
+    inactiveCount: 0,
+    newThisMonthCount: 0,
+};
 
 interface UserListFilterForm {
     role: UserRole | '';
@@ -42,7 +53,7 @@ const EMPTY_FILTER_FORM: UserListFilterForm = {
 
 @Component({
     selector: 'app-user-list',
-    imports: [RouterLink, Avatar, RoleBadge, Tabs, UserCreateForm, Pagination, NotFound],
+    imports: [RouterLink, Avatar, RoleBadge, Tabs, UserCreateForm, Pagination, NotFound, UserSummaryWidget],
     templateUrl: './user-list.html',
     styleUrl: './user-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +62,7 @@ export class UserList implements OnInit {
     private readonly store = inject(Store);
     private readonly session = inject(AuthSessionService);
     private readonly actions$ = inject(Actions);
+    private readonly dashboardService = inject(DashboardService);
 
     readonly UserRoleLabels = UserRoleLabels;
 
@@ -59,6 +71,19 @@ export class UserList implements OnInit {
     readonly error = this.store.selectSignal(selectUsersError);
     readonly pagination = this.store.selectSignal(selectUsersPagination);
     readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    private readonly summaryResource = rxResource({
+        params: () => (this.connectedCompanyId() ? { companyId: this.connectedCompanyId()! } : undefined),
+        stream: ({ params }) => this.dashboardService.getUsersSummary(params.companyId),
+        defaultValue: EMPTY_USERS_SUMMARY,
+    });
+
+    readonly summary = this.summaryResource.value;
+    readonly summaryLoading = this.summaryResource.isLoading;
+    readonly summaryError = computed(() => {
+        const error = this.summaryResource.error();
+        return error ? extractErrorMessage(error, 'Erro ao carregar os indicadores de usuários.') : null;
+    });
 
     readonly userRole = computed(() => normalizeUserRole(this.session.user()?.role));
     readonly manageableRoles = computed(() => getManageableRoles(this.userRole()));
@@ -142,6 +167,10 @@ export class UserList implements OnInit {
         if (this.pagination().next) {
             this.loadPage(this.requestedPage() + 1);
         }
+    }
+
+    goToPage(page: number): void {
+        this.loadPage(page - 1);
     }
 
     private loadPage(page: number): void {

@@ -32,6 +32,12 @@ public class PrescriptionItemController {
                 "Item de receita atualizado com sucesso", prescriptionItemService.updatePrescriptionItem(id, dto));
     }
 
+    @PatchMapping("/{id}/cancellation")
+    public ApiResponse<PrescriptionItemResponseDTO> cancelPrescriptionItem(@PathVariable UUID id) {
+        return ApiResponseFactory.success(
+                "Item de receita cancelado com sucesso", prescriptionItemService.cancelPrescriptionItem(id));
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deletePrescriptionItem(@PathVariable UUID id) {
         prescriptionItemService.deletePrescriptionItem(id);

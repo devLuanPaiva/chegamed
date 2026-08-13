@@ -16,6 +16,15 @@ const initialState: PatientState = {
     selectedPatient: null,
     selectedPatientLoading: false,
     accountMutating: false,
+    pendingRequests: [],
+    pendingLoading: false,
+    pendingError: null,
+    pendingCount: 0,
+    pendingCurrentPage: 1,
+    pendingTotalPages: 1,
+    pendingNext: null,
+    pendingPrevious: null,
+    reviewingRequestId: null,
 };
 
 export const patientReducer = createReducer(
@@ -170,5 +179,67 @@ export const patientReducer = createReducer(
     on(PatientActions.clearSelectedPatient, (state) => ({
         ...state,
         selectedPatient: null,
+    })),
+
+    on(PatientActions.loadPendingRegistrationRequests, (state) => ({
+        ...state,
+        pendingLoading: true,
+        pendingError: null,
+    })),
+
+    on(
+        PatientActions.loadPendingRegistrationRequestsSuccess,
+        (state, { requests, count, currentPage, totalPages, next, previous }) => ({
+            ...state,
+            pendingRequests: requests,
+            pendingCount: count,
+            pendingCurrentPage: currentPage,
+            pendingTotalPages: totalPages,
+            pendingNext: next,
+            pendingPrevious: previous,
+            pendingLoading: false,
+        }),
+    ),
+
+    on(PatientActions.loadPendingRegistrationRequestsFailure, (state, { message }) => ({
+        ...state,
+        pendingLoading: false,
+        pendingError: message,
+    })),
+
+    on(PatientActions.approveRegistrationRequest, (state, { id }) => ({
+        ...state,
+        reviewingRequestId: id,
+    })),
+
+    on(PatientActions.approveRegistrationRequestSuccess, (state, { id }) => ({
+        ...state,
+        reviewingRequestId: null,
+        pendingRequests: state.pendingRequests.filter((request) => request.id !== id),
+        pendingCount: Math.max(0, state.pendingCount - 1),
+    })),
+
+    on(PatientActions.approveRegistrationRequestFailure, (state, { message }) => ({
+        ...state,
+        reviewingRequestId: null,
+        pendingError: message,
+    })),
+
+    on(PatientActions.rejectRegistrationRequest, (state, { id }) => ({
+        ...state,
+        reviewingRequestId: id,
+    })),
+
+    on(PatientActions.rejectRegistrationRequestSuccess, (state, { id }) => ({
+        ...state,
+        reviewingRequestId: null,
+        pendingRequests: state.pendingRequests.filter((request) => request.id !== id),
+        pendingCount: Math.max(0, state.pendingCount - 1),
+    })),
+
+    on(PatientActions.rejectRegistrationRequestFailure, (state, { message }) => ({
+        ...state,
+        reviewingRequestId: null,
+        pendingError: message,
     })),
 );

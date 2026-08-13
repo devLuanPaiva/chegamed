@@ -4,18 +4,24 @@ import org.springframework.stereotype.Component;
 
 import com.devluanpaiva.controle_de_remedios.modules.delivery.dto.DeliveryResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.delivery.entity.Delivery;
+import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 
 @Component
 public class DeliveryMapper {
     public DeliveryResponseDTO toResponseDTO(Delivery delivery) {
+        User deliverer = delivery.getDeliverer();
+
         return new DeliveryResponseDTO(
                 delivery.getId(),
                 delivery.getCompany().getId(),
                 delivery.getPatient().getId(),
                 delivery.getPatient().getName(),
+                delivery.getPatient().getAddress(),
                 delivery.getPrescriptionItem().getId(),
                 delivery.getPrescriptionItem().getMedicine().getName(),
                 delivery.getPrescriptionItem().getUnityType(),
+                deliverer != null ? deliverer.getId() : null,
+                deliverer != null ? deliverer.getName() : null,
                 delivery.getDeliveryDate(),
                 delivery.getNextAvailableDate(),
                 delivery.getDeliveryQuantity(),

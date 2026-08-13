@@ -7,7 +7,7 @@ interface UseRequestDataDeletionOptions {
     onSuccess: () => void;
 }
 
-export function useRequestDataDeletion({ onSuccess }: UseRequestDataDeletionOptions) {
+export function useRequestDataDeletion({ onSuccess }: Readonly<UseRequestDataDeletionOptions>) {
     const [message, setMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);

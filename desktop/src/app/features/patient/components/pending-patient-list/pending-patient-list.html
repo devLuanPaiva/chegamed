@@ -1,0 +1,81 @@
+<section class="pending-patient-list">
+    @if (loading()) {
+        <div class="loading pending-patient-list__state">
+            <output class="spinner" aria-label="Carregando solicitações pendentes"></output>
+        </div>
+    } @else if (error()) {
+        <div class="pending-patient-list__state pending-patient-list__state--error">
+            <p>{{ error() }}</p>
+            <button type="button" class="btn btn-outline" (click)="retry()">
+                Tentar novamente
+            </button>
+        </div>
+    } @else if (showNotFound()) {
+        <app-not-found icon="patients" message="Nenhuma solicitação de cadastro pendente." />
+    } @else {
+        <div class="table-responsive">
+            <table class="table pending-patient-list__table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Contato</th>
+                        <th>E-mail</th>
+                        <th>Solicitado em</th>
+                        <th class="pending-patient-list__col-actions">Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (request of requests(); track request.id) {
+                        <tr>
+                            <td data-label="Nome" class="pending-patient-list__col-name">{{ request.name }}</td>
+                            <td data-label="CPF">{{ request.maskedCpf }}</td>
+                            <td data-label="Contato">{{ request.contact || '—' }}</td>
+                            <td data-label="E-mail">{{ request.email }}</td>
+                            <td data-label="Solicitado em">{{ request.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                            <td data-label="Ações" class="pending-patient-list__col-actions">
+                                <button
+                                    type="button"
+                                    class="btn btn-primary btn-sm"
+                                    [disabled]="reviewingRequestId() === request.id"
+                                    [attr.aria-label]="'Aprovar cadastro de ' + request.name"
+                                    (click)="openApproveConfirm(request)"
+                                >
+                                    Aprovar
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm"
+                                    [disabled]="reviewingRequestId() === request.id"
+                                    [attr.aria-label]="'Recusar cadastro de ' + request.name"
+                                    (click)="openRejectConfirm(request)"
+                                >
+                                    Recusar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <app-pagination [pagination]="pagination()" (previousPage)="goToPreviousPage()" (nextPage)="goToNextPage()" />
+    }
+</section>
+
+@if (confirmTarget(); as target) {
+    <app-confirm-dialog
+        titleId="registration-request-confirm-title"
+        [titleText]="target.kind === 'approve' ? 'Confirmar aprovação' : 'Confirmar recusa'"
+        [message]="
+            target.kind === 'approve'
+                ? 'Tem certeza que deseja aprovar o cadastro de ' + target.name + '? Uma conta de acesso será criada ou vinculada para o paciente e um e-mail de confirmação será enviado.'
+                : 'Tem certeza que deseja recusar o cadastro de ' + target.name + '? Esta ação não pode ser desfeita.'
+        "
+        [confirmLabel]="target.kind === 'approve' ? 'Aprovar' : 'Recusar'"
+        [confirmVariant]="target.kind === 'approve' ? 'primary' : 'danger'"
+        (confirmed)="confirmAction()"
+        (closed)="onConfirmClosed()"
+    />
+}

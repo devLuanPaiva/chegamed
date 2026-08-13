@@ -67,9 +67,18 @@ google:
     client-secret: ${OAUTH_CLIENT_SECRET:}
     token-uri: https://oauth2.googleapis.com/token
 
+apple:
+  oauth:
+    bundle-id: ${APPLE_BUNDLE_ID:com.devluan.chegamed}
+
 resend:
   api-key: ${RESEND_API_KEY:}
   from-email: ${RESEND_FROM_EMAIL:}
+
+expo:
+  push:
+    enabled: ${EXPO_PUSH_ENABLED:true}
+    access-token: ${EXPO_ACCESS_TOKEN:}
 
 app:
   branding:

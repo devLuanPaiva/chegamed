@@ -25,3 +25,19 @@ export const selectSelectedPatient = createSelector(selectPatientState, (state) 
 export const selectSelectedPatientLoading = createSelector(selectPatientState, (state) => state.selectedPatientLoading);
 
 export const selectPatientAccountMutating = createSelector(selectPatientState, (state) => state.accountMutating);
+
+export const selectPendingRegistrationRequests = createSelector(selectPatientState, (state) => state.pendingRequests);
+
+export const selectPendingRegistrationRequestsLoading = createSelector(selectPatientState, (state) => state.pendingLoading);
+
+export const selectPendingRegistrationRequestsError = createSelector(selectPatientState, (state) => state.pendingError);
+
+export const selectPendingRegistrationRequestsPagination = createSelector(selectPatientState, (state) => ({
+    count: state.pendingCount,
+    currentPage: state.pendingCurrentPage,
+    totalPages: state.pendingTotalPages,
+    next: state.pendingNext,
+    previous: state.pendingPrevious,
+}));
+
+export const selectReviewingRequestId = createSelector(selectPatientState, (state) => state.reviewingRequestId);

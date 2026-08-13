@@ -1,17 +1,22 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 
+import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
+import { IPrescriptionsSummary } from '@features/dashboard/models/dashboard.model';
+import { DashboardService } from '@features/dashboard/services/dashboard.service';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { Pagination } from '@shared/ui/pagination/pagination';
 import { PrescriptionStatusBadge } from '@shared/ui/prescription-status-badge/prescription-status-badge';
 import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
+import { extractErrorMessage } from '@shared/utils/api-error.util';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
 
 import { PrescriptionCreateForm } from '../../components/prescription-create-form/prescription-create-form';
+import { PrescriptionSummaryWidget } from '../../components/prescription-summary-widget/prescription-summary-widget';
 import { PrescriptionFilterParams } from '../../models/prescription-api.model';
 import { PrescriptionStatus, PrescriptionStatusLabels } from '../../models/prescription.model';
 import * as PrescriptionActions from '../../store/prescription.actions';
@@ -21,6 +26,13 @@ import {
     selectPrescriptionsLoading,
     selectPrescriptionsPagination,
 } from '../../store/prescription.selectors';
+
+const EMPTY_PRESCRIPTIONS_SUMMARY: IPrescriptionsSummary = {
+    totalCount: 0,
+    pendingCount: 0,
+    canceledCount: 0,
+    issuedThisMonthCount: 0,
+};
 
 interface PrescriptionListFilterForm {
     patientName: string;
@@ -38,7 +50,16 @@ const EMPTY_FILTER_FORM: PrescriptionListFilterForm = {
 
 @Component({
     selector: 'app-prescription-list',
-    imports: [RouterLink, DatePipe, Tabs, Pagination, PrescriptionStatusBadge, PrescriptionCreateForm, NotFound],
+    imports: [
+        RouterLink,
+        DatePipe,
+        Tabs,
+        Pagination,
+        PrescriptionStatusBadge,
+        PrescriptionCreateForm,
+        NotFound,
+        PrescriptionSummaryWidget,
+    ],
     templateUrl: './prescription-list.html',
     styleUrl: './prescription-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,11 +67,26 @@ const EMPTY_FILTER_FORM: PrescriptionListFilterForm = {
 export class PrescriptionList implements OnInit {
     private readonly store = inject(Store);
     private readonly actions$ = inject(Actions);
+    private readonly dashboardService = inject(DashboardService);
 
     readonly prescriptions = this.store.selectSignal(selectAllPrescriptions);
     readonly loading = this.store.selectSignal(selectPrescriptionsLoading);
     readonly error = this.store.selectSignal(selectPrescriptionsError);
     readonly pagination = this.store.selectSignal(selectPrescriptionsPagination);
+    readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    private readonly summaryResource = rxResource({
+        params: () => (this.connectedCompanyId() ? { companyId: this.connectedCompanyId()! } : undefined),
+        stream: ({ params }) => this.dashboardService.getPrescriptionsSummary(params.companyId),
+        defaultValue: EMPTY_PRESCRIPTIONS_SUMMARY,
+    });
+
+    readonly summary = this.summaryResource.value;
+    readonly summaryLoading = this.summaryResource.isLoading;
+    readonly summaryError = computed(() => {
+        const error = this.summaryResource.error();
+        return error ? extractErrorMessage(error, 'Erro ao carregar os indicadores de receituários.') : null;
+    });
 
     readonly tabs: TabConfig[] = [
         { id: 'list', label: 'Listagem' },
@@ -131,6 +167,10 @@ export class PrescriptionList implements OnInit {
         if (this.pagination().next) {
             this.loadPage(this.requestedPage() + 1);
         }
+    }
+
+    goToPage(page: number): void {
+        this.loadPage(page - 1);
     }
 
     private loadPage(page: number): void {

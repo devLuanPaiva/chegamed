@@ -15,6 +15,7 @@ import com.devluanpaiva.controle_de_remedios.shared.utils.TemplateRenderer;
 public class EmailServiceImpl implements EmailService {
     private static final String PASSWORD_RESET_TEMPLATE = "templates/email/password-reset.html";
     private static final String WELCOME_TEMPLATE = "templates/email/welcome.html";
+    private static final String PATIENT_REGISTRATION_APPROVED_TEMPLATE = "templates/email/patient-registration-approved.html";
     private static final String DATA_DELETION_CONFIRMATION_TEMPLATE = "templates/email/data-deletion-request-confirmation.html";
     private static final String DATA_DELETION_NOTIFICATION_TEMPLATE = "templates/email/data-deletion-request-notification.html";
 
@@ -55,6 +56,17 @@ public class EmailServiceImpl implements EmailService {
                 "year", currentYear()));
 
         resendClient.send(user.getEmail(), "Bem-vindo(a) ao ChegaMed", html);
+    }
+
+    @Override
+    public void sendPatientRegistrationApprovedEmail(User user, String loginUrl) {
+        String html = TemplateRenderer.render(PATIENT_REGISTRATION_APPROVED_TEMPLATE, Map.of(
+                "logoUrl", logoUrl,
+                "name", user.getName(),
+                "loginUrl", loginUrl,
+                "year", currentYear()));
+
+        resendClient.send(user.getEmail(), "Seu cadastro foi aprovado - ChegaMed", html);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.medicine.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,4 +16,10 @@ public interface MedicineRepository extends JpaRepository<Medicine, UUID>, JpaSp
     List<Medicine> findByCompany_Id(UUID companyId);
 
     List<Medicine> findByCompany_IdAndNameContainingIgnoreCase(UUID companyId, String name);
+
+    long countByCompany_Id(UUID companyId);
+
+    long countByCompany_IdAndCreatedAtBetween(UUID companyId, LocalDateTime from, LocalDateTime to);
+
+    long countByCompany_IdAndEanCodeIsNull(UUID companyId);
 }

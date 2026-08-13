@@ -9,9 +9,12 @@ export interface DeliveryApiDto {
     companyId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
     prescriptionItemId: string;
     medicineName: string;
     unityType: UnityType;
+    delivererId: string | null;
+    delivererName: string | null;
     deliveryDate: string;
     nextAvailableDate: string;
     deliveryQuantity: number;
@@ -67,9 +70,12 @@ export function toDelivery(dto: DeliveryApiDto): IDelivery {
         companyId: dto.companyId,
         patientId: dto.patientId,
         patientName: dto.patientName,
+        patientAddress: dto.patientAddress,
         prescriptionItemId: dto.prescriptionItemId,
         medicineName: dto.medicineName,
         unityType: dto.unityType,
+        delivererId: dto.delivererId,
+        delivererName: dto.delivererName,
         deliveryDate: parseLocalDate(dto.deliveryDate),
         nextAvailableDate: parseLocalDate(dto.nextAvailableDate),
         deliveryQuantity: dto.deliveryQuantity,

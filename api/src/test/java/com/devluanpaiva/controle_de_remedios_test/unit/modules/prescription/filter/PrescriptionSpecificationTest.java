@@ -238,7 +238,7 @@ class PrescriptionSpecificationTest {
         @Test
         @DisplayName("should filter by status when provided")
         void shouldFilterByStatusWhenProvided() {
-            Specification<Prescription> specification = PrescriptionSpecification.hasStatus(PrescriptionStatus.APPROVED);
+            Specification<Prescription> specification = PrescriptionSpecification.hasStatus(PrescriptionStatus.OUT_FOR_DELIVERY);
 
             Root<Prescription> root = mock(Root.class);
             CriteriaQuery<?> query = mock(CriteriaQuery.class);
@@ -247,7 +247,7 @@ class PrescriptionSpecificationTest {
             Predicate predicate = mock(Predicate.class);
 
             when(root.<PrescriptionStatus>get("status")).thenReturn(statusPath);
-            when(builder.equal(statusPath, PrescriptionStatus.APPROVED)).thenReturn(predicate);
+            when(builder.equal(statusPath, PrescriptionStatus.OUT_FOR_DELIVERY)).thenReturn(predicate);
 
             Predicate result = specification.toPredicate(root, query, builder);
 

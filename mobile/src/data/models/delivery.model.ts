@@ -6,9 +6,12 @@ export interface IDelivery {
     companyId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
     prescriptionItemId: string;
     medicineName: string;
     unityType: UnityType;
+    delivererId: string | null;
+    delivererName: string | null;
     deliveryDate: Date;
     nextAvailableDate: Date;
     deliveryQuantity: number;
@@ -21,16 +24,21 @@ export interface IPendingDeliveryItem {
     prescriptionId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
+    patientContact: string | null;
     issueDate: Date;
     medicineName: string;
+    dosage: string | null;
     status: PrescriptionStatus;
     unityType: UnityType;
     prescribedQuantity: number;
+    outForDeliveryAt: Date | null;
 }
 
 export interface DeliveryFilterParams {
     patientName?: string;
     patientCpf?: string;
+    status?: PrescriptionStatus;
 }
 
 export interface CreateDeliveryRequest {

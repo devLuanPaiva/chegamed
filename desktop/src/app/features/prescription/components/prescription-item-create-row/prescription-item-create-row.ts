@@ -22,7 +22,7 @@ const EMPTY_MODEL: ItemRowModel = {
     medicineSelection: null,
     dosage: '',
     prescribedQuantity: null,
-    unityType: UnityType.BOTTLE,
+    unityType: UnityType.TABLET,
     treatmentType: TreatmentType.CONTINUOUS,
     treatmentDays: null,
 };

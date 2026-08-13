@@ -1,0 +1,12 @@
+# Sibling projects not needed to build the mobile app
+desktop
+api
+web
+docs
+
+# Heavy build artifacts / deps anywhere in the repo
+**/node_modules
+**/target
+**/dist
+**/build
+**/.angular

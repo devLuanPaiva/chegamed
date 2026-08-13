@@ -108,4 +108,8 @@ export class AiUsagePage {
             this.requestedPage.update((page) => page + 1);
         }
     }
+
+    goToPage(page: number): void {
+        this.requestedPage.set(page - 1);
+    }
 }

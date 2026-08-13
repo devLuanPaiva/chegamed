@@ -31,6 +31,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.service.UserService;
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
 import com.devluanpaiva.controle_de_remedios.security.SecurityContextHelper;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
+import com.devluanpaiva.controle_de_remedios.shared.utils.AppLinkBuilder;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +100,7 @@ public class UserServiceImpl implements UserService {
 
     private void sendWelcomeEmail(User user, String rawPassword) {
         try {
-            emailService.sendWelcomeEmail(user, rawPassword, webUrl);
+            emailService.sendWelcomeEmail(user, rawPassword, AppLinkBuilder.build(webUrl, ""));
         } catch (RuntimeException ex) {
             log.error("Falha ao enviar e-mail de boas-vindas para o usuário '{}'", user.getId(), ex);
         }

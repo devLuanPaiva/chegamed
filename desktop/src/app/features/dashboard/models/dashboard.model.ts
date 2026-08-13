@@ -70,3 +70,38 @@ export interface IDeliveryTimeline {
     granularity: DeliveryTimelineGranularity;
     points: IDeliveryTimelinePoint[];
 }
+
+export interface IPatientsSummary {
+    totalCount: number;
+    newThisMonthCount: number;
+    withoutAccountCount: number;
+    pendingRegistrationRequestsCount: number;
+}
+
+export interface IPrescriptionsSummary {
+    totalCount: number;
+    pendingCount: number;
+    canceledCount: number;
+    issuedThisMonthCount: number;
+}
+
+export interface IDeliveriesSummary {
+    totalCount: number;
+    thisMonthCount: number;
+    overdueCount: number;
+    upcomingCount: number;
+}
+
+export interface IMedicinesSummary {
+    totalCount: number;
+    newThisMonthCount: number;
+    withoutEanCodeCount: number;
+    movementsThisMonthCount: number;
+}
+
+export interface IUsersSummary {
+    totalCount: number;
+    activeCount: number;
+    inactiveCount: number;
+    newThisMonthCount: number;
+}

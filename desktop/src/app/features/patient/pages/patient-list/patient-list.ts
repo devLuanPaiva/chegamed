@@ -1,14 +1,21 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Store } from '@ngrx/store';
 
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
+import { DashboardService } from '@features/dashboard/services/dashboard.service';
+import { IPatientsSummary } from '@features/dashboard/models/dashboard.model';
 import { NotFound } from '@shared/ui/not-found/not-found';
 import { Pagination } from '@shared/ui/pagination/pagination';
+import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
+import { extractErrorMessage } from '@shared/utils/api-error.util';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
 
 import { PatientCreateModal } from '../../components/patient-create-modal/patient-create-modal';
+import { PatientSummaryWidget } from '../../components/patient-summary-widget/patient-summary-widget';
+import { PendingPatientList } from '../../components/pending-patient-list/pending-patient-list';
 import * as PatientActions from '../../store/patient.actions';
 import { PatientFilterParams } from '../../models/patient-api.model';
 import {
@@ -17,6 +24,13 @@ import {
     selectPatientsLoading,
     selectPatientsPagination,
 } from '../../store/patient.selectors';
+
+const EMPTY_PATIENTS_SUMMARY: IPatientsSummary = {
+    totalCount: 0,
+    newThisMonthCount: 0,
+    withoutAccountCount: 0,
+    pendingRegistrationRequestsCount: 0,
+};
 
 interface PatientListFilterForm {
     name: string;
@@ -30,19 +44,48 @@ const EMPTY_FILTER_FORM: PatientListFilterForm = {
 
 @Component({
     selector: 'app-patient-list',
-    imports: [RouterLink, DatePipe, PatientCreateModal, Pagination, NotFound],
+    imports: [
+        RouterLink,
+        DatePipe,
+        PatientCreateModal,
+        PendingPatientList,
+        Pagination,
+        Tabs,
+        NotFound,
+        PatientSummaryWidget,
+    ],
     templateUrl: './patient-list.html',
     styleUrl: './patient-list.scss',
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PatientList implements OnInit {
     private readonly store = inject(Store);
+    private readonly dashboardService = inject(DashboardService);
 
     readonly patients = this.store.selectSignal(selectAllPatients);
     readonly loading = this.store.selectSignal(selectPatientsLoading);
     readonly error = this.store.selectSignal(selectPatientsError);
     readonly pagination = this.store.selectSignal(selectPatientsPagination);
     readonly connectedCompanyId = this.store.selectSignal(selectSelectedCompanyId);
+
+    private readonly summaryResource = rxResource({
+        params: () => (this.connectedCompanyId() ? { companyId: this.connectedCompanyId()! } : undefined),
+        stream: ({ params }) => this.dashboardService.getPatientsSummary(params.companyId),
+        defaultValue: EMPTY_PATIENTS_SUMMARY,
+    });
+
+    readonly summary = this.summaryResource.value;
+    readonly summaryLoading = this.summaryResource.isLoading;
+    readonly summaryError = computed(() => {
+        const error = this.summaryResource.error();
+        return error ? extractErrorMessage(error, 'Erro ao carregar os indicadores de pacientes.') : null;
+    });
+
+    readonly tabs: TabConfig[] = [
+        { id: 'list', label: 'Listagem' },
+        { id: 'pending', label: 'Pendentes' },
+    ];
+    readonly activeTabId = signal('list');
 
     readonly showCreateModal = signal(false);
     readonly filterForm = signal<PatientListFilterForm>({ ...EMPTY_FILTER_FORM });
@@ -60,6 +103,10 @@ export class PatientList implements OnInit {
 
     ngOnInit(): void {
         this.loadPage(0);
+    }
+
+    onTabChange(tabId: string): void {
+        this.activeTabId.set(tabId);
     }
 
     openCreateModal(): void {
@@ -102,6 +149,10 @@ export class PatientList implements OnInit {
         if (this.pagination().next) {
             this.loadPage(this.requestedPage() + 1);
         }
+    }
+
+    goToPage(page: number): void {
+        this.loadPage(page - 1);
     }
 
     private loadPage(page: number): void {

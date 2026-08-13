@@ -1,0 +1,8 @@
+<app-widget-card title="Indicadores de medicamentos" [loading]="loading()" [error]="error()">
+    <div class="medicine-summary-widget__stats">
+        <app-stat-tile label="Total de medicamentos" [value]="totalLabel()" accent="neutral" />
+        <app-stat-tile label="Novos neste mês" [value]="newThisMonthLabel()" accent="success" />
+        <app-stat-tile label="Sem código EAN" [value]="withoutEanCodeLabel()" accent="warning" />
+        <app-stat-tile label="Movimentações no mês" [value]="movementsThisMonthLabel()" accent="info" />
+    </div>
+</app-widget-card>

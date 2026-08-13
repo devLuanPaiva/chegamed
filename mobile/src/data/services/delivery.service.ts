@@ -17,9 +17,12 @@ interface DeliveryDto {
     companyId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
     prescriptionItemId: string;
     medicineName: string;
     unityType: UnityType;
+    delivererId: string | null;
+    delivererName: string | null;
     deliveryDate: string;
     nextAvailableDate: string;
     deliveryQuantity: number;
@@ -32,11 +35,15 @@ interface PendingDeliveryItemDto {
     prescriptionId: string;
     patientId: string;
     patientName: string;
+    patientAddress: string | null;
+    patientContact: string | null;
     issueDate: string;
     medicineName: string;
+    dosage: string | null;
     status: PrescriptionStatus;
     unityType: UnityType;
     prescribedQuantity: number;
+    outForDeliveryAt: string | null;
 }
 
 function toDelivery(dto: DeliveryDto): IDelivery {
@@ -45,9 +52,12 @@ function toDelivery(dto: DeliveryDto): IDelivery {
         companyId: dto.companyId,
         patientId: dto.patientId,
         patientName: dto.patientName,
+        patientAddress: dto.patientAddress,
         prescriptionItemId: dto.prescriptionItemId,
         medicineName: dto.medicineName,
         unityType: dto.unityType,
+        delivererId: dto.delivererId,
+        delivererName: dto.delivererName,
         deliveryDate: new Date(dto.deliveryDate),
         nextAvailableDate: new Date(dto.nextAvailableDate),
         deliveryQuantity: dto.deliveryQuantity,
@@ -62,20 +72,25 @@ function toPendingDeliveryItem(dto: PendingDeliveryItemDto): IPendingDeliveryIte
         prescriptionId: dto.prescriptionId,
         patientId: dto.patientId,
         patientName: dto.patientName,
+        patientAddress: dto.patientAddress,
+        patientContact: dto.patientContact,
         issueDate: new Date(dto.issueDate),
         medicineName: dto.medicineName,
+        dosage: dto.dosage,
         status: dto.status,
         unityType: dto.unityType,
         prescribedQuantity: dto.prescribedQuantity,
+        outForDeliveryAt: dto.outForDeliveryAt ? new Date(dto.outForDeliveryAt) : null,
     };
 }
 
+function buildPageParams(page: number): URLSearchParams {
+    return new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
+}
+
 function buildFilterParams(companyId: string, page: number, filter?: DeliveryFilterParams): URLSearchParams {
-    const params = new URLSearchParams({
-        page: String(page),
-        size: String(PAGE_SIZE),
-        companyId,
-    });
+    const params = buildPageParams(page);
+    params.set("companyId", companyId);
 
     const patientName = filter?.patientName?.trim();
     const patientCpf = filter?.patientCpf?.trim();
@@ -86,6 +101,10 @@ function buildFilterParams(companyId: string, page: number, filter?: DeliveryFil
 
     if (patientCpf) {
         params.set("patientCpf", onlyDigits(patientCpf));
+    }
+
+    if (filter?.status) {
+        params.set("status", filter.status);
     }
 
     return params;
@@ -122,8 +141,7 @@ export async function getPendingDeliveryItems(
 }
 
 export async function getMyDeliveries(page: number): Promise<PagedResult<IDelivery>> {
-    const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
-    const response = await apiFetch<DeliveryDto[]>(`/deliveries/me?${params.toString()}`);
+    const response = await apiFetch<DeliveryDto[]>(`/deliveries/me?${buildPageParams(page).toString()}`);
 
     return {
         data: response.data.map(toDelivery),
@@ -133,11 +151,34 @@ export async function getMyDeliveries(page: number): Promise<PagedResult<IDelive
 }
 
 export async function getMyPendingDeliveryItems(page: number): Promise<PagedResult<IPendingDeliveryItem>> {
-    const params = new URLSearchParams({ page: String(page), size: String(PAGE_SIZE) });
-    const response = await apiFetch<PendingDeliveryItemDto[]>(`/deliveries/me/pending-items?${params.toString()}`);
+    const response = await apiFetch<PendingDeliveryItemDto[]>(
+        `/deliveries/me/pending-items?${buildPageParams(page).toString()}`,
+    );
 
     return {
         data: response.data.map(toPendingDeliveryItem),
+        currentPage: response.currentPage ?? page,
+        totalPages: response.totalPages ?? 1,
+    };
+}
+
+export async function getMyOutForDeliveryItems(page: number): Promise<PagedResult<IPendingDeliveryItem>> {
+    const response = await apiFetch<PendingDeliveryItemDto[]>(
+        `/deliveries/me/out-for-delivery?${buildPageParams(page).toString()}`,
+    );
+
+    return {
+        data: response.data.map(toPendingDeliveryItem),
+        currentPage: response.currentPage ?? page,
+        totalPages: response.totalPages ?? 1,
+    };
+}
+
+export async function getMyCompletedDeliveries(page: number): Promise<PagedResult<IDelivery>> {
+    const response = await apiFetch<DeliveryDto[]>(`/deliveries/me/completed?${buildPageParams(page).toString()}`);
+
+    return {
+        data: response.data.map(toDelivery),
         currentPage: response.currentPage ?? page,
         totalPages: response.totalPages ?? 1,
     };
@@ -150,4 +191,12 @@ export async function deliverPrescriptionItem(payload: CreateDeliveryRequest): P
     });
 
     return toDelivery(response.data);
+}
+
+export async function dispatchPrescriptionItemForDelivery(prescriptionItemId: string): Promise<IPendingDeliveryItem> {
+    const response = await apiFetch<PendingDeliveryItemDto>(`/deliveries/dispatches/${prescriptionItemId}`, {
+        method: "POST",
+    });
+
+    return toPendingDeliveryItem(response.data);
 }

@@ -31,6 +31,7 @@ import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserRepository;
 import com.devluanpaiva.controle_de_remedios.security.JwtService;
 import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
+import com.devluanpaiva.controle_de_remedios.shared.utils.AppLinkBuilder;
 
 @Slf4j
 @Service
@@ -47,11 +48,8 @@ public class AuthService {
         private final PasswordResetTokenRepository passwordResetTokenRepository;
         private final EmailService emailService;
 
-        @Value("${app.frontend.desktop-reset-password-url}")
-        private String desktopResetPasswordUrl;
-
-        @Value("${app.frontend.mobile-reset-password-url}")
-        private String mobileResetPasswordUrl;
+        @Value("${app.frontend.web-url}")
+        private String webUrl;
 
         @Value("${app.password-reset.token-expiration-minutes}")
         private long tokenExpirationMinutes;
@@ -135,7 +133,7 @@ public class AuthService {
         @Transactional
         public void forgotPassword(ForgotPasswordRequestDTO dto) {
                 userRepository.findByEmail(dto.email())
-                                .ifPresent(user -> issuePasswordResetToken(user, dto.context()));
+                                .ifPresent(this::issuePasswordResetToken);
         }
 
         @Transactional
@@ -161,7 +159,7 @@ public class AuthService {
                 passwordResetTokenRepository.deleteByUserId(user.getId());
         }
 
-        private void issuePasswordResetToken(User user, RequestContext context) {
+        private void issuePasswordResetToken(User user) {
                 passwordResetTokenRepository.deleteByUserId(user.getId());
 
                 String rawToken = generateRawToken();
@@ -174,7 +172,7 @@ public class AuthService {
 
                 passwordResetTokenRepository.save(token);
 
-                String resetUrl = buildResetUrl(context, rawToken);
+                String resetUrl = buildResetUrl(rawToken);
 
                 try {
                         emailService.sendPasswordResetEmail(user, resetUrl, tokenExpirationMinutes);
@@ -183,9 +181,8 @@ public class AuthService {
                 }
         }
 
-        private String buildResetUrl(RequestContext context, String rawToken) {
-                String baseUrl = context == RequestContext.MOBILE ? mobileResetPasswordUrl : desktopResetPasswordUrl;
-                return baseUrl + "?token=" + rawToken;
+        private String buildResetUrl(String rawToken) {
+                return AppLinkBuilder.build(webUrl, "reset-password?token=" + rawToken);
         }
 
         private String generateRawToken() {

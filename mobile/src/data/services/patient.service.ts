@@ -4,12 +4,15 @@ import { PagedResult } from "@/lib/pagination";
 import {
     CreatePatientRequest,
     IPatient,
+    IPatientRegistrationRequest,
     PatientFilterParams,
+    PatientRegistrationRequestStatus,
     UpdatePatientRequest,
 } from "@/data/models/patient.model";
 
 const PATIENT_SEARCH_PAGE_SIZE = 20;
 const PATIENT_PAGE_SIZE = 20;
+const PENDING_REQUEST_PAGE_SIZE = 20;
 
 interface PatientDto {
     id: string;
@@ -124,4 +127,55 @@ export async function updatePatient(id: string, payload: UpdatePatientRequest): 
     });
 
     return toPatient(response.data);
+}
+
+interface PatientRegistrationRequestDto {
+    id: string;
+    companyId: string;
+    name: string;
+    maskedCpf: string;
+    contact: string | null;
+    address: string | null;
+    email: string;
+    status: string;
+    createdAt: string;
+}
+
+function toPatientRegistrationRequest(dto: PatientRegistrationRequestDto): IPatientRegistrationRequest {
+    return {
+        id: dto.id,
+        companyId: dto.companyId,
+        name: dto.name,
+        maskedCpf: dto.maskedCpf,
+        contact: dto.contact ?? undefined,
+        address: dto.address ?? undefined,
+        email: dto.email,
+        status: dto.status as PatientRegistrationRequestStatus,
+        createdAt: new Date(dto.createdAt),
+    };
+}
+
+export async function getPendingRegistrationRequests(page: number): Promise<PagedResult<IPatientRegistrationRequest>> {
+    const params = new URLSearchParams({ page: String(page), size: String(PENDING_REQUEST_PAGE_SIZE) });
+    const response = await apiFetch<PatientRegistrationRequestDto[]>(
+        `/patient-registration-requests?${params.toString()}`,
+    );
+
+    return {
+        data: response.data.map(toPatientRegistrationRequest),
+        currentPage: response.currentPage ?? page,
+        totalPages: response.totalPages ?? 1,
+    };
+}
+
+export async function approveRegistrationRequest(id: string): Promise<IPatient> {
+    const response = await apiFetch<PatientDto>(`/patient-registration-requests/${id}/approve`, {
+        method: "POST",
+    });
+
+    return toPatient(response.data);
+}
+
+export async function rejectRegistrationRequest(id: string): Promise<void> {
+    await apiFetch<null>(`/patient-registration-requests/${id}/reject`, { method: "POST" });
 }

@@ -13,6 +13,7 @@ import {
 import { clearTokens, getStoredTokens, persistTokens } from "@/lib/authStorage";
 import { BASE_URL } from "@/lib/env";
 import { signInWithGoogle } from "@/data/services/googleAuth.service";
+import { signInWithApple } from "@/data/services/appleAuth.service";
 import { IUser, UserRole, normalizeUserRole } from "../models/user.model";
 
 const SIGN_IN_ROUTE = "/(authentication)/signIn" as Href;
@@ -34,6 +35,7 @@ interface AuthContextType {
   user: Partial<IUser> | null;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -43,6 +45,7 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   login: async () => {},
   loginWithGoogle: async () => {},
+  loginWithApple: async () => {},
   logout: async () => {},
 });
 
@@ -205,6 +208,12 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
     startSession(accessToken, refreshToken);
   }, [startSession]);
 
+  const loginWithApple = useCallback(async () => {
+    const { accessToken, refreshToken } = await signInWithApple();
+    await persistTokens({ access: accessToken, refresh: refreshToken });
+    startSession(accessToken, refreshToken);
+  }, [startSession]);
+
   const logout = useCallback(async () => {
     await endSession();
     router.replace(SIGN_IN_ROUTE);
@@ -217,9 +226,18 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
       user,
       login,
       loginWithGoogle,
+      loginWithApple,
       logout,
     }),
-    [isLoggedIn, isLoadingSession, user, login, loginWithGoogle, logout],
+    [
+      isLoggedIn,
+      isLoadingSession,
+      user,
+      login,
+      loginWithGoogle,
+      loginWithApple,
+      logout,
+    ],
   );
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

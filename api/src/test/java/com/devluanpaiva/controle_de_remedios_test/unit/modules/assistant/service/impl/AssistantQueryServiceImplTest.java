@@ -3,6 +3,7 @@ package com.devluanpaiva.controle_de_remedios_test.unit.modules.assistant.servic
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -113,7 +114,7 @@ class AssistantQueryServiceImplTest {
                 .status(status)
                 .dosage("10mg")
                 .prescribedQuantity(30)
-                .unityType(UnityType.BOTTLE)
+                .unityType(UnityType.TABLET)
                 .treatmentType(TreatmentType.CONTINUOUS)
                 .treatmentDays(15)
                 .receivedQuantity(0)
@@ -152,6 +153,10 @@ class AssistantQueryServiceImplTest {
             Delivery delivery = buildDelivery(company, patient, deliveredItem);
 
             when(prescriptionItemRepository.count(any(Specification.class))).thenReturn(5L);
+            when(deliveryRepository.countByCompany_Id(companyId)).thenReturn(42L);
+            when(deliveryRepository.countByCompany_IdAndDeliveryDateBetween(
+                    eq(companyId), any(LocalDate.class), any(LocalDate.class)))
+                    .thenReturn(7L);
             when(prescriptionItemRepository.findAll(any(Specification.class), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(List.of(pendingItem)));
             when(deliveryRepository.findAll(any(Specification.class), any(Pageable.class)))
@@ -160,6 +165,8 @@ class AssistantQueryServiceImplTest {
             DeliverySummaryResponseDTO response = assistantQueryService.getDeliveriesSummary(companyId);
 
             assertThat(response.pendingCount()).isEqualTo(5L);
+            assertThat(response.totalDeliveredCount()).isEqualTo(42L);
+            assertThat(response.deliveredThisMonthCount()).isEqualTo(7L);
             assertThat(response.pendingItems()).hasSize(1);
             assertThat(response.pendingItems().get(0).patientName()).isEqualTo("Maria da Silva");
             assertThat(response.recentDeliveries()).hasSize(1);
@@ -224,6 +231,8 @@ class AssistantQueryServiceImplTest {
             DeliverySummaryResponseDTO response = assistantQueryService.getDeliveriesSummary(companyId);
 
             assertThat(response.pendingCount()).isZero();
+            assertThat(response.totalDeliveredCount()).isZero();
+            assertThat(response.deliveredThisMonthCount()).isZero();
             assertThat(response.pendingItems()).isEmpty();
             assertThat(response.recentDeliveries()).isEmpty();
         }
