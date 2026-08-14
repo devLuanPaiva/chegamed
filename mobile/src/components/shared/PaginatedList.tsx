@@ -6,8 +6,10 @@ import {
   Text,
   View,
 } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
 
 import { Colors, Spacing, Typography } from "@/theme";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 interface PaginatedListProps<T> extends Omit<
   FlatListProps<T>,
@@ -23,6 +25,7 @@ interface PaginatedListProps<T> extends Omit<
   isLoadingMore: boolean;
   error: string | null;
   emptyMessage: string;
+  emptyIcon?: LucideIcon;
   onLoadMore: () => void;
   onRefresh: () => void;
 }
@@ -33,6 +36,7 @@ export function PaginatedList<T>({
   isLoadingMore,
   error,
   emptyMessage,
+  emptyIcon,
   onLoadMore,
   onRefresh,
   contentContainerStyle,
@@ -62,7 +66,7 @@ export function PaginatedList<T>({
       onRefresh={onRefresh}
       onEndReached={onLoadMore}
       onEndReachedThreshold={0.4}
-      ListEmptyComponent={<Text style={styles.emptyText}>{emptyMessage}</Text>}
+      ListEmptyComponent={<EmptyState icon={emptyIcon} message={emptyMessage} />}
       ListFooterComponent={
         isLoadingMore ? (
           <ActivityIndicator
@@ -94,14 +98,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.base,
     color: Colors.danger,
     textAlign: "center",
-  },
-
-  emptyText: {
-    fontFamily: Typography.fonts.bodyMedium,
-    fontSize: Typography.sizes.base,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginTop: Spacing.xxl,
   },
 
   content: {

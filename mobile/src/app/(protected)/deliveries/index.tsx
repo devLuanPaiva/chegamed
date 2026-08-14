@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PackageCheck, Truck } from "lucide-react-native";
 
 import { Colors, Spacing, Typography } from "@/theme";
 import { IPendingDeliveryItem } from "@/data/models/delivery.model";
@@ -100,6 +101,7 @@ export default function DeliveriesScreen() {
                     isLoadingMore={queues.completed.isLoadingMore}
                     error={queues.completed.error}
                     emptyMessage="Nenhuma entrega realizada encontrada."
+                    emptyIcon={PackageCheck}
                     onLoadMore={queues.completed.loadMore}
                     onRefresh={queues.completed.refresh}
                 />
@@ -124,6 +126,7 @@ export default function DeliveriesScreen() {
                             ? "Nenhum item a caminho do paciente."
                             : "Nenhum item aguardando na farmácia."
                     }
+                    emptyIcon={Truck}
                     onLoadMore={activeQueue.loadMore}
                     onRefresh={activeQueue.refresh}
                 />

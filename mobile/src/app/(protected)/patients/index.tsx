@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, type Href } from "expo-router";
+import { HeartPulse, UserPlus } from "lucide-react-native";
 
 import { Colors, Spacing, Typography } from "@/theme";
 import { useCompanies } from "@/data/contexts/CompanyContext";
@@ -73,6 +74,7 @@ export default function PatientsScreen() {
                         isLoadingMore={patients.isLoadingMore}
                         error={patients.error}
                         emptyMessage="Nenhum paciente encontrado."
+                        emptyIcon={HeartPulse}
                         onLoadMore={patients.loadMore}
                         onRefresh={patients.refresh}
                     />
@@ -94,6 +96,7 @@ export default function PatientsScreen() {
                         isLoadingMore={pendingRequests.isLoadingMore}
                         error={pendingRequests.error}
                         emptyMessage="Nenhuma solicitação de cadastro pendente."
+                        emptyIcon={UserPlus}
                         onLoadMore={pendingRequests.loadMore}
                         onRefresh={pendingRequests.refresh}
                     />

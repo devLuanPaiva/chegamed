@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CheckCheck } from "lucide-react-native";
+import { Bell, CheckCheck } from "lucide-react-native";
 
 import { Colors, Radius, Spacing, Typography } from "@/theme";
 import { usePaginatedList } from "@/data/hooks/usePaginatedList";
@@ -78,6 +78,7 @@ export default function NotificationsScreen() {
                 isLoadingMore={notifications.isLoadingMore}
                 error={notifications.error}
                 emptyMessage="Você ainda não tem notificações."
+                emptyIcon={Bell}
                 onLoadMore={notifications.loadMore}
                 onRefresh={notifications.refresh}
             />
