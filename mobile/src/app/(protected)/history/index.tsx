@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Clock, PackageCheck } from "lucide-react-native";
 
 import { Colors, Spacing, Typography } from "@/theme";
 import { BackButton } from "@/components/shared/BackButton";
@@ -37,6 +38,7 @@ export default function HistoryScreen() {
                     isLoadingMore={pendingMedications.isLoadingMore}
                     error={pendingMedications.error}
                     emptyMessage="Nenhum medicamento pendente de entrega."
+                    emptyIcon={Clock}
                     onLoadMore={pendingMedications.loadMore}
                     onRefresh={pendingMedications.refresh}
                 />
@@ -49,6 +51,7 @@ export default function HistoryScreen() {
                     isLoadingMore={deliveredMedications.isLoadingMore}
                     error={deliveredMedications.error}
                     emptyMessage="Nenhum medicamento entregue ainda."
+                    emptyIcon={PackageCheck}
                     onLoadMore={deliveredMedications.loadMore}
                     onRefresh={deliveredMedications.refresh}
                 />

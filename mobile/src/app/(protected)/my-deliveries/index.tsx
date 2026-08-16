@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { PackageCheck, Truck } from "lucide-react-native";
 
 import { Colors, Spacing, Typography } from "@/theme";
 import { IPendingDeliveryItem } from "@/data/models/delivery.model";
@@ -93,6 +94,7 @@ export default function MyDeliveriesScreen() {
                     isLoadingMore={routes.pending.isLoadingMore}
                     error={routes.pending.error}
                     emptyMessage="Nenhuma entrega pendente no momento."
+                    emptyIcon={Truck}
                     onLoadMore={routes.pending.loadMore}
                     onRefresh={routes.pending.refresh}
                 />
@@ -105,6 +107,7 @@ export default function MyDeliveriesScreen() {
                     isLoadingMore={routes.completed.isLoadingMore}
                     error={routes.completed.error}
                     emptyMessage="Você ainda não concluiu nenhuma entrega."
+                    emptyIcon={PackageCheck}
                     onLoadMore={routes.completed.loadMore}
                     onRefresh={routes.completed.refresh}
                 />

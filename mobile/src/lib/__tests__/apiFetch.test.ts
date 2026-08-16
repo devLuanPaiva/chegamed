@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-import { apiFetch, ApiRequestError, rawFetch } from "@/lib/apiFetch";
+import { apiFetch, ApiRequestError, rawFetch, SERVER_UNAVAILABLE_MESSAGE } from "@/lib/apiFetch";
 import { AUTH_STORAGE_KEYS } from "@/lib/storageKeys";
 
 jest.mock("@/lib/env", () => ({
@@ -80,6 +80,25 @@ describe("apiFetch", () => {
         await expect(apiFetch("/patients")).rejects.toBeInstanceOf(ApiRequestError);
         await expect(apiFetch("/patients")).rejects.toMatchObject({ message: "Erro na requisição." });
     });
+
+    it("throws a server-unavailable error when the connection itself fails", async () => {
+        (global.fetch as jest.Mock).mockRejectedValue(new TypeError("Network request failed"));
+
+        await expect(apiFetch("/patients")).rejects.toMatchObject({ message: SERVER_UNAVAILABLE_MESSAGE });
+    });
+
+    it.each([502, 503, 504])(
+        "throws a server-unavailable error when the response status is %i",
+        async (status) => {
+            (global.fetch as jest.Mock).mockResolvedValue({
+                ok: false,
+                status,
+                json: async () => null,
+            });
+
+            await expect(apiFetch("/patients")).rejects.toMatchObject({ message: SERVER_UNAVAILABLE_MESSAGE });
+        },
+    );
 });
 
 describe("rawFetch", () => {

@@ -1,4 +1,5 @@
 import { useAuth } from "@/data/contexts/AuthContext";
+import { ApiRequestError } from "@/lib/apiFetch";
 import { GoogleSignInCancelledError } from "@/data/services/googleAuth.service";
 import { AppleSignInCancelledError } from "@/data/services/appleAuth.service";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
@@ -22,6 +23,17 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import { Wave } from "@/components/shared/Wave";
+
+const UNREGISTERED_EMAIL_MESSAGE =
+    "Não encontramos um cadastro com este e-mail. Procure uma farmácia parceira e solicite seu cadastro para poder entrar no app.";
+
+function socialLoginErrorMessage(err: unknown, fallback: string): string {
+    if (err instanceof ApiRequestError && err.code === "AUTH_EMAIL_NOT_REGISTERED") {
+        return UNREGISTERED_EMAIL_MESSAGE;
+    }
+
+    return err instanceof Error ? err.message : fallback;
+}
 
 export default function SignIn() {
     const { login, loginWithGoogle, loginWithApple } = useAuth();
@@ -65,7 +77,7 @@ export default function SignIn() {
             router.replace("/(protected)/home");
         } catch (err) {
             if (err instanceof GoogleSignInCancelledError) return;
-            setError(err instanceof Error ? err.message : "Erro ao entrar com o Google.");
+            setError(socialLoginErrorMessage(err, "Erro ao entrar com o Google."));
         } finally {
             setIsGoogleLoading(false);
         }
@@ -79,7 +91,7 @@ export default function SignIn() {
             router.replace("/(protected)/home");
         } catch (err) {
             if (err instanceof AppleSignInCancelledError) return;
-            setError(err instanceof Error ? err.message : "Erro ao entrar com a Apple.");
+            setError(socialLoginErrorMessage(err, "Erro ao entrar com a Apple."));
         } finally {
             setIsAppleLoading(false);
         }

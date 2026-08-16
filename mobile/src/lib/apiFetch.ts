@@ -79,11 +79,27 @@ function toApiRequestError(errorBody: ApiErrorResponse | null, fallbackMessage: 
     return new ApiRequestError(message, errorBody?.errors ?? []);
 }
 
+const SERVER_DOWN_STATUSES = new Set([502, 503, 504]);
+
+export const SERVER_UNAVAILABLE_MESSAGE =
+    "Não foi possível conectar ao servidor. Nosso sistema fica disponível de segunda a sexta, das 8h às 17h — tente novamente dentro desse horário.";
+
 async function performFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const accessToken = await getAccessToken();
     const headers = buildHeaders(accessToken, options.headers);
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
+    let response: Response;
+
+    try {
+        response = await fetch(`${BASE_URL}${endpoint}`, { ...options, headers });
+    } catch {
+        throw new ApiRequestError(SERVER_UNAVAILABLE_MESSAGE);
+    }
+
+    if (SERVER_DOWN_STATUSES.has(response.status)) {
+        throw new ApiRequestError(SERVER_UNAVAILABLE_MESSAGE);
+    }
+
     const body = await response.json().catch(() => null);
 
     if (!response.ok) {

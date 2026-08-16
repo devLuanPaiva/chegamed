@@ -12,8 +12,10 @@ import {
 
 import { clearTokens, getStoredTokens, persistTokens } from "@/lib/authStorage";
 import { BASE_URL } from "@/lib/env";
+import { rawFetch } from "@/lib/apiFetch";
 import { signInWithGoogle } from "@/data/services/googleAuth.service";
 import { signInWithApple } from "@/data/services/appleAuth.service";
+import { AuthTokens } from "@/data/models/auth.model";
 import { IUser, UserRole, normalizeUserRole } from "../models/user.model";
 
 const SIGN_IN_ROUTE = "/(authentication)/signIn" as Href;
@@ -179,25 +181,13 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
+      const { accessToken, refreshToken } = await rawFetch<AuthTokens>("/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, context: "MOBILE" }),
-      }).then((res) => res.json());
+      });
 
-      if (response.errors) {
-        throw new Error(response.errors.detail || "Erro ao realizar login.");
-      }
-
-      const access = response?.accessToken;
-      const refresh = response?.refreshToken;
-
-      if (!access || !refresh) {
-        throw new Error("Resposta inválida do servidor");
-      }
-
-      await persistTokens({ access, refresh });
-      startSession(access, refresh);
+      await persistTokens({ access: accessToken, refresh: refreshToken });
+      startSession(accessToken, refreshToken);
     },
     [startSession],
   );

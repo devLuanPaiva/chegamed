@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-import { extractErrorMessage, extractErrors } from './api-error.util';
+import { extractErrorMessage, extractErrors, isServerUnavailableError, SERVER_UNAVAILABLE_MESSAGE } from './api-error.util';
 
 describe('extractErrorMessage', () => {
     it('uses the single error detail over the generic message when there is exactly one error', () => {
@@ -63,13 +63,37 @@ describe('extractErrorMessage', () => {
     });
 
     it('falls back to the provided fallback when the body has neither errors nor message', () => {
-        const error = new HttpErrorResponse({ status: 0, error: null });
+        const error = new HttpErrorResponse({ status: 422, error: null });
 
         expect(extractErrorMessage(error, 'fallback')).toBe('fallback');
     });
 
     it('falls back to the provided fallback when the error is not an HttpErrorResponse', () => {
         expect(extractErrorMessage(new Error('boom'), 'fallback')).toBe('fallback');
+    });
+
+    [0, 502, 503, 504].forEach((status) => {
+        it(`returns the server-unavailable message instead of the fallback when the status is ${status}`, () => {
+            const error = new HttpErrorResponse({ status, error: null });
+
+            expect(extractErrorMessage(error, 'fallback')).toBe(SERVER_UNAVAILABLE_MESSAGE);
+        });
+    });
+});
+
+describe('isServerUnavailableError', () => {
+    [0, 502, 503, 504].forEach((status) => {
+        it(`returns true for status ${status}`, () => {
+            expect(isServerUnavailableError(new HttpErrorResponse({ status, error: null }))).toBe(true);
+        });
+    });
+
+    it('returns false for a regular HTTP error status', () => {
+        expect(isServerUnavailableError(new HttpErrorResponse({ status: 500, error: null }))).toBe(false);
+    });
+
+    it('returns false when the error is not an HttpErrorResponse', () => {
+        expect(isServerUnavailableError(new Error('boom'))).toBe(false);
     });
 });
 
