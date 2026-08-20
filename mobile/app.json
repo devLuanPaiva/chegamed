@@ -12,7 +12,9 @@
       "bundleIdentifier": "com.devluan.chegamed",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "pt-BR",
+        "CFBundleLocalizations": ["pt-BR"]
       }
     },
     "android": {
@@ -44,6 +46,7 @@
         }
       ],
       "expo-font",
+      "expo-apple-authentication",
       [
         "expo-camera",
         {
@@ -61,6 +64,17 @@
         {
           "color": "#035941",
           "defaultChannel": "deliveries"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPods": [
+              { "name": "GoogleUtilities", "modular_headers": true },
+              { "name": "RecaptchaInterop", "modular_headers": true }
+            ]
+          }
         }
       ]
     ],
