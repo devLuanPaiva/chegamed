@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     "Como o ChegaMed coleta, usa e protege os dados de usuários, pacientes e prescrições.",
 };
 
-const LAST_UPDATED = "23 de julho de 2026";
+const LAST_UPDATED = "20 de agosto de 2026";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -51,14 +51,30 @@ export default function PrivacyPolicyPage() {
           3. Uso de inteligência artificial
         </h2>
         <p className="mt-3">
-          As fotos de receitas e de caixas de medicamentos podem ser processadas pela API do
-          Google Gemini para extrair automaticamente informações como nome do paciente,
-          medicamento, dosagem e datas, reduzindo a digitação manual. Esse processamento é
-          feito por meio de uma conta paga (tier pago) da API do Google Gemini, cujos termos
-          comerciais excluem o uso dos dados enviados para o treinamento dos modelos do
-          Google. As imagens são usadas apenas para responder à solicitação de extração e não
-          são compartilhadas com terceiros para qualquer outra finalidade.
+          O ChegaMed utiliza a API do Google Gemini, um serviço de inteligência artificial de
+          terceiros, em duas funcionalidades opcionais do aplicativo. Em ambos os casos, o
+          processamento é feito por meio de uma conta paga (tier pago) da API do Google
+          Gemini, cujos termos comerciais excluem o uso dos dados enviados para o treinamento
+          dos modelos do Google, e os dados são usados apenas para responder à solicitação, não
+          sendo compartilhados com terceiros para qualquer outra finalidade. Antes do primeiro
+          uso de cada uma dessas funcionalidades, o aplicativo explica o que será enviado e
+          solicita a autorização do usuário.
         </p>
+        <ul className="mt-3 list-disc space-y-2 pl-5">
+          <li>
+            <strong>Extração de dados de fotos:</strong> ao fotografar uma receita ou a caixa
+            de um medicamento, a imagem é enviada à API do Google Gemini para extrair
+            automaticamente informações como nome do paciente, medicamento, dosagem e datas,
+            reduzindo a digitação manual.
+          </li>
+          <li>
+            <strong>Assistente de IA (chat):</strong> ao usar o assistente para perguntar sobre
+            entregas ou pacientes, o texto da pergunta é enviado à API do Google Gemini para
+            gerar uma resposta. Quando necessário para responder à pergunta, nomes de
+            pacientes e dados de entregas/prescrições relacionados também são enviados junto
+            com a pergunta.
+          </li>
+        </ul>
       </section>
 
       <section>
@@ -91,7 +107,8 @@ export default function PrivacyPolicyPage() {
           Não vendemos nem compartilhamos dados pessoais para fins de publicidade. Os dados
           são compartilhados apenas com prestadores de serviço estritamente necessários para o
           funcionamento da plataforma, como o provedor de infraestrutura em nuvem e a API do
-          Google Gemini (para extração de dados de imagens, conforme descrito na seção 3).
+          Google Gemini (para extração de dados de imagens e para o assistente de IA,
+          conforme descrito na seção 3).
         </p>
       </section>
 
