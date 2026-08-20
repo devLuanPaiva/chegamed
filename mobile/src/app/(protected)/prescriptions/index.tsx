@@ -11,11 +11,13 @@ import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 import { usePrescriptionScan } from "@/data/contexts/PrescriptionScanContext";
 import { createLocalId } from "@/lib/createLocalId";
 import { useSpeechTips } from "@/data/hooks/useSpeechTips";
+import { useAiConsent } from "@/data/hooks/useAiConsent";
 import { PrescriptionTypeSelector } from "@/features/prescriptions/components/PrescriptionTypeSelector";
 import { CameraCaptureButton } from "@/components/shared/CameraCaptureButton";
 import { CapturedPagesStrip } from "@/features/prescriptions/components/CapturedPagesStrip";
 import { SpeechTipButton } from "@/components/shared/SpeechTipButton";
 import { ProcessingOverlay } from "@/components/shared/ProcessingOverlay";
+import { AiConsentGate } from "@/components/shared/AiConsentGate";
 
 const CAPTURE_TIPS = [
     "Aproxime a câmera da receita e mantenha o celular parado.",
@@ -46,6 +48,7 @@ export default function PrescriptionScan() {
     } = usePrescriptionScan();
 
     const { isSpeaking, speakNextTip, stop: stopSpeech } = useSpeechTips(CAPTURE_TIPS);
+    const { hasConsented, grantConsent } = useAiConsent("EXTRACTION");
 
     useFocusEffect(
         useCallback(() => {
@@ -119,6 +122,26 @@ export default function PrescriptionScan() {
                     <Text style={styles.permissionButtonText}>Permitir acesso</Text>
                 </TouchableOpacity>
             </SafeAreaView>
+        );
+    }
+
+    if (hasConsented === null) {
+        return <View style={styles.container} />;
+    }
+
+    if (!hasConsented) {
+        return (
+            <AiConsentGate
+                title="Uso de inteligência artificial"
+                description="Para preencher os dados automaticamente, a foto da receita é enviada a um serviço de IA de terceiros."
+                bullets={[
+                    "O que é enviado: a foto da receita médica.",
+                    "Para quem: API do Google Gemini, contratada em plano pago que não usa os dados para treinar seus modelos.",
+                    "Finalidade: extrair nome do paciente, medicamentos, dosagens e datas automaticamente, reduzindo a digitação manual.",
+                ]}
+                onAccept={grantConsent}
+                onDecline={() => router.back()}
+            />
         );
     }
 
