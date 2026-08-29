@@ -80,6 +80,7 @@ export function connectNotificationSocket({
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     let isDisposed = false;
+    let connectionId = 0;
 
     function clearTimers() {
         if (pingTimer) {
@@ -112,9 +113,15 @@ export function connectNotificationSocket({
             return;
         }
 
+        const myConnectionId = ++connectionId;
+
         const accessToken = await getAccessToken();
 
-        if (!accessToken || isDisposed) {
+        if (isDisposed || myConnectionId !== connectionId) {
+            return;
+        }
+
+        if (!accessToken) {
             console.warn("[notificationSocket] conexão adiada: sem access token disponível");
             scheduleReconnect();
             return;
