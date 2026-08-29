@@ -85,6 +85,22 @@ export async function setBadgeCount(count: number): Promise<void> {
     await Notifications.setBadgeCountAsync(count);
 }
 
+export async function presentLocalNotification(title: string, body: string): Promise<void> {
+    try {
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title,
+                body,
+                sound: true,
+                ...(Platform.OS === "android" && { channelId: ANDROID_CHANNEL_ID }),
+            },
+            trigger: null,
+        });
+    } catch (error) {
+        console.warn("[push] não foi possível exibir a notificação local", error);
+    }
+}
+
 export function addPushReceivedListener(onReceived: () => void): Notifications.EventSubscription {
     return Notifications.addNotificationReceivedListener(() => onReceived());
 }

@@ -21,6 +21,7 @@ import {
 import {
     addPushOpenedListener,
     addPushReceivedListener,
+    presentLocalNotification,
     requestDevicePushRegistration,
     setBadgeCount,
 } from "@/data/services/pushNotification.service";
@@ -106,6 +107,7 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
             onNotification: (event) => {
                 applyUnreadCount(event.unreadCount);
                 setLastEventAt(Date.now());
+                void presentLocalNotification(event.notification.title, event.notification.body);
             },
             onReconnected: () => void refreshUnreadCount(),
         });
