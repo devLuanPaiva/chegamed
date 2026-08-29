@@ -57,7 +57,8 @@ public class User implements UserDetails {
     private UserRole role;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
-    private Boolean active;
+    @Builder.Default
+    private Boolean active = true;
 
     @ManyToMany
     @JoinTable(name = "user_companies", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "company_id"))
