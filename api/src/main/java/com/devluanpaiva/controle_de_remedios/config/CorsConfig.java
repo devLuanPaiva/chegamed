@@ -30,7 +30,15 @@ public class CorsConfig {
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 
+        CorsConfiguration webSocketConfig = new CorsConfiguration();
+        webSocketConfig.setAllowedOriginPatterns(List.of("*"));
+        webSocketConfig.setAllowedMethods(List.of("GET"));
+        webSocketConfig.setAllowedHeaders(List.of("*"));
+        webSocketConfig.setAllowCredentials(true);
+        webSocketConfig.setMaxAge(3600L);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/ws/**", webSocketConfig);
         source.registerCorsConfiguration("/**", config);
         return source;
     }
@@ -40,6 +48,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/ws/**")
+                        .allowedOriginPatterns("*")
+                        .allowedMethods("GET")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
+
                 registry.addMapping("/**")
                         .allowedOrigins(ALLOWED_ORIGINS.toArray(new String[0]))
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
