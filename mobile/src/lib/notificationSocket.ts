@@ -115,13 +115,16 @@ export function connectNotificationSocket({
         const accessToken = await getAccessToken();
 
         if (!accessToken || isDisposed) {
+            console.warn("[notificationSocket] conexão adiada: sem access token disponível");
             scheduleReconnect();
             return;
         }
 
+        console.log(`[notificationSocket] conectando a ${buildSocketUrl()} (tentativa ${reconnectAttempts})`);
         socket = openAuthenticatedSocket(accessToken);
 
         socket.onopen = () => {
+            console.log("[notificationSocket] conexão aberta");
             reconnectAttempts = 0;
             pingTimer = setInterval(() => socket?.send(PING_MESSAGE), PING_INTERVAL_MS);
             onReconnected();
@@ -132,6 +135,8 @@ export function connectNotificationSocket({
                 return;
             }
 
+            console.log(`[notificationSocket] mensagem recebida: ${event.data}`);
+
             const parsedEvent = parseEvent(event.data);
 
             if (parsedEvent) {
@@ -139,9 +144,13 @@ export function connectNotificationSocket({
             }
         };
 
-        socket.onerror = () => socket?.close();
+        socket.onerror = (event) => {
+            console.warn("[notificationSocket] erro na conexão", event);
+            socket?.close();
+        };
 
-        socket.onclose = () => {
+        socket.onclose = (event) => {
+            console.warn(`[notificationSocket] conexão fechada (code=${event.code}, reason=${event.reason})`);
             clearTimers();
             socket = null;
             scheduleReconnect();

@@ -85,6 +85,9 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
 
                 if (registration) {
                     await registerDeviceToken(registration);
+                    console.log(`[notifications] device token registrado na api (platform=${registration.platform})`);
+                } else {
+                    console.warn("[notifications] nenhum device token obtido; push nativo não será registrado");
                 }
             } catch (error) {
                 console.warn("Push nativo indisponível; as notificações seguem apenas no aplicativo", error);
@@ -125,6 +128,7 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
                 return;
             }
 
+            console.log("[notifications] app voltou ao primeiro plano; forçando reconexão e atualização");
             socketHandleRef.current?.reconnectNow();
             void refreshUnreadCount();
         }
@@ -140,11 +144,15 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
         }
 
         const receivedSubscription = addPushReceivedListener(() => {
+            console.log("[notifications] push nativo recebido em primeiro plano");
             setLastEventAt(Date.now());
             void refreshUnreadCount();
         });
 
-        const openedSubscription = addPushOpenedListener(() => router.push(NOTIFICATIONS_ROUTE));
+        const openedSubscription = addPushOpenedListener(() => {
+            console.log("[notifications] push nativo aberto pelo usuário");
+            router.push(NOTIFICATIONS_ROUTE);
+        });
 
         return () => {
             receivedSubscription.remove();
