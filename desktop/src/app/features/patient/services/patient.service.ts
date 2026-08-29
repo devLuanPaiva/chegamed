@@ -6,6 +6,7 @@ import { environment } from '@environments/environment';
 import { toUser, UserApiDto } from '@features/users/models/user-api.model';
 import { IUser } from '@features/users/models/user.model';
 import { ApiResponse } from '@shared/models/api-response.model';
+import { extractFilename } from '@shared/utils/file-download.util';
 
 import {
     CreatePatientAccountRequest,
@@ -105,6 +106,21 @@ export class PatientService {
         return this.http
             .delete<ApiResponse<null>>(`${this.apiUrl()}/patients/${patientId}/account`)
             .pipe(map(() => undefined));
+    }
+
+    downloadPatientsReport(companyId: string): Observable<{ blob: Blob; filename: string }> {
+        return this.http
+            .get(`${this.apiUrl()}/reports/patients/pdf`, {
+                params: { companyId },
+                responseType: 'blob',
+                observe: 'response',
+            })
+            .pipe(
+                map((response) => ({
+                    blob: response.body as Blob,
+                    filename: extractFilename(response.headers.get('Content-Disposition'), 'pacientes.pdf'),
+                })),
+            );
     }
 
     getPendingRegistrationRequests(page = 0, size = DEFAULT_PAGE_SIZE): Observable<PendingPatientRegistrationRequestsPage> {

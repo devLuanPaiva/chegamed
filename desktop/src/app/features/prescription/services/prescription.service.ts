@@ -4,6 +4,7 @@ import { map, Observable } from 'rxjs';
 
 import { environment } from '@environments/environment';
 import { ApiResponse } from '@shared/models/api-response.model';
+import { extractFilename } from '@shared/utils/file-download.util';
 
 import {
     CreatePrescriptionRequest,
@@ -96,5 +97,20 @@ export class PrescriptionService {
         return this.http
             .patch<ApiResponse<PrescriptionItemApiDto>>(`${this.apiUrl()}/prescription-items/${id}`, payload)
             .pipe(map((response) => toPrescriptionItem(response.data)));
+    }
+
+    downloadPrescriptionItemsReport(companyId: string): Observable<{ blob: Blob; filename: string }> {
+        return this.http
+            .get(`${this.apiUrl()}/reports/prescription-items/pdf`, {
+                params: { companyId },
+                responseType: 'blob',
+                observe: 'response',
+            })
+            .pipe(
+                map((response) => ({
+                    blob: response.body as Blob,
+                    filename: extractFilename(response.headers.get('Content-Disposition'), 'receituarios.pdf'),
+                })),
+            );
     }
 }

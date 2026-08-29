@@ -25,7 +25,7 @@ export interface ImpactStat {
   label: string;
 }
 
-export const CONTACT_EMAIL = "devluanpaiva@gmail.com";
+export const CONTACT_EMAIL = "contato@devluanpaiva.com.br";
 
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.devluan.chegamed";
