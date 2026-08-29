@@ -27,6 +27,7 @@ export interface NotificationSocketEvent {
 
 interface NotificationSocketOptions {
     onNotification: (event: NotificationSocketEvent) => void;
+    onReconnected: () => void;
 }
 
 type WebSocketWithHeaders = new (
@@ -65,7 +66,15 @@ function parseEvent(raw: string): NotificationSocketEvent | null {
     }
 }
 
-export function connectNotificationSocket({ onNotification }: Readonly<NotificationSocketOptions>): () => void {
+export interface NotificationSocketHandle {
+    disconnect: () => void;
+    reconnectNow: () => void;
+}
+
+export function connectNotificationSocket({
+    onNotification,
+    onReconnected,
+}: Readonly<NotificationSocketOptions>): NotificationSocketHandle {
     let socket: WebSocket | null = null;
     let pingTimer: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -115,6 +124,7 @@ export function connectNotificationSocket({ onNotification }: Readonly<Notificat
         socket.onopen = () => {
             reconnectAttempts = 0;
             pingTimer = setInterval(() => socket?.send(PING_MESSAGE), PING_INTERVAL_MS);
+            onReconnected();
         };
 
         socket.onmessage = (event) => {
@@ -140,10 +150,27 @@ export function connectNotificationSocket({ onNotification }: Readonly<Notificat
 
     void connect();
 
-    return () => {
-        isDisposed = true;
-        clearTimers();
-        socket?.close();
-        socket = null;
+    return {
+        disconnect: () => {
+            isDisposed = true;
+            clearTimers();
+            socket?.close();
+            socket = null;
+        },
+        reconnectNow: () => {
+            if (isDisposed) {
+                return;
+            }
+
+            if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
+                return;
+            }
+
+            clearTimers();
+            socket?.close();
+            socket = null;
+            reconnectAttempts = 0;
+            void connect();
+        },
     };
 }

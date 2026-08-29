@@ -5,8 +5,10 @@ import {
     useContext,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
 import { useAuth } from "@/data/contexts/AuthContext";
@@ -46,6 +48,7 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [lastEventAt, setLastEventAt] = useState(0);
+    const socketHandleRef = useRef<ReturnType<typeof connectNotificationSocket> | null>(null);
 
     const applyUnreadCount = useCallback((count: number) => {
         setUnreadCount(count);
@@ -96,13 +99,40 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
             return;
         }
 
-        return connectNotificationSocket({
+        const handle = connectNotificationSocket({
             onNotification: (event) => {
                 applyUnreadCount(event.unreadCount);
                 setLastEventAt(Date.now());
             },
+            onReconnected: () => void refreshUnreadCount(),
         });
-    }, [applyUnreadCount, isLoggedIn]);
+
+        socketHandleRef.current = handle;
+
+        return () => {
+            socketHandleRef.current = null;
+            handle.disconnect();
+        };
+    }, [applyUnreadCount, isLoggedIn, refreshUnreadCount]);
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            return;
+        }
+
+        function handleAppStateChange(nextState: AppStateStatus) {
+            if (nextState !== "active") {
+                return;
+            }
+
+            socketHandleRef.current?.reconnectNow();
+            void refreshUnreadCount();
+        }
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+        return () => subscription.remove();
+    }, [isLoggedIn, refreshUnreadCount]);
 
     useEffect(() => {
         if (!isLoggedIn) {
