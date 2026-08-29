@@ -18,7 +18,9 @@ import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 import com.devluanpaiva.controle_de_remedios.modules.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DeliveryNotificationServiceImpl implements DeliveryNotificationService {
@@ -41,6 +43,10 @@ public class DeliveryNotificationServiceImpl implements DeliveryNotificationServ
     private void notifyDeliverers(PrescriptionItem item, Patient patient, String medicineName) {
         List<User> deliverers = userRepository.findByRoleAndActiveTrueAndCompanies_Id(
                 UserRole.DELIVERER, patient.getCompany().getId());
+
+        log.info("Prescriptionitem id={} despachado para entrega; notificando {} entregador(es) ativo(s) da empresa {}: {}",
+                item.getId(), deliverers.size(), patient.getCompany().getId(),
+                deliverers.stream().map(User::getId).toList());
 
         String body = "%s para %s. Endereço: %s.".formatted(medicineName, patient.getName(), resolveAddress(patient));
 

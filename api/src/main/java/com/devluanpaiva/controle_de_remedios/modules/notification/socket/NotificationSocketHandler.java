@@ -9,7 +9,9 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class NotificationSocketHandler extends TextWebSocketHandler {
@@ -29,6 +31,7 @@ public class NotificationSocketHandler extends TextWebSocketHandler {
         }
 
         registry.register(userId, session);
+        log.info("Socket de notificações conectado: userId={}, sessionId={}", userId, session.getId());
     }
 
     @Override
@@ -40,6 +43,8 @@ public class NotificationSocketHandler extends TextWebSocketHandler {
         }
 
         registry.unregister(userId, session);
+        log.info("Socket de notificações desconectado: userId={}, sessionId={}, status={}",
+                userId, session.getId(), status);
     }
 
     @Override
