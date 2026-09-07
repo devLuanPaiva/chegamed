@@ -15,6 +15,7 @@ import com.devluanpaiva.controle_de_remedios.modules.medicine.dto.UpdateMedicine
 import com.devluanpaiva.controle_de_remedios.modules.medicine.entity.Medicine;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.mapper.MedicineMapper;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.repository.MedicineRepository;
+import com.devluanpaiva.controle_de_remedios.modules.medicine.service.MedicineNameNormalizer;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.service.MedicineResolutionService;
 import com.devluanpaiva.controle_de_remedios.modules.medicine.service.MedicineService;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
@@ -69,7 +70,7 @@ public class MedicineServiceImpl implements MedicineService {
         assertCanManage(actor, medicine.getCompany().getId());
 
         if (dto.name() != null) {
-            medicine.setName(dto.name());
+            medicine.setName(MedicineNameNormalizer.normalize(dto.name()));
         }
 
         if (dto.imageUrl() != null) {

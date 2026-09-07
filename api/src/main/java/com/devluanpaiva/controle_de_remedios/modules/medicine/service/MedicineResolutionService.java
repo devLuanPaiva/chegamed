@@ -24,11 +24,13 @@ public class MedicineResolutionService {
 
     public Medicine resolveOrCreate(
             Company company, String name, String eanCode, String imageUrl, boolean requireImageOnCreate) {
+        String normalizedName = MedicineNameNormalizer.normalize(name);
+
         if (StringUtils.hasText(eanCode)) {
-            return resolveByEanCode(company, name, eanCode, imageUrl, requireImageOnCreate);
+            return resolveByEanCode(company, normalizedName, eanCode, imageUrl, requireImageOnCreate);
         }
 
-        return resolveByName(company, name, imageUrl, requireImageOnCreate);
+        return resolveByName(company, normalizedName, imageUrl, requireImageOnCreate);
     }
 
     private Medicine resolveByEanCode(
@@ -39,17 +41,24 @@ public class MedicineResolutionService {
             return existingByEanCode.get();
         }
 
-        Optional<Medicine> similarWithoutEanCode = findSimilarByName(company.getId(), name)
-                .filter(medicine -> medicine.getEanCode() == null);
-        if (similarWithoutEanCode.isPresent()) {
-            Medicine medicine = similarWithoutEanCode.get();
-            medicine.setEanCode(eanCode);
+        Optional<Medicine> similar = findSimilarByName(company.getId(), name);
+        if (similar.isPresent()) {
+            Medicine medicine = similar.get();
 
-            if (StringUtils.hasText(imageUrl)) {
-                medicine.setImageUrl(imageUrl);
+            if (medicine.getEanCode() == null) {
+                medicine.setEanCode(eanCode);
+
+                if (StringUtils.hasText(imageUrl)) {
+                    medicine.setImageUrl(imageUrl);
+                }
+
+                return medicineRepository.save(medicine);
             }
 
-            return medicineRepository.save(medicine);
+            // Já existe um medicamento com nome igual/parecido cadastrado sob outro EAN
+            // (ex: variação de embalagem/lote). Reaproveita o registro existente em vez de
+            // criar um duplicado com o novo código de barras.
+            return medicine;
         }
 
         return createMedicine(company, name, eanCode, imageUrl, requireImageOnCreate);
