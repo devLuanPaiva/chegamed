@@ -64,7 +64,8 @@ public class ExpoPushClient {
                 request = request.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
             }
 
-            request.body(messages).retrieve().toBodilessEntity();
+            String responseBody = request.body(messages).retrieve().body(String.class);
+            log.info("Resposta da Expo Push API para {} dispositivo(s): {}", deviceTokens.size(), responseBody);
         } catch (RestClientException ex) {
             log.warn("Falha ao enviar push notification via Expo para {} dispositivo(s)", deviceTokens.size(), ex);
         }

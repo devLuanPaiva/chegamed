@@ -36,16 +36,22 @@ public class NotificationHandshakeInterceptor implements HandshakeInterceptor {
         String accessToken = extractAccessToken(request);
 
         if (accessToken == null) {
+            log.info("Handshake de notificações rejeitado: nenhum access token informado (remoteAddress={})",
+                    request.getRemoteAddress());
             return false;
         }
 
         UUID authenticatedUserId = resolveAuthenticatedUserId(accessToken);
 
         if (authenticatedUserId == null) {
+            log.info("Handshake de notificações rejeitado: token inválido ou usuário inativo (remoteAddress={})",
+                    request.getRemoteAddress());
             return false;
         }
 
         attributes.put(NotificationSocketHandler.USER_ID_ATTRIBUTE, authenticatedUserId);
+        log.info("Handshake de notificações aceito para userId={} (remoteAddress={})",
+                authenticatedUserId, request.getRemoteAddress());
         return true;
     }
 

@@ -2,6 +2,7 @@ package com.devluanpaiva.controle_de_remedios.shared.exceptions;
 
 import java.util.List;
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -181,6 +183,11 @@ public class GlobalExceptionHandler {
                 return ResponseEntity
                                 .status(HttpStatus.CONFLICT)
                                 .body(response);
+        }
+
+        @ExceptionHandler({ AsyncRequestNotUsableException.class, ClientAbortException.class })
+        public void handleClientAbort(Exception ex) {
+                log.debug("Cliente desconectou antes da resposta ser enviada", ex);
         }
 
         @ExceptionHandler(Exception.class)

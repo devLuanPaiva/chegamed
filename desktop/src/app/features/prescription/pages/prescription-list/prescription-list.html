@@ -1,6 +1,15 @@
 <section class="prescription-list">
     <header class="prescription-list__header">
         <h1 class="prescription-list__title">Receituários</h1>
+
+        <button
+            type="button"
+            class="btn btn-outline"
+            [disabled]="downloadingReport() || !connectedCompanyId()"
+            (click)="downloadReport()"
+        >
+            {{ downloadingReport() ? 'Gerando PDF...' : 'Baixar PDF' }}
+        </button>
     </header>
 
     <app-prescription-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />
