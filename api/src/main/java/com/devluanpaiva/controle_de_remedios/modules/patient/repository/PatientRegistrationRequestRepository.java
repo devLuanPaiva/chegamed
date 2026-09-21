@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.patient.repository;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,4 +20,8 @@ public interface PatientRegistrationRequestRepository extends JpaRepository<Pati
             Set<UUID> companyIds, PatientRegistrationRequestStatus status, Pageable pageable);
 
     long countByCompanyIdAndStatus(UUID companyId, PatientRegistrationRequestStatus status);
+
+    boolean existsByRequestedBy_IdAndStatus(UUID requesterId, PatientRegistrationRequestStatus status);
+
+    Optional<PatientRegistrationRequest> findFirstByRequestedBy_IdOrderByCreatedAtDesc(UUID requesterId);
 }
