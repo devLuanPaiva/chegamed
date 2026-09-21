@@ -196,6 +196,7 @@ public class DeliveryQueryServiceImpl implements DeliveryQueryService {
             case MANAGER, ASSISTANT -> DeliverySpecification.associatedWithManager(actor.getId());
             case DELIVERER -> DeliverySpecification.deliveredBy(actor.getId());
             case PATIENT -> DeliverySpecification.associatedWithPatientUser(actor.getId());
+            case VISITOR -> throw deliveryAuthorizationPolicy.forbidden();
         };
     }
 
