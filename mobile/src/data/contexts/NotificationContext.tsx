@@ -12,6 +12,7 @@ import { AppState, type AppStateStatus } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
 import { useAuth } from "@/data/contexts/AuthContext";
+import { NOTIFIABLE_ROLES } from "@/data/models/user.model";
 import {
     getUnreadNotificationCount,
     markAllNotificationsAsRead,
@@ -44,8 +45,11 @@ const NotificationContext = createContext<NotificationContextValue>({
 });
 
 export function NotificationProvider({ children }: Readonly<PropsWithChildren>) {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user } = useAuth();
     const router = useRouter();
+
+    const receivesNotifications =
+        isLoggedIn && Boolean(user?.role && NOTIFIABLE_ROLES.includes(user.role));
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [lastEventAt, setLastEventAt] = useState(0);
@@ -67,16 +71,16 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
     }, [applyUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             applyUnreadCount(0);
             return;
         }
 
         void refreshUnreadCount();
-    }, [applyUnreadCount, isLoggedIn, refreshUnreadCount]);
+    }, [applyUnreadCount, receivesNotifications, refreshUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
@@ -96,10 +100,10 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
         }
 
         void registerDevice();
-    }, [isLoggedIn]);
+    }, [receivesNotifications]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
@@ -118,10 +122,10 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
             socketHandleRef.current = null;
             handle.disconnect();
         };
-    }, [applyUnreadCount, isLoggedIn, refreshUnreadCount]);
+    }, [applyUnreadCount, receivesNotifications, refreshUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
@@ -138,10 +142,10 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
         const subscription = AppState.addEventListener("change", handleAppStateChange);
 
         return () => subscription.remove();
-    }, [isLoggedIn, refreshUnreadCount]);
+    }, [receivesNotifications, refreshUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
@@ -160,7 +164,7 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
             receivedSubscription.remove();
             openedSubscription.remove();
         };
-    }, [isLoggedIn, refreshUnreadCount, router]);
+    }, [receivesNotifications, refreshUnreadCount, router]);
 
     const markAsRead = useCallback(
         async (id: string) => {

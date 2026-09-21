@@ -38,6 +38,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
+  refreshSession: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -48,6 +49,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   loginWithGoogle: async () => {},
   loginWithApple: async () => {},
+  refreshSession: async () => {},
   logout: async () => {},
 });
 
@@ -204,6 +206,14 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
     startSession(accessToken, refreshToken);
   }, [startSession]);
 
+  const refreshSession = useCallback(async () => {
+    const { refresh } = await getStoredTokens();
+
+    if (!refresh) return;
+
+    await performRefresh(refresh);
+  }, [performRefresh]);
+
   const logout = useCallback(async () => {
     await endSession();
     router.replace(SIGN_IN_ROUTE);
@@ -217,6 +227,7 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
       login,
       loginWithGoogle,
       loginWithApple,
+      refreshSession,
       logout,
     }),
     [
@@ -226,6 +237,7 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
       login,
       loginWithGoogle,
       loginWithApple,
+      refreshSession,
       logout,
     ],
   );
