@@ -9,11 +9,16 @@ import { PRIVACY_POLICY_URL } from "@/lib/externalLinks";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 
 interface ProfileMenuProps {
+    canChangePassword: boolean;
     onRequestDeleteAccount: () => void;
     onRequestDataDeletion: () => void;
 }
 
-export function ProfileMenu({ onRequestDeleteAccount, onRequestDataDeletion }: Readonly<ProfileMenuProps>) {
+export function ProfileMenu({
+    canChangePassword,
+    onRequestDeleteAccount,
+    onRequestDataDeletion,
+}: Readonly<ProfileMenuProps>) {
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
     const insets = useSafeAreaInsets();
@@ -67,15 +72,17 @@ export function ProfileMenu({ onRequestDeleteAccount, onRequestDataDeletion }: R
                             <Text style={styles.menuLabel}>Política de privacidade</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.menuItem}
-                            onPress={goToChangePassword}
-                            accessibilityRole="button"
-                            accessibilityLabel="Alterar senha"
-                        >
-                            <KeyRound size={18} color={Colors.text} />
-                            <Text style={styles.menuLabel}>Alterar senha</Text>
-                        </TouchableOpacity>
+                        {canChangePassword ? (
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={goToChangePassword}
+                                accessibilityRole="button"
+                                accessibilityLabel="Alterar senha"
+                            >
+                                <KeyRound size={18} color={Colors.text} />
+                                <Text style={styles.menuLabel}>Alterar senha</Text>
+                            </TouchableOpacity>
+                        ) : null}
 
                         <TouchableOpacity
                             style={styles.menuItem}
