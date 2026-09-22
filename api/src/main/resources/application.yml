@@ -55,9 +55,6 @@ gemini:
       "[gemini-3.1-flash-lite]":
         input-per-million-tokens: 0.10
         output-per-million-tokens: 0.40
-      "[gemini-3.5-flash]":
-        input-per-million-tokens: 1.50
-        output-per-million-tokens: 9.00
 
 google:
   oauth:
