@@ -13,7 +13,7 @@ import {
 import { clearTokens, getStoredTokens, persistTokens } from "@/lib/authStorage";
 import { BASE_URL } from "@/lib/env";
 import { rawFetch } from "@/lib/apiFetch";
-import { signInWithGoogle } from "@/data/services/googleAuth.service";
+import { signInWithGoogle, signOutFromGoogle } from "@/data/services/googleAuth.service";
 import { signInWithApple } from "@/data/services/appleAuth.service";
 import { AuthTokens } from "@/data/models/auth.model";
 import { IUser, UserRole, normalizeUserRole } from "../models/user.model";
@@ -215,6 +215,7 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
   }, [performRefresh]);
 
   const logout = useCallback(async () => {
+    await signOutFromGoogle();
     await endSession();
     router.replace(SIGN_IN_ROUTE);
   }, [endSession, router]);

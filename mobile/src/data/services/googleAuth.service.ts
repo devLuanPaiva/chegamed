@@ -76,6 +76,15 @@ async function obtainGoogleIdToken(): Promise<string> {
     return response.data.idToken;
 }
 
+export async function signOutFromGoogle(): Promise<void> {
+    try {
+        ensureGoogleSignInConfigured();
+        await GoogleSignin.signOut();
+    } catch (error) {
+        console.warn("Google sign-out failed", error);
+    }
+}
+
 export async function signInWithGoogle(): Promise<AuthTokens> {
     const idToken = await obtainGoogleIdToken();
 
