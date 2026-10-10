@@ -2,13 +2,13 @@ import { useState } from "react";
 
 import { IVisitorRegistrationRequest } from "@/data/models/visitor.model";
 import { createVisitorRegistrationRequest } from "@/data/services/visitor.service";
+import { DEFAULT_VISITOR_COMPANY_ID } from "@/features/visitor/constants";
 import { validateRegistration } from "@/features/visitor/utils/validateRegistration";
 import { ApiRequestError } from "@/lib/apiFetch";
 import { onlyDigits } from "@/lib/cpf";
 import { brToIso } from "@/lib/dateFormat";
 
 export interface VisitorRegistrationFormValues {
-    companyId: string;
     name: string;
     cpf: string;
     birthDate: string;
@@ -17,7 +17,6 @@ export interface VisitorRegistrationFormValues {
 }
 
 const EMPTY_VALUES: VisitorRegistrationFormValues = {
-    companyId: "",
     name: "",
     cpf: "",
     birthDate: "",
@@ -64,7 +63,7 @@ export function useVisitorRegistrationForm({
             setIsSubmitting(true);
 
             const request = await createVisitorRegistrationRequest({
-                companyId: values.companyId,
+                companyId: DEFAULT_VISITOR_COMPANY_ID,
                 name: values.name.trim(),
                 cpf: onlyDigits(values.cpf),
                 birthDate: brToIso(values.birthDate),

@@ -10,10 +10,6 @@ export interface RegistrationFieldError {
 export function validateRegistration(
     values: VisitorRegistrationFormValues,
 ): RegistrationFieldError | null {
-    if (!values.companyId) {
-        return { field: "companyId", message: "Escolha a farmácia que acompanha seu tratamento." };
-    }
-
     if (!values.name.trim()) {
         return { field: "name", message: "Informe seu nome completo." };
     }

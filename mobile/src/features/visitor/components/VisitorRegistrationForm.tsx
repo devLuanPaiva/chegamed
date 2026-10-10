@@ -3,10 +3,8 @@ import { AlertCircle } from "lucide-react-native";
 
 import { BirthDateField } from "@/features/patients/components/BirthDateField";
 import { VisitorRegistrationFormValues } from "@/features/visitor/hooks/useVisitorRegistrationForm";
-import { IVisitorCompany } from "@/data/models/visitor.model";
 import { formatCpf } from "@/lib/cpf";
 import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
-import { CompanySelector } from "./CompanySelector";
 
 interface VisitorRegistrationFormProps {
     values: VisitorRegistrationFormValues;
@@ -14,9 +12,6 @@ interface VisitorRegistrationFormProps {
         field: K,
         value: VisitorRegistrationFormValues[K],
     ) => void;
-    companies: IVisitorCompany[];
-    isLoadingCompanies: boolean;
-    companiesError: string | null;
     formError: string | null;
     formErrorField?: string;
     isSubmitting: boolean;
@@ -26,9 +21,6 @@ interface VisitorRegistrationFormProps {
 export function VisitorRegistrationForm({
     values,
     onChangeField,
-    companies,
-    isLoadingCompanies,
-    companiesError,
     formError,
     formErrorField,
     isSubmitting,
@@ -42,15 +34,6 @@ export function VisitorRegistrationForm({
                     <Text style={styles.errorText}>{formError}</Text>
                 </View>
             ) : null}
-
-            <CompanySelector
-                companies={companies}
-                selectedCompanyId={values.companyId}
-                isLoading={isLoadingCompanies}
-                error={companiesError}
-                hasError={formErrorField === "companyId"}
-                onSelect={(companyId) => onChangeField("companyId", companyId)}
-            />
 
             <View style={styles.field}>
                 <Text style={styles.label}>Nome completo</Text>
@@ -129,7 +112,7 @@ export function VisitorRegistrationForm({
             </TouchableOpacity>
 
             <Text style={styles.disclaimer}>
-                Seus dados são enviados para a farmácia escolhida e o acesso de paciente é liberado depois
+                Seus dados são enviados para a farmácia e o acesso de paciente é liberado depois
                 que a equipe aprovar o cadastro. Você continua entrando com a mesma conta Google ou Apple.
             </Text>
         </View>

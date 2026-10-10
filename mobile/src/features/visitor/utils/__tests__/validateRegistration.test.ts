@@ -2,7 +2,6 @@ import { VisitorRegistrationFormValues } from "@/features/visitor/hooks/useVisit
 import { validateRegistration } from "@/features/visitor/utils/validateRegistration";
 
 const VALID_VALUES: VisitorRegistrationFormValues = {
-    companyId: "company-1",
     name: "Luan Alves",
     cpf: "123.456.789-01",
     birthDate: "20/05/1990",
@@ -17,13 +16,6 @@ function withValues(overrides: Partial<VisitorRegistrationFormValues>): VisitorR
 describe("validateRegistration", () => {
     it("accepts a complete form", () => {
         expect(validateRegistration(VALID_VALUES)).toBeNull();
-    });
-
-    it("requires a company", () => {
-        expect(validateRegistration(withValues({ companyId: "" }))).toEqual({
-            field: "companyId",
-            message: "Escolha a farmácia que acompanha seu tratamento.",
-        });
     });
 
     it("requires a name that is not only whitespace", () => {

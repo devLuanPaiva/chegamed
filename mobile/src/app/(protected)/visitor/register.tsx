@@ -6,14 +6,12 @@ import { useRouter } from "expo-router";
 import { BackButton } from "@/components/shared/BackButton";
 import { useAuth } from "@/data/contexts/AuthContext";
 import { VisitorRegistrationForm } from "@/features/visitor/components/VisitorRegistrationForm";
-import { useVisitorCompanies } from "@/features/visitor/hooks/useVisitorCompanies";
 import { useVisitorRegistrationForm } from "@/features/visitor/hooks/useVisitorRegistrationForm";
 import { Colors, Spacing, Typography } from "@/theme";
 
 export default function VisitorRegister() {
     const router = useRouter();
     const { user } = useAuth();
-    const { companies, isLoading: isLoadingCompanies, error: companiesError } = useVisitorCompanies();
 
     const { values, setField, isSubmitting, formError, formErrorField, submit } = useVisitorRegistrationForm({
         initialName: user?.name,
@@ -45,16 +43,12 @@ export default function VisitorRegister() {
                     showsVerticalScrollIndicator={false}
                 >
                     <Text style={styles.intro}>
-                        Escolha a farmácia que acompanha seu tratamento e confirme seus dados para solicitar
-                        seu cadastro como paciente.
+                        Confirme seus dados para solicitar seu cadastro como paciente.
                     </Text>
 
                     <VisitorRegistrationForm
                         values={values}
                         onChangeField={setField}
-                        companies={companies}
-                        isLoadingCompanies={isLoadingCompanies}
-                        companiesError={companiesError}
                         formError={formError}
                         formErrorField={formErrorField}
                         isSubmitting={isSubmitting}
