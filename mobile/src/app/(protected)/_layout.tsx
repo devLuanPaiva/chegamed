@@ -64,6 +64,7 @@ export default function ProtectedLayout() {
                 <Tabs.Screen name="history" options={{ href: null }} />
                 <Tabs.Screen name="assistant" options={{ href: null }} />
                 <Tabs.Screen name="change-password" options={{ href: null }} />
+                <Tabs.Screen name="visitor" options={{ href: null }} />
             </Tabs>
         </PrescriptionScanProvider>
     );

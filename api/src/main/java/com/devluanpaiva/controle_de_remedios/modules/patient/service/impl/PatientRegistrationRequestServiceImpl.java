@@ -1,6 +1,8 @@
 package com.devluanpaiva.controle_de_remedios.modules.patient.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,9 +19,11 @@ import com.devluanpaiva.controle_de_remedios.modules.company.entity.Company;
 import com.devluanpaiva.controle_de_remedios.modules.company.repository.CompanyRepository;
 import com.devluanpaiva.controle_de_remedios.modules.notification.service.EmailService;
 import com.devluanpaiva.controle_de_remedios.modules.patient.dto.CreatePatientRegistrationRequestDTO;
+import com.devluanpaiva.controle_de_remedios.modules.patient.dto.CreateVisitorRegistrationRequestDTO;
 import com.devluanpaiva.controle_de_remedios.modules.patient.dto.PatientRegistrationRequestResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.patient.dto.PatientResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.patient.dto.PublicCompanySummaryDTO;
+import com.devluanpaiva.controle_de_remedios.modules.patient.dto.VisitorRegistrationRequestResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.PatientRegistrationRequest;
 import com.devluanpaiva.controle_de_remedios.modules.patient.enums.PatientRegistrationRequestStatus;
@@ -70,24 +74,8 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
     public void createRegistrationRequest(String slug, CreatePatientRegistrationRequestDTO dto) {
         Company company = findActiveCompanyBySlugOrThrow(slug);
 
-        if (!BusinessHoursValidator.isWithinBusinessHours()) {
-            throw new BusinessException(
-                    HttpStatus.UNPROCESSABLE_CONTENT,
-                    "Fora do horário de atendimento",
-                    "OUTSIDE_BUSINESS_HOURS",
-                    "createdAt",
-                    "O cadastro só pode ser enviado de segunda a sexta, das 8h às 17h.");
-        }
-
-        if (patientRegistrationRequestRepository.existsByCompanyIdAndCpfAndStatus(
-                company.getId(), dto.cpf(), PatientRegistrationRequestStatus.PENDING)) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "Solicitação já enviada",
-                    "REGISTRATION_REQUEST_ALREADY_PENDING",
-                    "cpf",
-                    "Já existe uma solicitação de cadastro pendente para este CPF nesta empresa.");
-        }
+        assertWithinBusinessHours();
+        assertNoPendingRequestForCpf(company.getId(), dto.cpf());
 
         if (userRepository.existsByEmail(dto.email())) {
             throw emailAlreadyExists(dto.email());
@@ -105,6 +93,66 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
                 .build();
 
         patientRegistrationRequestRepository.save(request);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PublicCompanySummaryDTO> getCompaniesOpenForRegistration() {
+        requireVisitor(securityContextHelper.getCurrentUser());
+
+        return companyRepository.findAllByActiveTrueOrderByNameAsc().stream()
+                .map(company -> new PublicCompanySummaryDTO(company.getId(), company.getName(), company.getImageUrl()))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public VisitorRegistrationRequestResponseDTO createVisitorRegistrationRequest(
+            CreateVisitorRegistrationRequestDTO dto) {
+
+        User visitor = securityContextHelper.getCurrentUser();
+        requireVisitor(visitor);
+
+        Company company = findActiveCompanyByIdOrThrow(dto.companyId());
+
+        assertWithinBusinessHours();
+
+        if (patientRegistrationRequestRepository.existsByRequestedBy_IdAndStatus(
+                visitor.getId(), PatientRegistrationRequestStatus.PENDING)) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "Solicitação já enviada",
+                    "REGISTRATION_REQUEST_ALREADY_PENDING",
+                    "companyId",
+                    "Você já possui uma solicitação de cadastro aguardando aprovação.");
+        }
+
+        assertNoPendingRequestForCpf(company.getId(), dto.cpf());
+        assertCpfIsAvailableFor(visitor, dto.cpf());
+
+        PatientRegistrationRequest request = PatientRegistrationRequest.builder()
+                .company(company)
+                .requestedBy(visitor)
+                .name(dto.name())
+                .cpf(dto.cpf())
+                .birthDate(dto.birthDate())
+                .contact(dto.contact())
+                .address(dto.address())
+                .email(visitor.getEmail())
+                .build();
+
+        return patientRegistrationRequestMapper.toVisitorResponseDTO(
+                patientRegistrationRequestRepository.save(request));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<VisitorRegistrationRequestResponseDTO> getLatestVisitorRegistrationRequest() {
+        User visitor = securityContextHelper.getCurrentUser();
+
+        return patientRegistrationRequestRepository
+                .findFirstByRequestedBy_IdOrderByCreatedAtDesc(visitor.getId())
+                .map(patientRegistrationRequestMapper::toVisitorResponseDTO);
     }
 
     @Override
@@ -192,19 +240,30 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
     }
 
     private User buildApprovedUser(String name, String cpf, PatientRegistrationRequest request, Company company) {
+        if (request.getRequestedBy() != null) {
+            return promoteVisitor(request.getRequestedBy(), name, cpf, company);
+        }
+
         return userRepository.findByCpf(cpf)
                 .map(existingUser -> reactivateUser(existingUser, name, request, company))
                 .orElseGet(() -> createNewUser(name, cpf, request, company));
     }
 
+    private User promoteVisitor(User visitor, String name, String cpf, Company company) {
+        assertCpfIsAvailableFor(visitor, cpf);
+
+        visitor.setName(name);
+        visitor.setCpf(cpf);
+        visitor.setRole(UserRole.PATIENT);
+        visitor.setActive(true);
+        visitor.assignToCompany(company);
+
+        return visitor;
+    }
+
     private User reactivateUser(User user, String name, PatientRegistrationRequest request, Company company) {
         if (user.getRole() != UserRole.PATIENT || patientRepository.existsByUser_Id(user.getId())) {
-            throw new BusinessException(
-                    HttpStatus.CONFLICT,
-                    "CPF já cadastrado",
-                    "CPF_ALREADY_EXISTS",
-                    "cpf",
-                    "Já existe um usuário cadastrado com o CPF '" + user.getCpf() + "'.");
+            throw cpfAlreadyExists(user.getCpf());
         }
 
         userRepository.findByEmail(request.getEmail())
@@ -260,6 +319,50 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
                 .collect(Collectors.toSet());
     }
 
+    private void requireVisitor(User actor) {
+        authorizationPolicy.requireCondition(actor.getRole() == UserRole.VISITOR);
+    }
+
+    private void assertWithinBusinessHours() {
+        if (!BusinessHoursValidator.isWithinBusinessHours()) {
+            throw new BusinessException(
+                    HttpStatus.UNPROCESSABLE_CONTENT,
+                    "Fora do horário de atendimento",
+                    "OUTSIDE_BUSINESS_HOURS",
+                    "createdAt",
+                    "O cadastro só pode ser enviado de segunda a sexta, das 8h às 17h.");
+        }
+    }
+
+    private void assertNoPendingRequestForCpf(UUID companyId, String cpf) {
+        if (patientRegistrationRequestRepository.existsByCompanyIdAndCpfAndStatus(
+                companyId, cpf, PatientRegistrationRequestStatus.PENDING)) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "Solicitação já enviada",
+                    "REGISTRATION_REQUEST_ALREADY_PENDING",
+                    "cpf",
+                    "Já existe uma solicitação de cadastro pendente para este CPF nesta empresa.");
+        }
+    }
+
+    private void assertCpfIsAvailableFor(User user, String cpf) {
+        userRepository.findByCpf(cpf)
+                .filter(owner -> !owner.getId().equals(user.getId()))
+                .ifPresent(owner -> {
+                    throw cpfAlreadyExists(cpf);
+                });
+    }
+
+    private BusinessException cpfAlreadyExists(String cpf) {
+        return new BusinessException(
+                HttpStatus.CONFLICT,
+                "CPF já cadastrado",
+                "CPF_ALREADY_EXISTS",
+                "cpf",
+                "Já existe um usuário cadastrado com o CPF '" + cpf + "'.");
+    }
+
     private BusinessException emailAlreadyExists(String email) {
         return new BusinessException(
                 HttpStatus.CONFLICT,
@@ -278,6 +381,17 @@ public class PatientRegistrationRequestServiceImpl implements PatientRegistratio
                         "COMPANY_NOT_FOUND",
                         "slug",
                         "Não foi possível encontrar uma empresa com o identificador '" + slug + "'."));
+    }
+
+    private Company findActiveCompanyByIdOrThrow(UUID id) {
+        return companyRepository.findById(id)
+                .filter(Company::getActive)
+                .orElseThrow(() -> new BusinessException(
+                        HttpStatus.NOT_FOUND,
+                        "Empresa não encontrada",
+                        "COMPANY_NOT_FOUND",
+                        "companyId",
+                        "Não foi possível encontrar uma empresa com o ID '" + id + "'."));
     }
 
     private PatientRegistrationRequest findPendingRequestOrThrow(UUID id) {

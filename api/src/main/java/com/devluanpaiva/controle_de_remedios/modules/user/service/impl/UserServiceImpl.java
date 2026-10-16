@@ -168,7 +168,7 @@ public class UserServiceImpl implements UserService {
     public void deleteOwnAccount(DeleteAccountRequestDTO dto) {
         User user = securityContextHelper.getCurrentUser();
 
-        if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
+        if (hasPassword(user) && !passwordEncoder.matches(dto.password(), user.getPassword())) {
             throw new BusinessException(
                     HttpStatus.BAD_REQUEST,
                     "Senha incorreta",
@@ -212,6 +212,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void changePassword(ChangePasswordRequestDTO dto) {
         User user = securityContextHelper.getCurrentUser();
+
+        if (!hasPassword(user)) {
+            throw new BusinessException(
+                    HttpStatus.CONFLICT,
+                    "Conta sem senha cadastrada",
+                    "USER_WITHOUT_PASSWORD",
+                    "currentPassword",
+                    "Esta conta acessa o aplicativo apenas com Google ou Apple e não possui senha para alterar.");
+        }
 
         if (!passwordEncoder.matches(dto.currentPassword(), user.getPassword())) {
             throw new BusinessException(
@@ -260,6 +269,10 @@ public class UserServiceImpl implements UserService {
             log.error("Falha ao enviar e-mails da solicitação de exclusão de dados do usuário '{}'", user.getId(),
                     ex);
         }
+    }
+
+    private boolean hasPassword(User user) {
+        return user.getPassword() != null && !user.getPassword().isBlank();
     }
 
     private void assertCanManage(User actor, User target) {

@@ -13,7 +13,7 @@ import {
 import { clearTokens, getStoredTokens, persistTokens } from "@/lib/authStorage";
 import { BASE_URL } from "@/lib/env";
 import { rawFetch } from "@/lib/apiFetch";
-import { signInWithGoogle } from "@/data/services/googleAuth.service";
+import { signInWithGoogle, signOutFromGoogle } from "@/data/services/googleAuth.service";
 import { signInWithApple } from "@/data/services/appleAuth.service";
 import { AuthTokens } from "@/data/models/auth.model";
 import { IUser, UserRole, normalizeUserRole } from "../models/user.model";
@@ -38,6 +38,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
+  refreshSession: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -48,6 +49,7 @@ export const AuthContext = createContext<AuthContextType>({
   login: async () => {},
   loginWithGoogle: async () => {},
   loginWithApple: async () => {},
+  refreshSession: async () => {},
   logout: async () => {},
 });
 
@@ -204,7 +206,16 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
     startSession(accessToken, refreshToken);
   }, [startSession]);
 
+  const refreshSession = useCallback(async () => {
+    const { refresh } = await getStoredTokens();
+
+    if (!refresh) return;
+
+    await performRefresh(refresh);
+  }, [performRefresh]);
+
   const logout = useCallback(async () => {
+    await signOutFromGoogle();
     await endSession();
     router.replace(SIGN_IN_ROUTE);
   }, [endSession, router]);
@@ -217,6 +228,7 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
       login,
       loginWithGoogle,
       loginWithApple,
+      refreshSession,
       logout,
     }),
     [
@@ -226,6 +238,7 @@ export function AuthProvider({ children }: Readonly<PropsWithChildren>) {
       login,
       loginWithGoogle,
       loginWithApple,
+      refreshSession,
       logout,
     ],
   );

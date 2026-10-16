@@ -33,21 +33,35 @@ async function requestAppleSignIn(): Promise<AppleAuthentication.AppleAuthentica
     }
 }
 
-async function obtainAppleIdentityToken(): Promise<string> {
+interface AppleIdentity {
+    identityToken: string;
+    fullName?: string;
+}
+
+function joinFullName(fullName: AppleAuthentication.AppleAuthenticationFullName | null): string | undefined {
+    const parts = [fullName?.givenName, fullName?.familyName].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(" ") : undefined;
+}
+
+async function obtainAppleIdentity(): Promise<AppleIdentity> {
     const credential = await requestAppleSignIn();
 
     if (!credential.identityToken) {
         throw new Error("A Apple não retornou um token de identidade válido.");
     }
 
-    return credential.identityToken;
+    return {
+        identityToken: credential.identityToken,
+        fullName: joinFullName(credential.fullName),
+    };
 }
 
 export async function signInWithApple(): Promise<AuthTokens> {
-    const identityToken = await obtainAppleIdentityToken();
+    const identity = await obtainAppleIdentity();
 
     return rawFetch<AuthTokens>("/auth/apple", {
         method: "POST",
-        body: JSON.stringify({ identityToken }),
+        body: JSON.stringify(identity),
     });
 }

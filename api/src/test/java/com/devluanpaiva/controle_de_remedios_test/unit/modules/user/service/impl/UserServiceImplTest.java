@@ -950,6 +950,27 @@ class UserServiceImplTest {
 
             verify(userRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("should throw 409 when the account has no password because it signs in with Google or Apple")
+        void shouldThrowWhenAccountHasNoPassword() {
+            User self = buildUser(UserRole.VISITOR);
+            self.setPassword(null);
+            ChangePasswordRequestDTO dto = new ChangePasswordRequestDTO("current-password", "new-password",
+                    "new-password");
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+
+            assertThatThrownBy(() -> userService.changePassword(dto))
+                    .isInstanceOf(BusinessException.class)
+                    .satisfies(ex -> {
+                        BusinessException businessException = (BusinessException) ex;
+                        assertThat(businessException.getStatus()).isEqualTo(HttpStatus.CONFLICT);
+                        assertThat(businessException.getCode()).isEqualTo("USER_WITHOUT_PASSWORD");
+                    });
+
+            verify(userRepository, never()).save(any());
+        }
     }
 
     @Nested
@@ -988,6 +1009,21 @@ class UserServiceImplTest {
                     });
 
             verify(userRepository, never()).delete(any(User.class));
+        }
+
+        @Test
+        @DisplayName("should delete an account without a password without asking for one")
+        void shouldDeleteAccountWithoutPassword() {
+            User self = buildUser(UserRole.VISITOR);
+            self.setPassword(null);
+            DeleteAccountRequestDTO dto = new DeleteAccountRequestDTO(null);
+
+            when(securityContextHelper.getCurrentUser()).thenReturn(self);
+
+            userService.deleteOwnAccount(dto);
+
+            verify(passwordEncoder, never()).matches(anyString(), anyString());
+            verify(userRepository).delete(self);
         }
     }
 

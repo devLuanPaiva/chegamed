@@ -2,14 +2,14 @@
   "expo": {
     "name": "ChegaMed",
     "slug": "chegamed",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "chegamed",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon-ios.png",
-      "bundleIdentifier": "com.devluan.chegamed",
+      "bundleIdentifier": "com.devluanpaiva.chegamed",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
@@ -28,7 +28,7 @@
         "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS"
       ],
-      "package": "com.devluan.chegamed",
+      "package": "com.devluanpaiva.chegamed",
       "allowBackup": false
     },
     "web": {

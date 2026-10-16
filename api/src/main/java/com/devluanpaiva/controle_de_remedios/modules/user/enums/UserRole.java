@@ -12,7 +12,9 @@ public enum UserRole {
 
 	PATIENT,
 
-	DELIVERER;
+	DELIVERER,
+
+	VISITOR;
 
 	public Set<UserRole> manageableRoles() {
 		return switch (this) {
@@ -21,6 +23,7 @@ public enum UserRole {
 			case ASSISTANT -> Set.of();
 			case PATIENT -> Set.of();
 			case DELIVERER -> Set.of();
+			case VISITOR -> Set.of();
 		};
 	}
 

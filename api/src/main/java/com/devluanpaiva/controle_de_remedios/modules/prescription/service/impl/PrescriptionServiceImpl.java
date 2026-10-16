@@ -199,7 +199,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             case ADMIN -> Specification.unrestricted();
             case MANAGER, ASSISTANT -> PrescriptionSpecification.associatedWithManager(actor.getId());
             case PATIENT -> PrescriptionSpecification.associatedWithPatientUser(actor.getId());
-            case DELIVERER -> throw authorizationPolicy.forbidden();
+            case DELIVERER, VISITOR -> throw authorizationPolicy.forbidden();
         };
     }
 
