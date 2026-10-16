@@ -103,8 +103,9 @@ class MedicineResolutionServiceTest {
         }
 
         @Test
-        @DisplayName("should not reuse a similarly named medicine that already has a different eanCode")
-        void shouldNotReuseSimilarMedicineThatAlreadyHasADifferentEanCode() {
+        @DisplayName("should reuse a similarly named medicine that already has a different eanCode instead of "
+                + "creating a duplicate")
+        void shouldReuseSimilarMedicineThatAlreadyHasADifferentEanCodeInsteadOfDuplicating() {
             Company company = buildCompany();
             Medicine similarWithOtherEanCode = buildMedicine(company, "Dipirona", "1112223334445");
 
@@ -112,14 +113,13 @@ class MedicineResolutionServiceTest {
                     .thenReturn(Optional.empty());
             when(medicineRepository.findByCompany_IdAndNameContainingIgnoreCase(eq(company.getId()), any()))
                     .thenReturn(List.of(similarWithOtherEanCode));
-            when(medicineRepository.save(any(Medicine.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             Medicine result = medicineResolutionService.resolveOrCreate(
                     company, "Dipirona", "7891234567895", "https://example.com/dipirona.png");
 
-            assertThat(result).isNotEqualTo(similarWithOtherEanCode);
-            assertThat(result.getEanCode()).isEqualTo("7891234567895");
-            assertThat(similarWithOtherEanCode.getEanCode()).isEqualTo("1112223334445");
+            assertThat(result).isEqualTo(similarWithOtherEanCode);
+            assertThat(result.getEanCode()).isEqualTo("1112223334445");
+            verify(medicineRepository, never()).save(any());
         }
 
         @Test
@@ -136,7 +136,7 @@ class MedicineResolutionServiceTest {
             Medicine result = medicineResolutionService.resolveOrCreate(
                     company, "Dipirona", "7891234567895", "https://example.com/dipirona.png");
 
-            assertThat(result.getName()).isEqualTo("Dipirona");
+            assertThat(result.getName()).isEqualTo("DIPIRONA");
             assertThat(result.getEanCode()).isEqualTo("7891234567895");
             assertThat(result.getCompany()).isEqualTo(company);
         }
@@ -176,7 +176,7 @@ class MedicineResolutionServiceTest {
             Medicine result = medicineResolutionService.resolveOrCreate(
                     company, "Dipirona", null, "https://example.com/dipirona.png");
 
-            assertThat(result.getName()).isEqualTo("Dipirona");
+            assertThat(result.getName()).isEqualTo("DIPIRONA");
             assertThat(result.getEanCode()).isNull();
         }
 
@@ -232,7 +232,7 @@ class MedicineResolutionServiceTest {
 
             Medicine result = medicineResolutionService.resolveOrCreate(company, "Dipirona", null, null, false);
 
-            assertThat(result.getName()).isEqualTo("Dipirona");
+            assertThat(result.getName()).isEqualTo("DIPIRONA");
             assertThat(result.getImageUrl()).isNull();
         }
 
@@ -252,7 +252,7 @@ class MedicineResolutionServiceTest {
             verify(medicineRepository).save(captor.capture());
 
             Medicine saved = captor.getValue();
-            assertThat(saved.getName()).isEqualTo("Dipirona");
+            assertThat(saved.getName()).isEqualTo("DIPIRONA");
             assertThat(saved.getEanCode()).isNull();
             assertThat(saved.getImageUrl()).isEqualTo("https://example.com/dipirona.png");
             assertThat(saved.getCompany()).isEqualTo(company);
@@ -326,7 +326,7 @@ class MedicineResolutionServiceTest {
                     company, "Acetato de Dexametasona", null, "https://example.com/medicine.png");
 
             assertThat(result).isNotEqualTo(existing);
-            assertThat(result.getName()).isEqualTo("Acetato de Dexametasona");
+            assertThat(result.getName()).isEqualTo("ACETATO DE DEXAMETASONA");
         }
     }
 }

@@ -56,4 +56,13 @@ public interface PrescriptionItemRepository
             @Param("from") LocalDate from,
             @Param("to") LocalDate to,
             @Param("statuses") List<PrescriptionStatus> statuses);
+
+    @Query("select i from PrescriptionItem i "
+            + "join fetch i.medicine "
+            + "join fetch i.prescription pr "
+            + "join fetch pr.patient pat "
+            + "left join fetch i.delivery "
+            + "where pat.company.id = :companyId "
+            + "order by pat.name asc, i.createdAt asc")
+    List<PrescriptionItem> findAllByCompanyForReport(@Param("companyId") UUID companyId);
 }

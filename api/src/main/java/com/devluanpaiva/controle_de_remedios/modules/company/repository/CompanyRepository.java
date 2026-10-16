@@ -1,5 +1,6 @@
 package com.devluanpaiva.controle_de_remedios.modules.company.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +19,6 @@ public interface CompanyRepository extends JpaRepository<Company, UUID>, JpaSpec
     boolean existsByIdAndUsers_Id(UUID id, UUID userId);
 
     Optional<Company> findBySlug(String slug);
+
+    List<Company> findAllByActiveTrueOrderByNameAsc();
 }

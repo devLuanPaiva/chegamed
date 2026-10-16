@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useAuth } from "@/data/contexts/AuthContext";
 import { useCompanies } from "@/data/contexts/CompanyContext";
+import { isVisitorRole } from "@/data/models/user.model";
 import { CompanySection } from "@/features/profile/components/CompanySection";
 import { DeleteAccountDialog } from "@/features/profile/components/DeleteAccountDialog";
 import { ProfileMenu } from "@/features/profile/components/ProfileMenu";
@@ -20,6 +21,7 @@ export default function Profile() {
     const [isLogoutDialogVisible, setIsLogoutDialogVisible] = useState(false);
     const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
     const [isDataDeletionDialogVisible, setIsDataDeletionDialogVisible] = useState(false);
+    const isVisitor = isVisitorRole(user?.role);
 
     function openLogoutDialog() {
         setIsLogoutDialogVisible(true);
@@ -73,6 +75,7 @@ export default function Profile() {
                 <View style={styles.header}>
                     <Text style={styles.screenTitle}>Perfil</Text>
                     <ProfileMenu
+                        canChangePassword={!isVisitor}
                         onRequestDeleteAccount={openDeleteDialog}
                         onRequestDataDeletion={openDataDeletionDialog}
                     />
@@ -85,13 +88,15 @@ export default function Profile() {
                     role={user?.role}
                 />
 
-                <CompanySection
-                    companies={companies}
-                    selectedCompanyId={selectedCompany?.id ?? null}
-                    isLoading={isLoading}
-                    error={error}
-                    onSelectCompany={selectCompany}
-                />
+                {isVisitor ? null : (
+                    <CompanySection
+                        companies={companies}
+                        selectedCompanyId={selectedCompany?.id ?? null}
+                        isLoading={isLoading}
+                        error={error}
+                        onSelectCompany={selectCompany}
+                    />
+                )}
 
                 <TouchableOpacity
                     style={styles.logoutButton}
@@ -118,6 +123,7 @@ export default function Profile() {
 
             <DeleteAccountDialog
                 visible={isDeleteDialogVisible}
+                requiresPassword={!isVisitor}
                 onCancel={closeDeleteDialog}
                 onDeleted={handleAccountDeleted}
             />

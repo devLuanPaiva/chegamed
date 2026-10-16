@@ -3,6 +3,7 @@ package com.devluanpaiva.controle_de_remedios.modules.patient.mapper;
 import org.springframework.stereotype.Component;
 
 import com.devluanpaiva.controle_de_remedios.modules.patient.dto.PatientRegistrationRequestResponseDTO;
+import com.devluanpaiva.controle_de_remedios.modules.patient.dto.VisitorRegistrationRequestResponseDTO;
 import com.devluanpaiva.controle_de_remedios.modules.patient.entity.PatientRegistrationRequest;
 import com.devluanpaiva.controle_de_remedios.shared.utils.CpfMasker;
 
@@ -17,6 +18,17 @@ public class PatientRegistrationRequestMapper {
                 request.getContact(),
                 request.getAddress(),
                 request.getEmail(),
+                request.getStatus(),
+                request.getCreatedAt());
+    }
+
+    public VisitorRegistrationRequestResponseDTO toVisitorResponseDTO(PatientRegistrationRequest request) {
+        return new VisitorRegistrationRequestResponseDTO(
+                request.getId(),
+                request.getCompany().getId(),
+                request.getCompany().getName(),
+                request.getName(),
+                CpfMasker.mask(request.getCpf()),
                 request.getStatus(),
                 request.getCreatedAt());
     }

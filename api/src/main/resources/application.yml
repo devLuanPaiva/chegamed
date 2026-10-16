@@ -55,9 +55,6 @@ gemini:
       "[gemini-3.1-flash-lite]":
         input-per-million-tokens: 0.10
         output-per-million-tokens: 0.40
-      "[gemini-3.5-flash]":
-        input-per-million-tokens: 1.50
-        output-per-million-tokens: 9.00
 
 google:
   oauth:
@@ -69,7 +66,7 @@ google:
 
 apple:
   oauth:
-    bundle-id: ${APPLE_BUNDLE_ID:com.devluan.chegamed}
+    bundle-id: ${APPLE_BUNDLE_ID:com.devluanpaiva.chegamed}
 
 resend:
   api-key: ${RESEND_API_KEY:}
@@ -84,7 +81,7 @@ app:
   branding:
     logo-url: ${APP_LOGO_URL:https://cdn.chegamed.com.br/branding/logo.png}
   support:
-    email: ${SUPPORT_EMAIL:suporte@chegamed.com.br}
+    email: ${SUPPORT_EMAIL:contato@devluanpaiva.com.br}
   frontend:
     web-url: ${APP_WEB_URL:https://chegamed.com.br}
     desktop-reset-password-url: ${DESKTOP_RESET_PASSWORD_URL:chegamed-desktop://reset-password}

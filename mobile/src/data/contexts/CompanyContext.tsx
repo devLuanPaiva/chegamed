@@ -11,6 +11,7 @@ import {
 
 import { COMPANY_STORAGE_KEYS } from "@/lib/storageKeys";
 import { getCompanies } from "@/data/services/company.service";
+import { isVisitorRole } from "@/data/models/user.model";
 import { ICompany } from "../models/company.model";
 import { useAuth } from "./AuthContext";
 
@@ -47,7 +48,7 @@ function resolveSelectedCompanyId(
 }
 
 export function CompanyProvider({ children }: Readonly<PropsWithChildren>) {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user } = useAuth();
     const [companies, setCompanies] = useState<ICompany[]>([]);
     const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -77,12 +78,12 @@ export function CompanyProvider({ children }: Readonly<PropsWithChildren>) {
     }, []);
 
     useEffect(() => {
-        if (isLoggedIn) {
+        if (isLoggedIn && !isVisitorRole(user?.role)) {
             loadCompanies();
         } else {
             resetCompanies();
         }
-    }, [isLoggedIn, loadCompanies, resetCompanies]);
+    }, [isLoggedIn, user?.role, loadCompanies, resetCompanies]);
 
     const selectCompany = useCallback(async (companyId: string) => {
         setSelectedCompanyId(companyId);

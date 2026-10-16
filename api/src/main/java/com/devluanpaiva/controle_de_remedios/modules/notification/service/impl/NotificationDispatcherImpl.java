@@ -39,6 +39,9 @@ public class NotificationDispatcherImpl implements NotificationDispatcher {
     public void dispatch(Notification notification) {
         UUID recipientId = notification.getRecipient().getId();
 
+        log.info("Despachando notificação id={} type={} para recipientId={}",
+                notification.getId(), notification.getType(), recipientId);
+
         publishRealtime(recipientId, notification);
         publishPush(recipientId, notification);
     }
@@ -63,8 +66,12 @@ public class NotificationDispatcherImpl implements NotificationDispatcher {
                 .toList();
 
         if (deviceTokens.isEmpty()) {
+            log.info("Nenhum device token de push registrado para recipientId={}; push não enviado", recipientId);
             return;
         }
+
+        log.info("Enviando push notification para recipientId={} ({} device token(s))",
+                recipientId, deviceTokens.size());
 
         expoPushClient.send(deviceTokens, notification.getTitle(), notification.getBody(), buildPushData(notification));
     }

@@ -42,13 +42,13 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true, length = 180)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = true, length = 255, name = "image_url")
     private String imageUrl;
 
-    @Column(nullable = false, unique = true, length = 11)
+    @Column(nullable = true, unique = true, length = 11)
     private String cpf;
 
     @Enumerated(EnumType.STRING)
@@ -57,7 +57,8 @@ public class User implements UserDetails {
     private UserRole role;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
-    private Boolean active;
+    @Builder.Default
+    private Boolean active = true;
 
     @ManyToMany
     @JoinTable(name = "user_companies", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "company_id"))

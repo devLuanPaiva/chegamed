@@ -1,7 +1,7 @@
-import { Check, LayoutDashboard, Monitor, Play, Smartphone } from "lucide-react";
+import { Apple, Check, LayoutDashboard, Monitor, Play, Smartphone } from "lucide-react";
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/ui/Reveal";
-import { PLAY_STORE_URL } from "@/lib/site-config";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site-config";
 
 interface BulletProps {
   children: ReactNode;
@@ -57,11 +57,12 @@ export function Availability() {
                 </Bullet>
               </ul>
 
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition-transform hover:-translate-y-0.5"
               >
                 <Play size={22} fill="currentColor" />
                 <span className="text-left leading-tight">
@@ -73,6 +74,23 @@ export function Availability() {
                   </span>
                 </span>
               </a>
+              <a
+                href={APP_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition-transform hover:-translate-y-0.5"
+              >
+                <Apple size={22} fill="currentColor" />
+                <span className="text-left leading-tight">
+                  <span className="block text-[11px] font-semibold text-neutral-300">
+                    Baixe na
+                  </span>
+                  <span className="block text-base font-bold">
+                    App Store
+                  </span>
+                </span>
+              </a>
+              </div>
             </div>
           </Reveal>
 

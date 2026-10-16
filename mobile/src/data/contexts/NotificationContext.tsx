@@ -5,11 +5,14 @@ import {
     useContext,
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 import { useRouter, type Href } from "expo-router";
 
 import { useAuth } from "@/data/contexts/AuthContext";
+import { NOTIFIABLE_ROLES } from "@/data/models/user.model";
 import {
     getUnreadNotificationCount,
     markAllNotificationsAsRead,
@@ -19,6 +22,7 @@ import {
 import {
     addPushOpenedListener,
     addPushReceivedListener,
+    presentLocalNotification,
     requestDevicePushRegistration,
     setBadgeCount,
 } from "@/data/services/pushNotification.service";
@@ -41,11 +45,15 @@ const NotificationContext = createContext<NotificationContextValue>({
 });
 
 export function NotificationProvider({ children }: Readonly<PropsWithChildren>) {
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user } = useAuth();
     const router = useRouter();
+
+    const receivesNotifications =
+        isLoggedIn && Boolean(user?.role && NOTIFIABLE_ROLES.includes(user.role));
 
     const [unreadCount, setUnreadCount] = useState(0);
     const [lastEventAt, setLastEventAt] = useState(0);
+    const socketHandleRef = useRef<ReturnType<typeof connectNotificationSocket> | null>(null);
 
     const applyUnreadCount = useCallback((count: number) => {
         setUnreadCount(count);
@@ -63,16 +71,16 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
     }, [applyUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             applyUnreadCount(0);
             return;
         }
 
         void refreshUnreadCount();
-    }, [applyUnreadCount, isLoggedIn, refreshUnreadCount]);
+    }, [applyUnreadCount, receivesNotifications, refreshUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
@@ -82,6 +90,9 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
 
                 if (registration) {
                     await registerDeviceToken(registration);
+                    console.log(`[notifications] device token registrado na api (platform=${registration.platform})`);
+                } else {
+                    console.warn("[notifications] nenhum device token obtido; push nativo não será registrado");
                 }
             } catch (error) {
                 console.warn("Push nativo indisponível; as notificações seguem apenas no aplicativo", error);
@@ -89,38 +100,71 @@ export function NotificationProvider({ children }: Readonly<PropsWithChildren>) 
         }
 
         void registerDevice();
-    }, [isLoggedIn]);
+    }, [receivesNotifications]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
             return;
         }
 
-        return connectNotificationSocket({
+        const handle = connectNotificationSocket({
             onNotification: (event) => {
                 applyUnreadCount(event.unreadCount);
                 setLastEventAt(Date.now());
+                void presentLocalNotification(event.notification.title, event.notification.body);
             },
+            onReconnected: () => void refreshUnreadCount(),
         });
-    }, [applyUnreadCount, isLoggedIn]);
+
+        socketHandleRef.current = handle;
+
+        return () => {
+            socketHandleRef.current = null;
+            handle.disconnect();
+        };
+    }, [applyUnreadCount, receivesNotifications, refreshUnreadCount]);
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!receivesNotifications) {
+            return;
+        }
+
+        function handleAppStateChange(nextState: AppStateStatus) {
+            if (nextState !== "active") {
+                return;
+            }
+
+            console.log("[notifications] app voltou ao primeiro plano; forçando reconexão e atualização");
+            socketHandleRef.current?.reconnectNow();
+            void refreshUnreadCount();
+        }
+
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+        return () => subscription.remove();
+    }, [receivesNotifications, refreshUnreadCount]);
+
+    useEffect(() => {
+        if (!receivesNotifications) {
             return;
         }
 
         const receivedSubscription = addPushReceivedListener(() => {
+            console.log("[notifications] push nativo recebido em primeiro plano");
             setLastEventAt(Date.now());
             void refreshUnreadCount();
         });
 
-        const openedSubscription = addPushOpenedListener(() => router.push(NOTIFICATIONS_ROUTE));
+        const openedSubscription = addPushOpenedListener(() => {
+            console.log("[notifications] push nativo aberto pelo usuário");
+            router.push(NOTIFICATIONS_ROUTE);
+        });
 
         return () => {
             receivedSubscription.remove();
             openedSubscription.remove();
         };
-    }, [isLoggedIn, refreshUnreadCount, router]);
+    }, [receivesNotifications, refreshUnreadCount, router]);
 
     const markAsRead = useCallback(
         async (id: string) => {

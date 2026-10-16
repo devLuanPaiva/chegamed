@@ -10,6 +10,7 @@ import com.devluanpaiva.controle_de_remedios.modules.patient.entity.Patient;
 import com.devluanpaiva.controle_de_remedios.modules.user.entity.User;
 import com.devluanpaiva.controle_de_remedios.modules.user.enums.UserRole;
 import com.devluanpaiva.controle_de_remedios.security.AuthorizationPolicy;
+import com.devluanpaiva.controle_de_remedios.shared.exceptions.BusinessException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +51,10 @@ public class DeliveryAuthorizationPolicy {
 
     public void requireRole(User actor, UserRole role) {
         authorizationPolicy.requireCondition(actor.getRole() == role);
+    }
+
+    public BusinessException forbidden() {
+        return authorizationPolicy.forbidden();
     }
 
     public boolean isMemberOf(UUID companyId, User user) {

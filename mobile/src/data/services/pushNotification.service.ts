@@ -52,6 +52,7 @@ export interface DevicePushRegistration {
 
 export async function requestDevicePushRegistration(): Promise<DevicePushRegistration | null> {
     if (!Device.isDevice) {
+        console.warn("[push] registro abortado: executando em emulador/simulador, não em dispositivo físico");
         return null;
     }
 
@@ -62,22 +63,42 @@ export async function requestDevicePushRegistration(): Promise<DevicePushRegistr
         currentStatus === "granted" ? currentStatus : (await Notifications.requestPermissionsAsync()).status;
 
     if (status !== "granted") {
+        console.warn(`[push] registro abortado: permissão de notificação não concedida (status=${status})`);
         return null;
     }
 
     const projectId = resolveProjectId();
 
     if (!projectId) {
+        console.warn("[push] registro abortado: projectId do EAS não encontrado na config do app");
         return null;
     }
 
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
+
+    console.log(`[push] token Expo obtido: ${data}`);
 
     return { token: data, platform: resolveDevicePlatform() };
 }
 
 export async function setBadgeCount(count: number): Promise<void> {
     await Notifications.setBadgeCountAsync(count);
+}
+
+export async function presentLocalNotification(title: string, body: string): Promise<void> {
+    try {
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title,
+                body,
+                sound: true,
+                ...(Platform.OS === "android" && { channelId: ANDROID_CHANNEL_ID }),
+            },
+            trigger: null,
+        });
+    } catch (error) {
+        console.warn("[push] não foi possível exibir a notificação local", error);
+    }
 }
 
 export function addPushReceivedListener(onReceived: () => void): Notifications.EventSubscription {

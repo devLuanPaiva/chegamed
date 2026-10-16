@@ -18,13 +18,27 @@ import { Colors, Radius, Shadows, Spacing, Typography } from "@/theme";
 
 interface DeleteAccountDialogProps {
     visible: boolean;
+    requiresPassword: boolean;
     onCancel: () => void;
     onDeleted: () => void;
 }
 
-export function DeleteAccountDialog({ visible, onCancel, onDeleted }: Readonly<DeleteAccountDialogProps>) {
+const PASSWORD_MESSAGE =
+    "Essa ação é permanente e não pode ser desfeita. Digite sua senha para confirmar a exclusão da sua conta.";
+
+const NO_PASSWORD_MESSAGE =
+    "Essa ação é permanente e não pode ser desfeita. Sua conta acessa o aplicativo com Google ou Apple, " +
+    "então basta confirmar para excluí-la.";
+
+export function DeleteAccountDialog({
+    visible,
+    requiresPassword,
+    onCancel,
+    onDeleted,
+}: Readonly<DeleteAccountDialogProps>) {
     const [securePassword, setSecurePassword] = useState(true);
     const { password, setPassword, isSubmitting, formError, submit, reset } = useDeleteAccount({
+        requiresPassword,
         onSuccess: onDeleted,
     });
 
@@ -40,8 +54,7 @@ export function DeleteAccountDialog({ visible, onCancel, onDeleted }: Readonly<D
                 <Pressable style={styles.card} onPress={(event) => event.stopPropagation()}>
                     <Text style={styles.title}>Excluir conta</Text>
                     <Text style={styles.message}>
-                        Essa ação é permanente e não pode ser desfeita. Digite sua senha para confirmar a
-                        exclusão da sua conta.
+                        {requiresPassword ? PASSWORD_MESSAGE : NO_PASSWORD_MESSAGE}
                     </Text>
 
                     {formError ? (
@@ -51,31 +64,33 @@ export function DeleteAccountDialog({ visible, onCancel, onDeleted }: Readonly<D
                         </View>
                     ) : null}
 
-                    <View style={styles.inputWrapper}>
-                        <Lock size={18} color={Colors.textSecondary} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Digite sua senha"
-                            placeholderTextColor={Colors.textSecondary}
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry={securePassword}
-                            editable={!isSubmitting}
-                            accessibilityLabel="Senha"
-                        />
-                        <TouchableOpacity
-                            onPress={() => setSecurePassword((prev) => !prev)}
-                            hitSlop={10}
-                            accessibilityRole="button"
-                            accessibilityLabel={securePassword ? "Mostrar senha" : "Ocultar senha"}
-                        >
-                            {securePassword ? (
-                                <EyeOff size={18} color={Colors.textSecondary} />
-                            ) : (
-                                <Eye size={18} color={Colors.textSecondary} />
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                    {requiresPassword ? (
+                        <View style={styles.inputWrapper}>
+                            <Lock size={18} color={Colors.textSecondary} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Digite sua senha"
+                                placeholderTextColor={Colors.textSecondary}
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={securePassword}
+                                editable={!isSubmitting}
+                                accessibilityLabel="Senha"
+                            />
+                            <TouchableOpacity
+                                onPress={() => setSecurePassword((prev) => !prev)}
+                                hitSlop={10}
+                                accessibilityRole="button"
+                                accessibilityLabel={securePassword ? "Mostrar senha" : "Ocultar senha"}
+                            >
+                                {securePassword ? (
+                                    <EyeOff size={18} color={Colors.textSecondary} />
+                                ) : (
+                                    <Eye size={18} color={Colors.textSecondary} />
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    ) : null}
 
                     <View style={styles.actions}>
                         <TouchableOpacity

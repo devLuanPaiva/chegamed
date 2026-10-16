@@ -27,6 +27,7 @@ export interface NotificationSocketEvent {
 
 interface NotificationSocketOptions {
     onNotification: (event: NotificationSocketEvent) => void;
+    onReconnected: () => void;
 }
 
 type WebSocketWithHeaders = new (
@@ -65,12 +66,21 @@ function parseEvent(raw: string): NotificationSocketEvent | null {
     }
 }
 
-export function connectNotificationSocket({ onNotification }: Readonly<NotificationSocketOptions>): () => void {
+export interface NotificationSocketHandle {
+    disconnect: () => void;
+    reconnectNow: () => void;
+}
+
+export function connectNotificationSocket({
+    onNotification,
+    onReconnected,
+}: Readonly<NotificationSocketOptions>): NotificationSocketHandle {
     let socket: WebSocket | null = null;
     let pingTimer: ReturnType<typeof setInterval> | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     let isDisposed = false;
+    let connectionId = 0;
 
     function clearTimers() {
         if (pingTimer) {
@@ -103,24 +113,36 @@ export function connectNotificationSocket({ onNotification }: Readonly<Notificat
             return;
         }
 
+        const myConnectionId = ++connectionId;
+
         const accessToken = await getAccessToken();
 
-        if (!accessToken || isDisposed) {
+        if (isDisposed || myConnectionId !== connectionId) {
+            return;
+        }
+
+        if (!accessToken) {
+            console.warn("[notificationSocket] conexão adiada: sem access token disponível");
             scheduleReconnect();
             return;
         }
 
+        console.log(`[notificationSocket] conectando a ${buildSocketUrl()} (tentativa ${reconnectAttempts})`);
         socket = openAuthenticatedSocket(accessToken);
 
         socket.onopen = () => {
+            console.log("[notificationSocket] conexão aberta");
             reconnectAttempts = 0;
             pingTimer = setInterval(() => socket?.send(PING_MESSAGE), PING_INTERVAL_MS);
+            onReconnected();
         };
 
         socket.onmessage = (event) => {
             if (typeof event.data !== "string") {
                 return;
             }
+
+            console.log(`[notificationSocket] mensagem recebida: ${event.data}`);
 
             const parsedEvent = parseEvent(event.data);
 
@@ -129,9 +151,13 @@ export function connectNotificationSocket({ onNotification }: Readonly<Notificat
             }
         };
 
-        socket.onerror = () => socket?.close();
+        socket.onerror = (event) => {
+            console.warn("[notificationSocket] erro na conexão", event);
+            socket?.close();
+        };
 
-        socket.onclose = () => {
+        socket.onclose = (event) => {
+            console.warn(`[notificationSocket] conexão fechada (code=${event.code}, reason=${event.reason})`);
             clearTimers();
             socket = null;
             scheduleReconnect();
@@ -140,10 +166,27 @@ export function connectNotificationSocket({ onNotification }: Readonly<Notificat
 
     void connect();
 
-    return () => {
-        isDisposed = true;
-        clearTimers();
-        socket?.close();
-        socket = null;
+    return {
+        disconnect: () => {
+            isDisposed = true;
+            clearTimers();
+            socket?.close();
+            socket = null;
+        },
+        reconnectNow: () => {
+            if (isDisposed) {
+                return;
+            }
+
+            if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
+                return;
+            }
+
+            clearTimers();
+            socket?.close();
+            socket = null;
+            reconnectAttempts = 0;
+            void connect();
+        },
     };
 }

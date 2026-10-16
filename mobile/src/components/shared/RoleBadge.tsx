@@ -13,6 +13,7 @@ const ROLE_BADGE_COLORS: Record<UserRole, string> = {
     [UserRole.ASSISTANT]: Colors.info,
     [UserRole.PATIENT]: Colors.success,
     [UserRole.DELIVERER]: Colors.primaryLight,
+    [UserRole.VISITOR]: Colors.textSecondary,
 };
 
 export function RoleBadge({ role }: Readonly<RoleBadgeProps>) {

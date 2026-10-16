@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Monitor, Play } from "lucide-react";
-import { CONTACT_EMAIL, NAV_LINKS, PLAY_STORE_URL } from "@/lib/site-config";
+import { Apple, Monitor, Play } from "lucide-react";
+import { APP_STORE_URL, CONTACT_EMAIL, NAV_LINKS, PLAY_STORE_URL } from "@/lib/site-config";
 
 export function Footer() {
   return (
@@ -53,6 +53,15 @@ export function Footer() {
             >
               <Play size={16} fill="currentColor" />
               Google Play
+            </a>
+            <a
+              href={APP_STORE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-neutral-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
+            >
+              <Apple size={16} fill="currentColor" />
+              App Store
             </a>
             <Link
               href="/#contato"

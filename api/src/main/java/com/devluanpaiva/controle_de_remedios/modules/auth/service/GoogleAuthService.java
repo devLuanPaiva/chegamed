@@ -25,11 +25,16 @@ public class GoogleAuthService {
     private final GoogleIdentityVerifier googleIdentityVerifier;
     private final GoogleOAuthClient googleOAuthClient;
     private final UserRepository userRepository;
+    private final VisitorAccountService visitorAccountService;
     private final JwtService jwtService;
 
     public AuthResponseDTO loginWithIdToken(GoogleLoginRequestDTO dto) {
         GoogleIdentity identity = googleIdentityVerifier.verify(dto.idToken());
-        User user = resolveVerifiedUser(identity);
+        assertEmailIsVerified(identity);
+
+        User user = visitorAccountService.findOrCreateByEmail(
+                identity.email(), identity.name(), identity.pictureUrl());
+
         return issueTokensFor(user);
     }
 
@@ -40,22 +45,22 @@ public class GoogleAuthService {
                 dto.redirectUri());
 
         GoogleIdentity identity = googleIdentityVerifier.verify(idToken);
-        User user = resolveVerifiedUser(identity);
+        assertEmailIsVerified(identity);
 
-        if (user.getRole() == UserRole.PATIENT) {
-            throw patientDesktopForbidden();
+        User user = userRepository.findByEmailIgnoreCase(identity.email())
+                .orElseThrow(this::emailNotRegistered);
+
+        if (user.getRole() == UserRole.PATIENT || user.getRole() == UserRole.VISITOR) {
+            throw desktopForbidden();
         }
 
         return issueTokensFor(user);
     }
 
-    private User resolveVerifiedUser(GoogleIdentity identity) {
+    private void assertEmailIsVerified(GoogleIdentity identity) {
         if (!identity.emailVerified()) {
             throw emailNotVerified();
         }
-
-        return userRepository.findByEmailIgnoreCase(identity.email())
-                .orElseThrow(this::emailNotRegistered);
     }
 
     private AuthResponseDTO issueTokensFor(User user) {
@@ -64,7 +69,7 @@ public class GoogleAuthService {
                 jwtService.generateRefreshToken(user));
     }
 
-    private BusinessException patientDesktopForbidden() {
+    private BusinessException desktopForbidden() {
         return new BusinessException(
                 HttpStatus.FORBIDDEN,
                 "Acesso não autorizado",

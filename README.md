@@ -270,4 +270,4 @@ O diretório [`docs/`](./docs) contém o diagrama de classes completo do domíni
 
 ## Autor
 
-Desenvolvido por **Luan Alves** ([devluanpaiva@gmail.com](mailto:devluanpaiva@gmail.com)).
+Desenvolvido por **Luan Alves** ([contato@devluanpaiva.com.br](mailto:contato@devluanpaiva.com.br)).

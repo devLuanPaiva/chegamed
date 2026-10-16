@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { CameraView } from "expo-camera";
 import { AlertCircle } from "lucide-react-native";
 
@@ -10,11 +11,13 @@ import { useSpeechTips } from "@/data/hooks/useSpeechTips";
 import { useAutoCameraPermission } from "@/features/medicines/hooks/useAutoCameraPermission";
 import { useWelcomeTip } from "@/features/medicines/hooks/useWelcomeTip";
 import { useBarcodeCapture } from "@/features/medicines/hooks/useBarcodeCapture";
+import { useAiConsent } from "@/data/hooks/useAiConsent";
 import { CameraPermissionGate } from "@/features/medicines/components/CameraPermissionGate";
 import { ScanTopBar } from "@/features/medicines/components/ScanTopBar";
 import { CameraGradients } from "@/features/medicines/components/CameraGradients";
 import { CameraCaptureButton } from "@/components/shared/CameraCaptureButton";
 import { ProcessingOverlay } from "@/components/shared/ProcessingOverlay";
+import { AiConsentGate } from "@/components/shared/AiConsentGate";
 
 const BARCODE_TIPS = [
     "Aproxime a câmera do código de barras para facilitar a leitura.",
@@ -24,10 +27,12 @@ const BARCODE_TIPS = [
 ];
 
 export default function MedicineBarcodeScan() {
+    const router = useRouter();
     const isFocused = useIsFocused();
     const [permission, requestPermission] = useAutoCameraPermission();
     const { isSpeaking, speakNextTip, stop: stopSpeech } = useSpeechTips(BARCODE_TIPS, { random: true });
     const { cameraRef, capturing, lookup, handleCapture } = useBarcodeCapture();
+    const { hasConsented, grantConsent } = useAiConsent("EXTRACTION");
 
     useWelcomeTip(permission?.granted, speakNextTip);
 
@@ -48,6 +53,26 @@ export default function MedicineBarcodeScan() {
             <CameraPermissionGate
                 subtitle="Para fotografar o código de barras, o ChegaMed precisa da sua permissão de câmera."
                 onRequestPermission={requestPermission}
+            />
+        );
+    }
+
+    if (hasConsented === null) {
+        return <View style={styles.container} />;
+    }
+
+    if (!hasConsented) {
+        return (
+            <AiConsentGate
+                title="Uso de inteligência artificial"
+                description="Para identificar o medicamento automaticamente, a foto do código de barras ou da caixa é enviada a um serviço de IA de terceiros."
+                bullets={[
+                    "O que é enviado: a foto do código de barras ou da caixa do medicamento.",
+                    "Para quem: API do Google Gemini, contratada em plano pago que não usa os dados para treinar seus modelos.",
+                    "Finalidade: identificar o código de barras ou o nome do medicamento automaticamente, reduzindo a digitação manual.",
+                ]}
+                onAccept={grantConsent}
+                onDecline={() => router.back()}
             />
         );
     }

@@ -67,8 +67,12 @@ public class PatientRegistrationRequest {
     @Column(nullable = false, length = 180)
     private String email;
 
-    @Column(nullable = false, length = 255, name = "password_hash")
+    @Column(length = 255, name = "password_hash")
     private String passwordHash;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requested_by_user_id", nullable = true)
+    private User requestedBy;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

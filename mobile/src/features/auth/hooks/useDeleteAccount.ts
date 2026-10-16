@@ -4,10 +4,11 @@ import { ApiRequestError } from "@/lib/apiFetch";
 import { deleteAccount } from "@/data/services/auth.service";
 
 interface UseDeleteAccountOptions {
+    requiresPassword: boolean;
     onSuccess: () => void;
 }
 
-export function useDeleteAccount({ onSuccess }: Readonly<UseDeleteAccountOptions>) {
+export function useDeleteAccount({ requiresPassword, onSuccess }: Readonly<UseDeleteAccountOptions>) {
     const [password, setPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
@@ -18,7 +19,7 @@ export function useDeleteAccount({ onSuccess }: Readonly<UseDeleteAccountOptions
     }
 
     async function submit() {
-        if (!password) {
+        if (requiresPassword && !password) {
             setFormError("Informe sua senha para confirmar.");
             return;
         }

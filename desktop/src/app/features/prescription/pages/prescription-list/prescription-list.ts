@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { Actions, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 
+import { ToastType } from '@core/ui/toast/models/toast.model';
+import { ToastService } from '@core/ui/toast/service/toast.service';
 import { selectSelectedCompanyId } from '@features/company/store/company.selectors';
 import { IPrescriptionsSummary } from '@features/dashboard/models/dashboard.model';
 import { DashboardService } from '@features/dashboard/services/dashboard.service';
@@ -14,11 +16,13 @@ import { PrescriptionStatusBadge } from '@shared/ui/prescription-status-badge/pr
 import { Tabs, TabConfig } from '@shared/ui/tabs/tabs';
 import { extractErrorMessage } from '@shared/utils/api-error.util';
 import { formatCpf, onlyDigits } from '@shared/utils/cpf.util';
+import { downloadBlob } from '@shared/utils/file-download.util';
 
 import { PrescriptionCreateForm } from '../../components/prescription-create-form/prescription-create-form';
 import { PrescriptionSummaryWidget } from '../../components/prescription-summary-widget/prescription-summary-widget';
 import { PrescriptionFilterParams } from '../../models/prescription-api.model';
 import { PrescriptionStatus, PrescriptionStatusLabels } from '../../models/prescription.model';
+import { PrescriptionService } from '../../services/prescription.service';
 import * as PrescriptionActions from '../../store/prescription.actions';
 import {
     selectAllPrescriptions,
@@ -68,6 +72,8 @@ export class PrescriptionList implements OnInit {
     private readonly store = inject(Store);
     private readonly actions$ = inject(Actions);
     private readonly dashboardService = inject(DashboardService);
+    private readonly prescriptionService = inject(PrescriptionService);
+    private readonly toast = inject(ToastService);
 
     readonly prescriptions = this.store.selectSignal(selectAllPrescriptions);
     readonly loading = this.store.selectSignal(selectPrescriptionsLoading);
@@ -93,6 +99,7 @@ export class PrescriptionList implements OnInit {
         { id: 'create', label: 'Cadastrar nova' },
     ];
     readonly activeTabId = signal('list');
+    readonly downloadingReport = signal(false);
 
     readonly statusOptions = Object.values(PrescriptionStatus);
     readonly PrescriptionStatusLabels = PrescriptionStatusLabels;
@@ -125,6 +132,27 @@ export class PrescriptionList implements OnInit {
 
     onTabChange(tabId: string): void {
         this.activeTabId.set(tabId);
+    }
+
+    downloadReport(): void {
+        const companyId = this.connectedCompanyId();
+
+        if (!companyId || this.downloadingReport()) {
+            return;
+        }
+
+        this.downloadingReport.set(true);
+
+        this.prescriptionService.downloadPrescriptionItemsReport(companyId).subscribe({
+            next: ({ blob, filename }) => {
+                downloadBlob(blob, filename);
+                this.downloadingReport.set(false);
+            },
+            error: (error) => {
+                this.toast.show(ToastType.Error, extractErrorMessage(error, 'Erro ao baixar relatório de receituários.'));
+                this.downloadingReport.set(false);
+            },
+        });
     }
 
     onFilterPatientNameChange(value: string): void {

@@ -2,9 +2,20 @@
     <header class="patient-list__header">
         <h1 class="patient-list__title">Pacientes</h1>
 
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-            Novo paciente
-        </button>
+        <div class="patient-list__header-actions">
+            <button
+                type="button"
+                class="btn btn-outline"
+                [disabled]="downloadingReport() || !connectedCompanyId()"
+                (click)="downloadReport()"
+            >
+                {{ downloadingReport() ? 'Gerando PDF...' : 'Baixar PDF' }}
+            </button>
+
+            <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+                Novo paciente
+            </button>
+        </div>
     </header>
 
     <app-patient-summary-widget [summary]="summary()" [loading]="summaryLoading()" [error]="summaryError()" />

@@ -1,12 +1,15 @@
 import { useCallback, useRef, useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { AlertCircle, Bot } from "lucide-react-native";
 
 import { useAuth } from "@/data/contexts/AuthContext";
 import { useCompanies } from "@/data/contexts/CompanyContext";
+import { useAiConsent } from "@/data/hooks/useAiConsent";
 import { Colors, Radius, Spacing, Typography } from "@/theme";
 import { BackButton } from "@/components/shared/BackButton";
+import { AiConsentGate } from "@/components/shared/AiConsentGate";
 import { useAssistantChat } from "@/features/assistant/hooks/useAssistantChat";
 import { ChatBubble } from "@/features/assistant/components/ChatBubble";
 import { TypingIndicator } from "@/features/assistant/components/TypingIndicator";
@@ -14,17 +17,13 @@ import { ChatInputBar } from "@/features/assistant/components/ChatInputBar";
 import { IChatMessage } from "@/data/models/assistant.model";
 
 export default function AssistantScreen() {
+    const router = useRouter();
     const { user } = useAuth();
     const { selectedCompany } = useCompanies();
     const { messages, isSending, error, sendMessage } = useAssistantChat(selectedCompany?.id);
+    const { hasConsented, grantConsent } = useAiConsent("ASSISTANT");
     const [draft, setDraft] = useState("");
     const listRef = useRef<FlatList<IChatMessage>>(null);
-
-    function handleSend() {
-        const text = draft;
-        setDraft("");
-        sendMessage(text);
-    }
 
     const renderItem = useCallback(
         ({ item }: { item: IChatMessage }) => (
@@ -32,6 +31,32 @@ export default function AssistantScreen() {
         ),
         [user?.name, user?.imageUrl],
     );
+
+    if (hasConsented === null) {
+        return <View style={styles.flex} />;
+    }
+
+    if (!hasConsented) {
+        return (
+            <AiConsentGate
+                title="Assistente com inteligência artificial"
+                description="Para responder às suas perguntas, o assistente envia dados a um serviço de IA de terceiros."
+                bullets={[
+                    "O que é enviado: o texto da sua pergunta e, quando necessário para respondê-la, nomes de pacientes e dados de entregas/prescrições relacionados.",
+                    "Para quem: API do Google Gemini, contratada em plano pago que não usa os dados para treinar seus modelos.",
+                    "Finalidade: gerar uma resposta em linguagem natural sobre entregas e pacientes.",
+                ]}
+                onAccept={grantConsent}
+                onDecline={() => router.back()}
+            />
+        );
+    }
+
+    function handleSend() {
+        const text = draft;
+        setDraft("");
+        sendMessage(text);
+    }
 
     return (
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : "height"}>

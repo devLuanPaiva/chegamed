@@ -34,8 +34,13 @@ public class NotificationSocketRegistry {
         Set<WebSocketSession> sessions = sessionsByUser.get(userId);
 
         if (sessions == null || sessions.isEmpty()) {
+            log.info("Nenhuma sessão de socket registrada para userId={}; notificação não enviada em tempo real",
+                    userId);
             return;
         }
+
+        log.info("Enviando notificação em tempo real para userId={} ({} sessão(ões) ativa(s))",
+                userId, sessions.size());
 
         TextMessage message = new TextMessage(payload);
 
@@ -46,6 +51,8 @@ public class NotificationSocketRegistry {
 
     private void sendQuietly(UUID userId, WebSocketSession session, TextMessage message) {
         if (!session.isOpen()) {
+            log.info("Sessão fechada encontrada para userId={}, sessionId={}; removendo do registro",
+                    userId, session.getId());
             unregister(userId, session);
             return;
         }
@@ -55,7 +62,8 @@ public class NotificationSocketRegistry {
                 session.sendMessage(message);
             }
         } catch (IOException ex) {
-            log.warn("Falha ao enviar notificação em tempo real; sessão será descartada", ex);
+            log.warn("Falha ao enviar notificação em tempo real para userId={}, sessionId={}; sessão será descartada",
+                    userId, session.getId(), ex);
             unregister(userId, session);
         }
     }

@@ -4,15 +4,16 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/data/contexts/AuthContext";
-import { UserRole } from "@/data/models/user.model";
+import { NOTIFIABLE_ROLES, UserRole, isVisitorRole } from "@/data/models/user.model";
 import { AssistantFeatureCard } from "@/features/home/components/AssistantFeatureCard";
 import { HeroCard } from "@/features/home/components/HeroCard";
 import { ModulesSection } from "@/features/home/components/ModulesSection";
 import { NotificationButton } from "@/features/home/components/NotificationButton";
+import { VisitorRegistrationSection } from "@/features/visitor/components/VisitorRegistrationSection";
 import { Colors, Spacing } from "@/theme";
 
 const ASSISTANT_ROLES: UserRole[] = [UserRole.MANAGER, UserRole.ASSISTANT];
-const NOTIFIABLE_ROLES: UserRole[] = [UserRole.PATIENT, UserRole.DELIVERER];
+const VISITOR_SUBTITLE = "Que bom ter você aqui! Falta só um passo para usar o ChegaMed.";
 
 export default function Home() {
     const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function Home() {
 
     const canUseAssistant = Boolean(user?.role && ASSISTANT_ROLES.includes(user.role));
     const receivesNotifications = Boolean(user?.role && NOTIFIABLE_ROLES.includes(user.role));
+    const isVisitor = isVisitorRole(user?.role);
 
     return (
         <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -32,7 +34,13 @@ export default function Home() {
                     </View>
                 ) : null}
 
-                <HeroCard name={user?.name ?? "Usuário"} imageUrl={user?.imageUrl} />
+                <HeroCard
+                    name={user?.name ?? "Usuário"}
+                    imageUrl={user?.imageUrl}
+                    subtitle={isVisitor ? VISITOR_SUBTITLE : undefined}
+                />
+
+                {isVisitor ? <VisitorRegistrationSection /> : null}
 
                 {canUseAssistant ? (
                     <AssistantFeatureCard

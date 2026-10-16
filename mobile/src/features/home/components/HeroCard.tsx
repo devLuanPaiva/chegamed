@@ -8,9 +8,12 @@ import { getGreeting } from "../utils/greeting";
 interface HeroCardProps {
     name: string;
     imageUrl?: string | null;
+    subtitle?: string;
 }
 
-export function HeroCard({ name, imageUrl }: Readonly<HeroCardProps>) {
+const DEFAULT_SUBTITLE = "Bem-vindo(a) de volta ao ChegaMed.";
+
+export function HeroCard({ name, imageUrl, subtitle }: Readonly<HeroCardProps>) {
     const greeting = getGreeting(new Date().getHours());
 
     return (
@@ -23,7 +26,7 @@ export function HeroCard({ name, imageUrl }: Readonly<HeroCardProps>) {
             <View style={styles.textBlock}>
                 <Text style={styles.greeting}>{greeting},</Text>
                 <Text style={styles.name}>{name}</Text>
-                <Text style={styles.subtitle}>Bem-vindo(a) de volta ao ChegaMed.</Text>
+                <Text style={styles.subtitle}>{subtitle ?? DEFAULT_SUBTITLE}</Text>
             </View>
 
             <Avatar
