@@ -28,9 +28,9 @@ export interface ImpactStat {
 export const CONTACT_EMAIL = "contato@devluanpaiva.com.br";
 
 export const PLAY_STORE_URL =
-  "https://play.google.com/store/apps/details?id=com.devluanpaiva.chegamed";
+  "https://play.google.com/store/apps/details?id=com.devluanpaiva.chegamed&pcampaignid=web_share";
 
-export const APP_STORE_URL = "https://apps.apple.com/app/id6799482723";
+export const APP_STORE_URL = "https://apps.apple.com/br/app/chegamed/id6819890220";
 
 export const DEEP_LINK_SCHEME = "chegamed";
 
